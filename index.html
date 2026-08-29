@@ -350,20 +350,22 @@
 
 <div class="app-container">
   
-  <header>
-    <div class="brand" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-      <div class="brand-left" style="display: flex; align-items: center; gap: 8px;">
-        <div class="badge">MYRA</div>
-        <div id="roleBadge" style="background: #475569; color: white; font-weight: 800; font-size: 0.62rem; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; border: 1px solid #64748b; letter-spacing: 0.05em; display: inline-flex; align-items: center;">👪 Parent (Read-Only)</div>
+  <header style="display: flex; flex-direction: column; gap: 12px; padding: 12px 14px;">
+    <!-- Top Row (Brand & Google Login/Auth) -->
+    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 10px;">
+      <div class="brand" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <div class="brand-left" style="display: flex; align-items: center; gap: 8px;">
+          <div class="badge">MYRA</div>
+          <div id="roleBadge" style="background: #475569; color: white; font-weight: 800; font-size: 0.62rem; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; border: 1px solid #64748b; letter-spacing: 0.05em; display: inline-flex; align-items: center;">👪 Parent (Read-Only)</div>
+        </div>
+        <div class="title-group">
+          <h1 id="appTitle" style="margin: 0; font-size: 1.1rem;">HV Myra O10 Matchday Board (8 vs 8)</h1>
+          <p id="appSubtitle" style="margin: 0;">Interactive Board & Read-Only Match Sheet Export</p>
+        </div>
       </div>
-      <div class="title-group">
-        <h1 id="appTitle" style="margin: 0; font-size: 1.1rem;">HV Myra O10 Matchday Board (8 vs 8)</h1>
-        <p id="appSubtitle" style="margin: 0;">Interactive Board & Read-Only Match Sheet Export</p>
-      </div>
-    </div>
 
-    <div class="header-controls">
-      <div id="googleAuthContainer" style="display: flex; align-items: center; gap: 8px; background: var(--card-bg); padding: 5px 8px; border-radius: 8px; border: 1px solid #334155; position: relative;">
+      <div id="googleAuthContainer" style="display: flex; align-items: center; gap: 8px; background: var(--card-bg); padding: 5px 8px; border-radius: 8px; border: 1px solid #334155; position: relative; margin-left: auto;">
+        <span id="googleLoginPrompt" style="font-size: 0.65rem; color: #94a3b8; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em;">Sign in with Google:</span>
         <div id="googleSignInButton" style="display: none;"></div>
         <div id="googleUserProfile" style="display: none; align-items: center; gap: 6px;">
           <img id="userAvatar" src="" style="width: 24px; height: 24px; border-radius: 50%; border: 1px solid #38bdf8;">
@@ -385,13 +387,11 @@
           <button onclick="saveGoogleConfig()" style="background: #059669; border-color: #10b981; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; width: 100%;">Save & Initialize</button>
         </div>
       </div>
+    </div>
 
-      <div class="lang-switch">
-        <button class="lang-btn active" id="btnLangEN" onclick="setLanguage('en')">🇬🇧 English</button>
-        <button class="lang-btn" id="btnLangNL" onclick="setLanguage('nl')">🇳🇱 Nederlands</button>
-      </div>
-
-      <div class="match-card">
+    <!-- Bottom Row (Match Info & Lang switch) -->
+    <div class="header-controls" style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 10px; margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
+      <div class="match-card" style="margin-right: auto;">
         <div class="match-input-group">
           <label id="lblMatchDate">📅 Match Date (Calendar)</label>
           <input type="date" id="matchDatePicker" value="2026-08-29" onchange="onDateSelected(this.value)">
@@ -404,6 +404,11 @@
           <label id="lblMatchQuarter">⏱️ Period / Quarter</label>
           <input type="text" id="matchQuarter" value="Q1 Lineup" oninput="syncBanner()">
         </div>
+      </div>
+
+      <div class="lang-switch">
+        <button class="lang-btn active" id="btnLangEN" onclick="setLanguage('en')">🇬🇧 English</button>
+        <button class="lang-btn" id="btnLangNL" onclick="setLanguage('nl')">🇳🇱 Nederlands</button>
       </div>
     </div>
   </header>
@@ -723,9 +728,14 @@
   }
 
   function initGoogleAuth() {
+    const promptEl = document.getElementById('googleLoginPrompt');
     if (!googleClientId) {
       document.getElementById('googleSignInButton').style.display = 'none';
       document.getElementById('btnConfigGoogle').innerText = '⚙️ Setup Login';
+      if (promptEl) {
+        promptEl.style.display = 'inline';
+        promptEl.innerText = currentLang === 'en' ? 'Setup Google Auth:' : 'Google Auth Instellen:';
+      }
       currentUserRole = 'parent';
       applyRolePrivileges();
       return;
@@ -749,10 +759,15 @@
 
     const localUser = localStorage.getItem('hv_myra_user');
     if (localUser) {
+      if (promptEl) promptEl.style.display = 'none';
       showUserLoggedIn(JSON.parse(localUser));
     } else {
       currentUserRole = 'parent';
       applyRolePrivileges();
+      if (promptEl) {
+        promptEl.style.display = 'inline';
+        promptEl.innerText = currentLang === 'en' ? 'Sign in with Google:' : 'Inloggen met Google:';
+      }
       document.getElementById('googleSignInButton').style.display = 'block';
       document.getElementById('googleUserProfile').style.display = 'none';
     }
@@ -787,6 +802,8 @@
     localStorage.removeItem('hv_myra_user');
     document.getElementById('googleUserProfile').style.display = 'none';
     document.getElementById('googleSignInButton').style.display = 'none';
+    const promptEl = document.getElementById('googleLoginPrompt');
+    if (promptEl) promptEl.style.display = 'inline';
     currentUserRole = 'parent';
     applyRolePrivileges();
     initGoogleAuth();
