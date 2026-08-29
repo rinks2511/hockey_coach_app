@@ -182,6 +182,14 @@
     text-align: center;
   }
 
+  .player-select-pill:disabled, .sidebar-select:disabled {
+    opacity: 0.9;
+    background: rgba(15, 23, 42, 0.8);
+    color: #94a3b8;
+    cursor: default;
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
   .token.ball .token-circle {
     width: clamp(14px, 2.5vw, 20px);
     height: clamp(14px, 2.5vw, 20px);
@@ -343,11 +351,14 @@
 <div class="app-container">
   
   <header>
-    <div class="brand">
-      <div class="badge">MYRA</div>
+    <div class="brand" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+      <div class="brand-left" style="display: flex; align-items: center; gap: 8px;">
+        <div class="badge">MYRA</div>
+        <div id="roleBadge" style="background: #475569; color: white; font-weight: 800; font-size: 0.62rem; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; border: 1px solid #64748b; letter-spacing: 0.05em; display: inline-flex; align-items: center;">👪 Parent (Read-Only)</div>
+      </div>
       <div class="title-group">
-        <h1 id="appTitle">HV Myra O10 Matchday Board (8 vs 8)</h1>
-        <p id="appSubtitle">Coach Edition • Interactive Board & Read-Only Match Sheet Export</p>
+        <h1 id="appTitle" style="margin: 0; font-size: 1.1rem;">HV Myra O10 Matchday Board (8 vs 8)</h1>
+        <p id="appSubtitle" style="margin: 0;">Interactive Board & Read-Only Match Sheet Export</p>
       </div>
     </div>
 
@@ -361,10 +372,16 @@
         </div>
         <button id="btnConfigGoogle" onclick="toggleGoogleConfig()" style="padding: 4px 6px; font-size: 0.65rem; background: #273042; border-color: #3e4c66; border-radius: 4px; color: #e2e8f0;">⚙️ Setup Login</button>
         
-        <div id="googleConfigPanel" style="display: none; background: var(--panel-bg); border: 1px solid #334155; padding: 10px; border-radius: 6px; position: absolute; right: 0px; top: 38px; z-index: 100; flex-direction: column; gap: 6px; width: 280px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); text-align: left;">
+        <div id="googleConfigPanel" style="display: none; background: var(--panel-bg); border: 1px solid #334155; padding: 10px; border-radius: 6px; position: absolute; right: 0px; top: 38px; z-index: 100; flex-direction: column; gap: 8px; width: 280px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); text-align: left;">
           <label style="font-size: 0.65rem; color: #38bdf8; font-weight: bold;">GOOGLE OAUTH CLIENT ID</label>
           <input type="text" id="googleClientIdInput" placeholder="Paste Client ID here" style="background: #090c12; border: 1px solid #334155; color: #fff; padding: 4px 6px; border-radius: 4px; font-size: 0.7rem; width: 100%;">
-          <div style="font-size: 0.58rem; color: #94a3b8; line-height: 1.2;">Create this in Google Cloud Console > APIs & Services > Credentials > OAuth client ID (Web application). Add your app's domain (e.g. localhost or Cloud Run URL) to <strong>Authorized JavaScript origins</strong>.</div>
+          <div style="font-size: 0.58rem; color: #94a3b8; line-height: 1.2;">Create in GCP Console > APIs & Services > Credentials. Add your app's URL to JavaScript origins.</div>
+          
+          <div id="googleConfigEmailsGroup" style="display: none; flex-direction: column; gap: 4px;">
+            <label style="font-size: 0.65rem; color: #38bdf8; font-weight: bold; margin-top: 4px;">COACH EMAILS (Comma-separated)</label>
+            <textarea id="coachEmailsInput" placeholder="e.g. coach1@gmail.com, coach2@gmail.com" style="background: #090c12; border: 1px solid #334155; color: #fff; padding: 4px 6px; border-radius: 4px; font-size: 0.7rem; width: 100%; height: 50px; resize: none; font-family: sans-serif;"></textarea>
+          </div>
+          
           <button onclick="saveGoogleConfig()" style="background: #059669; border-color: #10b981; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; width: 100%;">Save & Initialize</button>
         </div>
       </div>
@@ -581,6 +598,8 @@
   let currentLang = 'en';
 
   let googleClientId = localStorage.getItem('hv_myra_google_client_id') || '';
+  let coachEmails = JSON.parse(localStorage.getItem('hv_myra_coaches')) || ["singhalrajeev89@gmail.com"];
+  let currentUserRole = 'parent';
 
   function toggleGoogleConfig() {
     const panel = document.getElementById('googleConfigPanel');
@@ -598,15 +617,117 @@
     }
     localStorage.setItem('hv_myra_google_client_id', val);
     googleClientId = val;
+
+    if (currentUserRole === 'coach') {
+      const emailsInput = document.getElementById('coachEmailsInput');
+      if (emailsInput) {
+        const emailsVal = emailsInput.value.split(',')
+          .map(e => e.trim().toLowerCase())
+          .filter(e => e.length > 0);
+        if (!emailsVal.includes('singhalrajeev89@gmail.com')) {
+          emailsVal.push('singhalrajeev89@gmail.com');
+        }
+        coachEmails = emailsVal;
+        localStorage.setItem('hv_myra_coaches', JSON.stringify(coachEmails));
+      }
+    }
+
     toggleGoogleConfig();
     initGoogleAuth();
-    showToast('Client ID saved! Initializing...');
+    showToast('Configuration saved! Initializing...');
+  }
+
+  function determineUserRole(userEmail) {
+    if (userEmail && coachEmails.includes(userEmail.toLowerCase())) {
+      currentUserRole = 'coach';
+    } else {
+      currentUserRole = 'parent';
+    }
+    applyRolePrivileges();
+  }
+
+  function applyRolePrivileges() {
+    const isCoach = (currentUserRole === 'coach');
+
+    const badge = document.getElementById('roleBadge');
+    if (badge) {
+      if (isCoach) {
+        badge.innerText = '👑 Coach';
+        badge.style.backgroundColor = '#059669';
+        badge.style.borderColor = '#10b981';
+      } else {
+        badge.innerText = '👪 Parent (Read-Only)';
+        badge.style.backgroundColor = '#475569';
+        badge.style.borderColor = '#64748b';
+      }
+    }
+
+    const drawBtn = document.getElementById('modeDraw');
+    const arrowBtn = document.getElementById('modeArrow');
+    const eraserBtn = document.getElementById('modeEraser');
+    const clearBtn = document.getElementById('btnResetLines');
+    const form1 = document.getElementById('btnForm1');
+    const form2 = document.getElementById('btnForm2');
+    const form3 = document.getElementById('btnForm3');
+    const saveBtn = document.getElementById('btnSave');
+    const loadBtn = document.getElementById('btnLoad');
+    const notes = document.getElementById('coachNotes');
+
+    if (!isCoach) {
+      setMode('select');
+      if (drawBtn) drawBtn.disabled = true;
+      if (arrowBtn) arrowBtn.disabled = true;
+      if (eraserBtn) eraserBtn.disabled = true;
+      if (clearBtn) clearBtn.disabled = true;
+      if (form1) form1.disabled = true;
+      if (form2) form2.disabled = true;
+      if (form3) form3.disabled = true;
+      if (saveBtn) saveBtn.style.display = 'none';
+      if (loadBtn) loadBtn.style.display = 'none';
+      if (notes) notes.readOnly = true;
+
+      const squadTitle = document.getElementById('txtManageSquadTitle');
+      const addPlayerDiv = document.querySelector('.add-player');
+      if (squadTitle) squadTitle.style.display = 'none';
+      if (addPlayerDiv) addPlayerDiv.style.display = 'none';
+
+      document.querySelectorAll('.player-chip span').forEach(el => el.style.display = 'none');
+    } else {
+      if (drawBtn) drawBtn.disabled = false;
+      if (arrowBtn) arrowBtn.disabled = false;
+      if (eraserBtn) eraserBtn.disabled = false;
+      if (clearBtn) clearBtn.disabled = false;
+      if (form1) form1.disabled = false;
+      if (form2) form2.disabled = false;
+      if (form3) form3.disabled = false;
+      if (saveBtn) saveBtn.style.display = 'inline-flex';
+      if (loadBtn) loadBtn.style.display = 'inline-flex';
+      if (notes) notes.readOnly = false;
+
+      const squadTitle = document.getElementById('txtManageSquadTitle');
+      const addPlayerDiv = document.querySelector('.add-player');
+      if (squadTitle) squadTitle.style.display = 'block';
+      if (addPlayerDiv) addPlayerDiv.style.display = 'flex';
+
+      document.querySelectorAll('.player-chip span').forEach(el => el.style.display = 'inline');
+    }
+
+    document.querySelectorAll('.player-select-pill, .sidebar-select').forEach(select => {
+      select.disabled = !isCoach;
+    });
+
+    const emailsGroup = document.getElementById('googleConfigEmailsGroup');
+    if (emailsGroup) {
+      emailsGroup.style.display = isCoach ? 'flex' : 'none';
+    }
   }
 
   function initGoogleAuth() {
     if (!googleClientId) {
       document.getElementById('googleSignInButton').style.display = 'none';
       document.getElementById('btnConfigGoogle').innerText = '⚙️ Setup Login';
+      currentUserRole = 'parent';
+      applyRolePrivileges();
       return;
     }
     document.getElementById('btnConfigGoogle').innerText = '⚙️ Config';
@@ -630,6 +751,8 @@
     if (localUser) {
       showUserLoggedIn(JSON.parse(localUser));
     } else {
+      currentUserRole = 'parent';
+      applyRolePrivileges();
       document.getElementById('googleSignInButton').style.display = 'block';
       document.getElementById('googleUserProfile').style.display = 'none';
     }
@@ -656,12 +779,16 @@
     document.getElementById('googleUserProfile').style.display = 'flex';
     document.getElementById('userAvatar').src = user.picture;
     document.getElementById('userName').innerText = user.given_name || user.name;
+
+    determineUserRole(user.email);
   }
 
   function logoutGoogle() {
     localStorage.removeItem('hv_myra_user');
     document.getElementById('googleUserProfile').style.display = 'none';
     document.getElementById('googleSignInButton').style.display = 'none';
+    currentUserRole = 'parent';
+    applyRolePrivileges();
     initGoogleAuth();
     showToast('Logged out');
   }
@@ -1012,6 +1139,7 @@
   document.querySelectorAll('.draggable-token').forEach(el => {
     el.addEventListener('pointerdown', (e) => {
       if (currentMode !== 'select') return;
+      if (currentUserRole !== 'coach') return; // Parents cannot drag
       if (e.target.tagName.toLowerCase() === 'select') return;
       activeElement = el;
       const rect = el.getBoundingClientRect();
@@ -1071,6 +1199,7 @@
 
   canvas.addEventListener('pointerdown', (e) => {
     if (currentMode === 'select') return;
+    if (currentUserRole !== 'coach') return; // Parents cannot draw!
     isDrawing = true;
     const coords = getCanvasCoords(e);
     startX = coords.x;
@@ -1448,6 +1577,10 @@
     initDropdowns();
     renderSquadManager();
     document.getElementById('googleClientIdInput').value = googleClientId;
+    const emailsInput = document.getElementById('coachEmailsInput');
+    if (emailsInput) {
+      emailsInput.value = coachEmails.join(', ');
+    }
     initGoogleAuth();
     syncBanner();
   };
