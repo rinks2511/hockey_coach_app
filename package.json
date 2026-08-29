@@ -1,0 +1,11 @@
+{
+  "name": "hockey_coach_app",
+  "version": "1.0.0",
+  "description": "HV Myra O10 Matchday Board (Coach Edition)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {}
+}
