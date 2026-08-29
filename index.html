@@ -348,6 +348,31 @@
 </head>
 <body>
 
+<div id="loginOverlay" style="position: fixed; inset: 0; background: #0b0f19; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; gap: 20px; font-family: system-ui, -apple-system, sans-serif; color: #fff;">
+  <div style="background: rgba(30, 41, 59, 0.4); padding: 40px; border-radius: 16px; border: 1px solid #334155; max-width: 400px; width: 90%; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+    <div style="background: #002b49; color: #ffffff; border: 2px solid #ffffff; font-weight: 800; font-size: 1.2rem; padding: 6px 12px; border-radius: 8px; display: inline-block;">MYRA</div>
+    <div style="display: flex; flex-direction: column; gap: 6px;">
+      <h2 style="font-size: 1.4rem; font-weight: 800; margin: 0; color: #ffffff;">HV Myra O10 Matchday Board</h2>
+      <p style="font-size: 0.85rem; color: #94a3b8; margin: 0; line-height: 1.4;">Sign in with your Google Account to access the tactics board.</p>
+    </div>
+    
+    <!-- Sign-in Button -->
+    <div id="googleSignInButtonOverlay"></div>
+    
+    <!-- Setup Overlay (Visible only when Client ID is missing) -->
+    <div id="googleAuthSetupOverlay" style="display: none; flex-direction: column; gap: 8px; width: 100%; text-align: left; background: rgba(15, 23, 42, 0.6); padding: 12px; border-radius: 8px; border: 1px solid #334155;">
+      <label style="font-size: 0.65rem; color: #38bdf8; font-weight: bold;">⚙️ SETUP LOGIN (GOOGLE OAUTH CLIENT ID)</label>
+      <input type="text" id="googleClientIdInputOverlay" placeholder="Paste Google Client ID here" style="background: #090c12; border: 1px solid #334155; color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.72rem; width: 100%;">
+      <button onclick="saveGoogleConfigOverlay()" style="background: #059669; border: none; color: #fff; padding: 6px 12px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; cursor: pointer; text-align: center; width: 100%;">Save & Initialize</button>
+      <div style="font-size: 0.58rem; color: #94a3b8; line-height: 1.2; margin-top: 4px;">Once configured, parents and coaches can log in with Google.</div>
+    </div>
+
+    <div style="font-size: 0.72rem; color: #64748b;">
+      Coaches will have full editing rights.<br>Parents will have view-only privileges.
+    </div>
+  </div>
+</div>
+
 <div class="app-container">
   
   <header style="display: flex; flex-direction: column; gap: 12px; padding: 12px 14px;">
@@ -365,8 +390,6 @@
       </div>
 
       <div id="googleAuthContainer" style="display: flex; align-items: center; gap: 8px; background: var(--card-bg); padding: 5px 8px; border-radius: 8px; border: 1px solid #334155; position: relative; margin-left: auto;">
-        <span id="googleLoginPrompt" style="font-size: 0.65rem; color: #94a3b8; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em;">Sign in with Google:</span>
-        <div id="googleSignInButton" style="display: none;"></div>
         <div id="googleUserProfile" style="display: none; align-items: center; gap: 6px;">
           <img id="userAvatar" src="" style="width: 24px; height: 24px; border-radius: 50%; border: 1px solid #38bdf8;">
           <span id="userName" style="font-size: 0.72rem; font-weight: 700; color: #fff; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
@@ -727,21 +750,32 @@
     }
   }
 
+  function saveGoogleConfigOverlay() {
+    const input = document.getElementById('googleClientIdInputOverlay');
+    const val = input.value.trim();
+    if (!val) {
+      showToast('Please enter a valid Client ID');
+      return;
+    }
+    localStorage.setItem('hv_myra_google_client_id', val);
+    googleClientId = val;
+    initGoogleAuth();
+    showToast('Client ID saved!');
+  }
+
   function initGoogleAuth() {
-    const promptEl = document.getElementById('googleLoginPrompt');
+    const overlay = document.getElementById('loginOverlay');
     if (!googleClientId) {
-      document.getElementById('googleSignInButton').style.display = 'none';
-      document.getElementById('btnConfigGoogle').innerText = '⚙️ Setup Login';
-      if (promptEl) {
-        promptEl.style.display = 'inline';
-        promptEl.innerText = currentLang === 'en' ? 'Setup Google Auth:' : 'Google Auth Instellen:';
-      }
+      if (overlay) overlay.style.display = 'flex';
+      document.getElementById('googleAuthSetupOverlay').style.display = 'flex';
+      document.getElementById('googleSignInButtonOverlay').style.display = 'none';
       currentUserRole = 'parent';
       applyRolePrivileges();
       return;
     }
-    document.getElementById('btnConfigGoogle').innerText = '⚙️ Config';
     
+    document.getElementById('googleAuthSetupOverlay').style.display = 'none';
+
     if (typeof google === 'undefined') {
       setTimeout(initGoogleAuth, 1000);
       return;
@@ -753,22 +787,19 @@
     });
 
     google.accounts.id.renderButton(
-      document.getElementById("googleSignInButton"),
-      { theme: "outline", size: "medium", text: "signin" }
+      document.getElementById("googleSignInButtonOverlay"),
+      { theme: "filled_blue", size: "large", text: "signin_with", shape: "pill", width: 240 }
     );
 
     const localUser = localStorage.getItem('hv_myra_user');
     if (localUser) {
-      if (promptEl) promptEl.style.display = 'none';
+      if (overlay) overlay.style.display = 'none';
       showUserLoggedIn(JSON.parse(localUser));
     } else {
       currentUserRole = 'parent';
       applyRolePrivileges();
-      if (promptEl) {
-        promptEl.style.display = 'inline';
-        promptEl.innerText = currentLang === 'en' ? 'Sign in with Google:' : 'Inloggen met Google:';
-      }
-      document.getElementById('googleSignInButton').style.display = 'block';
+      if (overlay) overlay.style.display = 'flex';
+      document.getElementById('googleSignInButtonOverlay').style.display = 'block';
       document.getElementById('googleUserProfile').style.display = 'none';
     }
   }
@@ -790,7 +821,9 @@
   }
 
   function showUserLoggedIn(user) {
-    document.getElementById('googleSignInButton').style.display = 'none';
+    const overlay = document.getElementById('loginOverlay');
+    if (overlay) overlay.style.display = 'none';
+    
     document.getElementById('googleUserProfile').style.display = 'flex';
     document.getElementById('userAvatar').src = user.picture;
     document.getElementById('userName').innerText = user.given_name || user.name;
@@ -801,11 +834,12 @@
   function logoutGoogle() {
     localStorage.removeItem('hv_myra_user');
     document.getElementById('googleUserProfile').style.display = 'none';
-    document.getElementById('googleSignInButton').style.display = 'none';
-    const promptEl = document.getElementById('googleLoginPrompt');
-    if (promptEl) promptEl.style.display = 'inline';
     currentUserRole = 'parent';
     applyRolePrivileges();
+    
+    const overlay = document.getElementById('loginOverlay');
+    if (overlay) overlay.style.display = 'flex';
+    
     initGoogleAuth();
     showToast('Logged out');
   }
@@ -1594,6 +1628,10 @@
     initDropdowns();
     renderSquadManager();
     document.getElementById('googleClientIdInput').value = googleClientId;
+    const overlayInput = document.getElementById('googleClientIdInputOverlay');
+    if (overlayInput) {
+      overlayInput.value = googleClientId;
+    }
     const emailsInput = document.getElementById('coachEmailsInput');
     if (emailsInput) {
       emailsInput.value = coachEmails.join(', ');
