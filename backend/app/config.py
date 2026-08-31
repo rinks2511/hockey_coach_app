@@ -25,7 +25,15 @@ class Settings:
     def DEFAULT_SQUAD_PLAYERS(self) -> List[str]:
       squad_str = os.getenv(
           "DEFAULT_SQUAD_PLAYERS",
-          "Shanaya, Kyra, Hannah, Liz, Liv, Kate, Alina, Mira, Sai, Defne"
+          "Alina, Defne, Hannah, Kate, Kyra, Liz, Liv, Mira, Sai, Shanaya"
+      )
+      return [player.strip() for player in squad_str.split(",") if player.strip()]
+
+    @property
+    def DEFAULT_TRIMMERS_SQUAD_PLAYERS(self) -> List[str]:
+      squad_str = os.getenv(
+          "DEFAULT_TRIMMERS_SQUAD_PLAYERS",
+          "André van der Sterre, Anna Erdmann-Witzel, Arold Boekhout, Boris Bonsel, Eelco Oudhof, Elise Visscher, Frances Handoko-de Man, Glenn Groenewegen, Gregor de Vries, Hester Kuis, Jeff Zwijsen, Marije Koelink, Marnix Langstraat, Noortje Semmelink, Norbert van Haaften, Rajeev Singhal, Robert-Jan van Weerd, Sander Duivesteijn, Saskia Klaverstijn, Tom Weller, Willem Reddingius"
       )
       return [player.strip() for player in squad_str.split(",") if player.strip()]
 

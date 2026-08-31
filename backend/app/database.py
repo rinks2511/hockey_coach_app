@@ -79,14 +79,30 @@ def init_db():
                 "INSERT INTO settings (team_id, key, value) VALUES (?, ?, ?)",
                 ("MO10", "squad_players", json.dumps(settings.DEFAULT_SQUAD_PLAYERS))
             )
+        else:
+            conn.execute(
+                "UPDATE settings SET value = ? WHERE team_id = 'MO10' AND key = 'squad_players'",
+                (json.dumps(settings.DEFAULT_SQUAD_PLAYERS),)
+            )
             
-        # Trimmers (Adult roster of parents)
+        # Trimmers (Adult roster)
         cur = conn.execute("SELECT 1 FROM settings WHERE team_id = 'Trimmers' AND key = 'squad_players'")
         if not cur.fetchone():
-            trimmers_roster = ["Rajeev", "Anchal", "Jatin", "Meenakshi", "Mustafa", "Michelle", "Marjolein", "Daniel", "Zeliha", "Dinesh", "Mine"]
             conn.execute(
                 "INSERT INTO settings (team_id, key, value) VALUES (?, ?, ?)",
-                ("Trimmers", "squad_players", json.dumps(trimmers_roster))
+                ("Trimmers", "squad_players", json.dumps(settings.DEFAULT_TRIMMERS_SQUAD_PLAYERS))
+            )
+        else:
+            conn.execute(
+                "UPDATE settings SET value = ? WHERE team_id = 'Trimmers' AND key = 'squad_players'",
+                (json.dumps(settings.DEFAULT_TRIMMERS_SQUAD_PLAYERS),)
+            )
+
+        # Ensure coach_emails contains singhalrajeev89@gmail.com for both teams
+        for team in teams:
+            conn.execute(
+                "UPDATE settings SET value = ? WHERE team_id = ? AND key = 'coach_emails'",
+                (json.dumps(settings.DEFAULT_COACH_EMAILS), team)
             )
             
         conn.commit()
