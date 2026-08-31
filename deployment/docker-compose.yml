@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      # Override config settings here if needed
+      - DATABASE_FILE=/app/backend/hockey_coach.db
+      - DEFAULT_COACH_EMAILS=singhalrajeev89@gmail.com
+    volumes:
+      # Mount a local directory to persist the SQLite DB safely
+      - db_data:/app/backend
+
+volumes:
+  db_data:

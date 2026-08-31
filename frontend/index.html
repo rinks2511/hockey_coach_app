@@ -1,0 +1,4089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>HV Myra O10 Matchday Board (Coach Edition)</title>
+<style>
+  :root {
+    --pitch-green: #1f8a4c;
+    --line-white: #ffffff;
+    --score-orange: #f59e0b;
+    --myra-navy: #003366;
+    --gk-gold: #f59e0b;
+    --sub-orange: #ea580c;
+    --opp-red: #c1121f;
+    --board-bg: #12161f;
+    --panel-bg: #1c2230;
+    --card-bg: #141923;
+    --text-main: #eef4f8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  body { background-color: var(--board-bg); color: var(--text-main); padding: 8px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; width: 100%; }
+  .app-container { width: 100%; max-width: 1300px; display: flex; flex-direction: column; gap: 10px; }
+
+  header {
+    background: var(--panel-bg);
+    padding: 10px 14px;
+    border-radius: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid rgba(255,255,255,0.08);
+    gap: 10px;
+  }
+
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .badge { background: #002b49; color: #ffffff; border: 2px solid #ffffff; font-weight: 800; font-size: 0.85rem; padding: 4px 8px; border-radius: 6px; }
+  .title-group h1 { font-size: 1.05rem; font-weight: 700; }
+  .title-group p { font-size: 0.72rem; color: #94a3b8; }
+
+  .header-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .lang-switch { display: flex; background: #090c12; border: 1px solid #334155; border-radius: 20px; padding: 2px; gap: 2px; }
+  .lang-btn { background: transparent; border: none; color: #94a3b8; padding: 4px 8px; border-radius: 14px; font-size: 0.72rem; font-weight: 700; cursor: pointer; }
+  .lang-btn.active { background: #38bdf8; color: #0f172a; }
+
+  .match-card { display: flex; align-items: center; gap: 6px; background: var(--card-bg); padding: 5px 8px; border-radius: 8px; border: 1px solid #334155; flex-wrap: wrap; }
+  .match-input-group { display: flex; flex-direction: column; gap: 2px; }
+  .match-input-group label { font-size: 0.6rem; text-transform: uppercase; color: #38bdf8; font-weight: 700; }
+  .match-input-group input { background: #090c12; border: 1px solid #334155; color: #fff; padding: 4px 6px; border-radius: 5px; font-size: 0.75rem; font-weight: 600; }
+  .match-input-group input[type="date"] { cursor: pointer; color-scheme: dark; }
+
+  .toolbar {
+    background: var(--panel-bg);
+    padding: 8px 10px;
+    border-radius: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .tool-group { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+  .tool-label { font-size: 0.7rem; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-right: 2px; }
+
+  button {
+    background: #273042;
+    color: #e2e8f0;
+    border: 1px solid #3e4c66;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s ease;
+  }
+  button:hover { background: #36435c; border-color: #5a6d91; }
+  button.active { background: #0284c7; border-color: #38bdf8; color: #fff; }
+  button.primary { background: #059669; border-color: #10b981; color: white; }
+  button.purple { background: #7c3aed; border-color: #a78bfa; color: white; }
+  button.purple:hover { background: #6d28d9; }
+
+  .tactics-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 12px;
+    align-items: start;
+  }
+  @media (max-width: 960px) { .tactics-wrapper { grid-template-columns: 1fr; } }
+
+  .board-section { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+  .export-match-banner {
+    background: var(--card-bg);
+    padding: 8px 12px;
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 4px solid #f59e0b;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .export-match-banner .banner-title { font-size: 0.9rem; font-weight: 700; color: #ffffff; }
+  .export-match-banner .banner-meta { font-size: 0.75rem; color: #f59e0b; font-weight: 700; display: flex; gap: 8px; }
+
+  .board-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1.55 / 1;
+    background: var(--pitch-green);
+    border: 3px solid var(--line-white);
+    border-radius: 6px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    overflow: hidden;
+    touch-action: none;
+  }
+
+  .pitch-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+  
+  /* Canvas sits on top for responsive drawing / erasing */
+  #drawCanvas { 
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    z-index: 25; 
+    pointer-events: none;
+    touch-action: none;
+  }
+
+  .token {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    transform: translate(-50%, -50%);
+  }
+
+  .token-circle {
+    width: clamp(26px, 4vw, 36px);
+    height: clamp(26px, 4vw, 36px);
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: clamp(0.58rem, 1.2vw, 0.68rem);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    border: 2px solid white;
+    line-height: 1;
+  }
+  .token-circle .sub-tag { font-size: 0.42rem; font-weight: 700; opacity: 0.95; margin-top: 1px; }
+
+  .token.myra-field .token-circle { background: #003366; color: #ffffff; }
+  .token.myra-gk .token-circle { background: #f59e0b; color: #000; }
+  .token.myra-sub-def .token-circle { background: #059669; color: #fff; border-color: #a7f3d0; }
+  .token.myra-sub-mid .token-circle { background: #4f46e5; color: #fff; border-color: #c7d2fe; }
+  .token.myra-sub-fwd .token-circle { background: #db2777; color: #fff; border-color: #fbcfe8; }
+  .token.opp .token-circle { background: var(--opp-red); color: white; border-color: #fee2e2; }
+
+  .player-select-pill {
+    margin-top: 2px;
+    background: rgba(10, 15, 25, 0.95);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 10px;
+    font-size: clamp(0.58rem, 1.1vw, 0.68rem);
+    font-weight: 700;
+    padding: 1px 3px;
+    outline: none;
+    cursor: pointer;
+    max-width: clamp(65px, 10vw, 95px);
+    text-align: center;
+  }
+
+  .player-select-pill:disabled, .sidebar-select:disabled {
+    opacity: 0.9;
+    background: rgba(15, 23, 42, 0.8);
+    color: #94a3b8;
+    cursor: default;
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  .token.ball .token-circle {
+    width: clamp(14px, 2.5vw, 20px);
+    height: clamp(14px, 2.5vw, 20px);
+    background: #ffffff;
+    border: 2px solid #1e293b;
+    border-radius: 50%;
+  }
+
+  .draggable-token { cursor: grab; }
+  .draggable-token:active { cursor: grabbing; z-index: 50; }
+
+  .dugout-bench {
+    background: var(--card-bg);
+    border: 2px dashed #334155;
+    border-radius: 8px;
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 36px;
+    flex-wrap: wrap;
+  }
+  .dugout-label { font-size: 0.7rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; }
+
+  .side-panel {
+    background: var(--card-bg);
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .panel-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #cbd5e1;
+    border-bottom: 1px solid #334155;
+    padding-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .roster-instruction {
+    font-size: 0.68rem;
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.1);
+    border: 1px dashed rgba(56, 189, 248, 0.4);
+    padding: 5px 7px;
+    border-radius: 5px;
+    line-height: 1.25;
+  }
+
+  .roster-cards { display: flex; flex-direction: column; gap: 4px; }
+  .position-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #0c1017;
+    padding: 3px 6px;
+    border-radius: 5px;
+    border: 1px solid #232c3d;
+  }
+
+  .pos-tag { font-weight: 800; font-size: 0.68rem; width: 68px; color: #38bdf8; }
+  .pos-tag.tag-sub-def { color: #34d399; }
+  .pos-tag.tag-sub-mid { color: #818cf8; }
+  .pos-tag.tag-sub-fwd { color: #f472b6; }
+
+  .sidebar-select {
+    background: #1c2433;
+    color: #e2e8f0;
+    border: 1px solid #3b475c;
+    padding: 3px 5px;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    flex: 1;
+    margin-left: 4px;
+  }
+
+  .coach-notes textarea {
+    width: 100%;
+    height: 70px;
+    background: #0c1017;
+    border: 1px solid #232c3d;
+    border-radius: 5px;
+    color: #fff;
+    padding: 6px;
+    font-size: 0.72rem;
+    resize: none;
+    line-height: 1.3;
+  }
+
+  .rules-panel {
+    background: var(--card-bg);
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .rules-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  @media (max-width: 900px) { .rules-grid { grid-template-columns: 1fr; } }
+
+  .rule-card {
+    background: #0c1017;
+    border: 1px solid #232c3d;
+    border-radius: 6px;
+    padding: 6px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .rule-card .rule-title { font-size: 0.72rem; font-weight: 700; color: #38bdf8; }
+  .rule-card p { font-size: 0.65rem; color: #cbd5e1; line-height: 1.25; }
+
+  .legend-bar {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    font-size: 0.68rem;
+    color: #94a3b8;
+    margin-top: 2px;
+    flex-wrap: wrap;
+  }
+  .legend-bar span { display: inline-flex; align-items: center; gap: 4px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  #toast {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #0f172a;
+    border: 1px solid #38bdf8;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 16px;
+    font-size: 0.78rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: 100;
+  }
+  #toast.show { opacity: 1; }
+
+  .nav-tabs { display: flex; gap: 4px; padding: 0 14px 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 12px; margin-top: 10px; }
+  .nav-tab { background: transparent; color: #94a3b8; border: none; font-size: 0.85rem; font-weight: 700; padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+  .nav-tab:hover { background: rgba(255,255,255,0.05); color: white; }
+  .nav-tab.active { background: #38bdf8; color: #0b0f19; }
+  .sub-matrix-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; color: white; background: #0c1017; border: 1px solid #232c3d; }
+  .sub-matrix-table th, .sub-matrix-table td { border: 1px solid #232c3d; padding: 4px; text-align: center; }
+  .sub-matrix-table th { background: #1e293b; color: #94a3b8; font-weight: 600; }
+  .sub-matrix-table td:first-child { text-align: left; font-weight: bold; color: #38bdf8; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sub-matrix-checkbox { cursor: pointer; width: 14px; height: 14px; }
+  .invalid-col { background: rgba(239, 68, 68, 0.2); }
+  .invalid-row { background: rgba(239, 68, 68, 0.2); }
+
+</style>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+
+<div id="loginOverlay" style="position: fixed; inset: 0; background: #0b0f19; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; gap: 20px; font-family: system-ui, -apple-system, sans-serif; color: #fff;">
+  <div style="background: rgba(30, 41, 59, 0.4); padding: 40px; border-radius: 16px; border: 1px solid #334155; max-width: 400px; width: 90%; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+    <div style="background: #002b49; color: #ffffff; border: 2px solid #ffffff; font-weight: 800; font-size: 1.2rem; padding: 6px 12px; border-radius: 8px; display: inline-block;">MYRA</div>
+    <div style="display: flex; flex-direction: column; gap: 6px;">
+      <h2 style="font-size: 1.4rem; font-weight: 800; margin: 0; color: #ffffff;">HV Myra O10 Matchday Board</h2>
+      <p style="font-size: 0.85rem; color: #94a3b8; margin: 0; line-height: 1.4;">Sign in with your Google Account to access the tactics board.</p>
+    </div>
+    
+    <!-- Sign-in Button -->
+    <div id="googleSignInButtonOverlay"></div>
+    
+    <!-- Local Dev Bypass Button -->
+    <button id="btnLocalBypass" onclick="bypassGoogleAuth()" style="background: #1e293b; border: 1px solid #334155; color: #38bdf8; padding: 8px 16px; border-radius: 20px; font-size: 0.72rem; font-weight: bold; cursor: pointer; display: none; align-items: center; justify-content: center; gap: 6px; width: 240px; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
+      🔓 Bypass Google (Local Test Coach)
+    </button>
+    
+    <!-- Setup Overlay (Visible only when Client ID is missing) -->
+    <div id="googleAuthSetupOverlay" style="display: none; flex-direction: column; gap: 8px; width: 100%; text-align: left; background: rgba(15, 23, 42, 0.6); padding: 12px; border-radius: 8px; border: 1px solid #334155;">
+      <label style="font-size: 0.65rem; color: #38bdf8; font-weight: bold;">⚙️ SETUP LOGIN (GOOGLE OAUTH CLIENT ID)</label>
+      <input type="text" id="googleClientIdInputOverlay" placeholder="Paste Google Client ID here" style="background: #090c12; border: 1px solid #334155; color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.72rem; width: 100%;">
+      <button onclick="saveGoogleConfigOverlay()" style="background: #059669; border: none; color: #fff; padding: 6px 12px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; cursor: pointer; text-align: center; width: 100%;">Save & Initialize</button>
+      <div style="font-size: 0.58rem; color: #94a3b8; line-height: 1.2; margin-top: 4px;">Once configured, parents and coaches can log in with Google.</div>
+    </div>
+
+    <div style="font-size: 0.72rem; color: #64748b;">
+      Coaches will have full editing rights.<br>Parents will have view-only privileges.
+    </div>
+  </div>
+</div>
+
+<div class="app-container">
+  
+  <header style="display: flex; flex-direction: column; gap: 12px; padding: 12px 14px;">
+    <!-- Top Row (Brand & Google Login/Auth) -->
+    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 10px;">
+      <div class="brand" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <div class="brand-left" style="display: flex; align-items: center; gap: 8px;">
+          <div class="badge">MYRA</div>
+          <select id="teamSelector" onchange="changeTeam(this.value)" style="background: #1e293b; color: white; border: 1px solid #334155; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; outline: none;">
+            <option value="MO10">HV Myra MO10</option>
+            <option value="Trimmers">HV Myra Trimmers</option>
+          </select>
+          <div id="roleBadge" style="background: #475569; color: white; font-weight: 800; font-size: 0.62rem; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; border: 1px solid #64748b; letter-spacing: 0.05em; display: inline-flex; align-items: center;">👪 Parent (Read-Only)</div>
+        </div>
+        <div class="title-group">
+          <h1 id="appTitle" style="margin: 0; font-size: 1.1rem;">HV Myra MO10 Matchday Board (8 vs 8)</h1>
+          <p id="appSubtitle" style="margin: 0;">Interactive Board & Read-Only Match Sheet Export</p>
+        </div>
+      </div>
+
+      <div id="googleAuthContainer" style="display: flex; align-items: center; gap: 8px; background: var(--card-bg); padding: 5px 8px; border-radius: 8px; border: 1px solid #334155; position: relative; margin-left: auto;">
+        <div id="googleUserProfile" style="display: none; align-items: center; gap: 6px;">
+          <img id="userAvatar" src="" style="width: 24px; height: 24px; border-radius: 50%; border: 1px solid #38bdf8;">
+          <span id="userName" style="font-size: 0.72rem; font-weight: 700; color: #fff; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+          <button onclick="logoutGoogle()" style="padding: 2px 6px; font-size: 0.65rem; background: #c1121f; border-color: #fee2e2; border-radius: 4px; color: white;">Logout</button>
+        </div>
+        <button id="btnConfigGoogle" onclick="toggleGoogleConfig()" style="padding: 4px 6px; font-size: 0.65rem; background: #273042; border-color: #3e4c66; border-radius: 4px; color: #e2e8f0;">⚙️ Setup Login</button>
+        
+        <div id="googleConfigPanel" style="display: none; background: var(--panel-bg); border: 1px solid #334155; padding: 10px; border-radius: 6px; position: absolute; right: 0px; top: 38px; z-index: 100; flex-direction: column; gap: 8px; width: 280px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); text-align: left;">
+          <label style="font-size: 0.65rem; color: #38bdf8; font-weight: bold;">GOOGLE OAUTH CLIENT ID</label>
+          <input type="text" id="googleClientIdInput" placeholder="Paste Client ID here" style="background: #090c12; border: 1px solid #334155; color: #fff; padding: 4px 6px; border-radius: 4px; font-size: 0.7rem; width: 100%;">
+          <div style="font-size: 0.58rem; color: #94a3b8; line-height: 1.2;">Create in GCP Console > APIs & Services > Credentials. Add your app's URL to JavaScript origins.</div>
+          
+          <div id="googleConfigEmailsGroup" style="display: none; flex-direction: column; gap: 4px;">
+            <label style="font-size: 0.65rem; color: #38bdf8; font-weight: bold; margin-top: 4px;">COACH EMAILS (Comma-separated)</label>
+            <textarea id="coachEmailsInput" placeholder="e.g. coach1@gmail.com, coach2@gmail.com" style="background: #090c12; border: 1px solid #334155; color: #fff; padding: 4px 6px; border-radius: 4px; font-size: 0.7rem; width: 100%; height: 50px; resize: none; font-family: sans-serif;"></textarea>
+          </div>
+          
+          <button onclick="saveGoogleConfig()" style="background: #059669; border-color: #10b981; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; width: 100%;">Save & Initialize</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Row (Match Info & Lang switch) -->
+    <div class="header-controls" style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 10px; margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
+      <div class="match-card" style="margin-right: auto;">
+        <div class="match-input-group">
+          <label id="lblMatchDate">📅 Match Date (Calendar)</label>
+          <input type="date" id="matchDatePicker" value="2026-08-29" onchange="onDateSelected(this.value)">
+        </div>
+        <div class="match-input-group">
+          <label id="lblMatchOpponent">⚔️ Match / Opponent</label>
+          <input type="text" id="matchOpponent" value="HV Myra O10 vs Pinoké O10" oninput="syncBanner()">
+        </div>
+        <div class="match-input-group">
+          <label id="lblMatchQuarter">⏱️ Period / Quarter</label>
+          <input type="text" id="matchQuarter" value="H1 lineup" oninput="syncBanner()">
+        </div>
+      </div>
+    </div>
+  </header>
+
+  
+  <!-- TAB NAVIGATION -->
+  <div class="nav-tabs">
+    <button id="tab-tactics" onclick="switchTab('tactics')" class="nav-tab active">🛡️ Tactics Board</button>
+    <button id="tab-situations" onclick="switchTab('situations')" class="nav-tab">🎯 Match Situations</button>
+    <button id="tab-subs" onclick="switchTab('subs')" class="nav-tab">⏱️ Substitution Planner</button>
+    <button id="tab-rules" onclick="switchTab('rules')" class="nav-tab">📖 Match Rules</button>
+  </div>
+
+  <div id="view-tactics" style="display: block;">
+  <div class="toolbar">
+    <div class="tool-group">
+      <span class="tool-label" id="lblMode">Mode:</span>
+      <button id="modeSelect" class="active" onclick="setMode('select')">Select & Move</button>
+      <button id="modeDraw" onclick="setMode('draw')">✏️ Draw Line</button>
+      <button id="modeArrow" onclick="setMode('arrow')">↗️ Draw Arrow</button>
+      <button id="modeEraser" onclick="setMode('eraser')">🧹 Eraser</button>
+      <button onclick="clearDrawings()" id="btnResetLines">Clear All Lines</button>
+    </div>
+
+    <div class="tool-group" id="toolGroupFormations">
+      <span class="tool-label" id="lblFormations">Formations:</span>
+      <!-- MO10 Formations (8v8) -->
+      <span id="formationsMO10" style="display: flex; gap: 4px;">
+        <button onclick="applyFormation('1-2-3-2')" id="btnForm1" class="active">1-2-3-2 (Standard)</button>
+        <button onclick="applyFormation('1-3-3-1')" id="btnForm2">1-3-3-1 (Defensive)</button>
+      </span>
+      <!-- Trimmers Formations (11v11) -->
+      <span id="formationsTrimmers" style="display: none; gap: 4px;">
+        <button onclick="applyFormation('4-3-3')" id="btnFormTrimmers433" class="active">4-3-3 (Standard)</button>
+        <button onclick="applyFormation('4-4-2')" id="btnFormTrimmers442">4-4-2 (Midfield Control)</button>
+        <button onclick="applyFormation('3-1-3-3')" id="btnFormTrimmers3133">3-1-3-3 (CDM / Diamond)</button>
+      </span>
+    </div>
+
+    <div class="tool-group">
+      <span class="tool-label">Opponents:</span>
+      <button id="btnToggleOpponents" onclick="toggleOpponentsVisibility()" class="active">👁️ Opponents: On</button>
+    </div>
+
+    <div class="tool-group">
+      <span class="tool-label" id="lblActions">Share & Save:</span>
+      <button class="purple" onclick="downloadReadOnlyHTML()">📤 Download Read-Only HTML (For Team)</button>
+      <button class="primary" onclick="window.print()">🖨️ Print / Save PDF</button>
+      <button onclick="saveTacticsLocal()" id="btnSave">Save (Coach)</button>
+      <button onclick="loadTacticsFromServer()" id="btnLoad">Load</button>
+    </div>
+  </div>
+
+  <div class="export-match-banner">
+    <div class="banner-title" id="bannerMatchTitle">HV Myra O10 vs Pinoké O10</div>
+    <div class="banner-meta">
+      <span id="bannerDate">📅 Saturday, 29 Aug 2026</span>
+      <span id="bannerQuarter">⏱️ Q1 Lineup</span>
+    </div>
+  </div>
+
+  <div id="womenQuotaBanner" style="display: none; background: var(--card-bg); padding: 8px 12px; border-radius: 6px; border-left: 4px solid #ec4899; margin-top: 4px; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; border: 1px solid rgba(255,255,255,0.08);">
+    <div class="banner-title" style="font-size: 0.85rem; display: flex; align-items: center; gap: 6px;" id="womenQuotaStatus">
+      👩 Women on Pitch: 0 / 4
+    </div>
+    <div style="font-size: 0.7rem; color: #94a3b8; font-weight: 600;">
+      Rec Hockey rule: exactly/at least 4 women must be active on field.
+    </div>
+  </div>
+
+  <div class="tactics-wrapper" style="margin-top: 10px;">
+    
+    <div class="board-section">
+      <div class="board-container" id="board">
+        <svg class="pitch-svg" viewBox="0 0 1100 700" preserveAspectRatio="none" id="pitchSvg">
+        </svg>
+
+        <canvas id="drawCanvas"></canvas>
+
+        <div class="token ball draggable-token" id="ball" style="top: 50%; left: 50%;">
+          <div class="token-circle"></div>
+        </div>
+
+        <!-- Dynamic Tokens Rendered via JS -->
+      </div>
+
+      <div class="dugout-bench">
+        <span class="dugout-label" id="lblBenchInfo">Pitch Setup:</span>
+        <span style="font-size:0.7rem; color:#94a3b8;" id="txtBenchDetails">🥅 Left: Myra Goal • 🥅 Right: Opponent Goal • 🎯 <strong>15m Line:</strong> Flat scoring line (shots inside 15m count as goals).</span>
+      </div>
+
+      <div class="legend-bar">
+        <span><span class="dot" style="background:#003366;"></span> <span id="legField">Myra Field</span></span>
+        <span><span class="dot" style="background:#f59e0b;"></span> <span id="legKeeper">Keeper</span></span>
+        <span><span class="dot" style="background:#d97706;"></span> <span id="legSubDef">Sub-Def</span></span>
+        <span><span class="dot" style="background:#ea580c;"></span> <span id="legSubMid">Sub-Mid</span></span>
+        <span><span class="dot" style="background:var(--opp-red);"></span> <span id="legOpp">Opponent</span></span>
+      </div>
+    </div>
+
+    <div class="side-panel">
+      <!-- 1. Primary Card: Gameweek Attendance & Available Squad -->
+      <div class="panel-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px;">
+        <span id="txtManageSquadTitleTactics">👥 Available Players Today</span>
+        <span id="attendanceSummaryBadgeTactics" style="font-size: 0.68rem; font-weight: 700; color: #38bdf8; background: #0c1017; border: 1px solid #232c3d; padding: 2px 6px; border-radius: 4px;">Loading...</span>
+      </div>
+
+      <!-- Quick actions -->
+      <div style="display: flex; gap: 4px; margin-bottom: 6px; font-size: 0.7rem;">
+        <button onclick="setAllAttendance(true)" style="flex: 1; padding: 3px 6px; background: #1e293b; border: 1px solid #334155; color: #94a3b8; border-radius: 4px; cursor: pointer; font-size: 0.68rem;">✓ Select All</button>
+        <button onclick="setAllAttendance(false)" style="flex: 1; padding: 3px 6px; background: #1e293b; border: 1px solid #334155; color: #94a3b8; border-radius: 4px; cursor: pointer; font-size: 0.68rem;">✗ Clear</button>
+        <button onclick="resetDefaultAttendance()" style="flex: 1; padding: 3px 6px; background: #1e293b; border: 1px solid #334155; color: #38bdf8; border-radius: 4px; cursor: pointer; font-size: 0.68rem;">🔄 Reset Matchday</button>
+      </div>
+
+      <!-- Add Player / Borrowed Guest Form -->
+      <div class="add-player" style="display: flex; gap: 4px; margin-bottom: 6px; background: #0c1017; padding: 6px; border: 1px solid #232c3d; border-radius: 5px; flex-wrap: wrap;">
+        <input type="text" id="newPlayerInput" placeholder="Player or Guest Name" style="flex: 1; min-width: 100px; background: #161b26; border: 1px solid #334155; color: #fff; padding: 4px 6px; border-radius: 4px; font-size: 0.72rem;">
+        <select id="newPlayerGenderTactics" style="background: #161b26; border: 1px solid #334155; color: #fff; padding: 4px 4px; border-radius: 4px; font-size: 0.72rem;">
+          <option value="auto">Auto ⚧</option>
+          <option value="F">👩 F</option>
+          <option value="M">👨 M</option>
+        </select>
+        <label style="display: flex; align-items: center; gap: 3px; font-size: 0.65rem; color: #fbbf24; cursor: pointer; user-select: none;" title="Check if this is a borrowed / guest player for this matchday">
+          <input type="checkbox" id="newPlayerIsGuestTactics" checked style="cursor: pointer;"> Guest
+        </label>
+        <button onclick="addSquadPlayer(false)" style="padding: 4px 8px; background: #059669; border-color: #10b981; color: white; border-radius: 4px; font-weight: 700; font-size: 0.72rem; cursor: pointer;">+ Add</button>
+      </div>
+
+      <div class="roster-instruction" style="font-size: 0.65rem; margin-bottom: 4px; color: #94a3b8;">
+        💡 Check players who are <strong>attending today</strong>. Only checked players are available on the pitch & rotation planner.
+      </div>
+
+      <div id="squadListContainer" style="display: flex; flex-direction: column; gap: 4px; max-height: 320px; overflow-y: auto; background: #0c1017; padding: 6px; border: 1px solid #232c3d; border-radius: 5px; margin-bottom: 8px;"></div>
+
+      <!-- Coach Notes -->
+      <div style="background: #0c1017; border: 1px solid #232c3d; border-radius: 6px; padding: 8px 10px;">
+        <div style="font-size: 0.75rem; font-weight: 700; color: #f59e0b; margin-bottom: 6px;" id="txtNotesTitle">✏️ Coach Notes</div>
+        <textarea id="coachNotes" style="min-height: 110px; width: 100%; font-size: 0.72rem;">Match Strategy:
+- 15m Scoring Line: Goals only count when shot or touched inside the 15m line!
+- Build-up: Push wide via LB and RB
+- Sub Rotation: Rotate defenders with Defense; rotate midfield with Attack.</textarea>
+      </div>
+    </div>
+
+  </div>
+
+  </div> <!-- end view-tactics -->
+
+  <div id="view-subs" style="display: none; max-width: 1200px; margin: 0 auto; padding: 10px;">
+    <div style="display: grid; grid-template-columns: 1fr 340px; gap: 15px; align-items: start;">
+      
+      <!-- Left Column: Substitution Matrix -->
+      <div class="side-panel" style="width: 100%;">
+        <div class="panel-title" style="display: flex; justify-content: space-between; align-items: center;">
+          <span id="txtSubPlannerTitle">⏱️ Substitution Planner</span>
+          <button onclick="autoFillRotation()" style="padding: 4px 10px; background: #3b82f6; border-color: #2563eb; color: white; border-radius: 4px; font-size: 0.75rem; cursor: pointer;">⚡ Auto-Fill Rotation</button>
+        </div>
+
+        <div class="roster-instruction" id="txtSubInstruction">
+          ✅ Check the box when a player is PLAYING on the pitch. Each block must have the required on-field players.
+        </div>
+
+        <div class="substitution-matrix" id="substitutionMatrixContainer">
+          <table class="sub-matrix-table" id="subMatrixTable">
+            <thead id="subMatrixHead"></thead>
+            <tbody id="subMatrixBody"></tbody>
+          </table>
+          <div id="subMatrixValidation" style="color: #ef4444; font-size: 0.75rem; margin-top: 5px; min-height: 14px;"></div>
+        </div>
+
+        <div class="coach-notes" style="margin-top: 20px;">
+          <div class="panel-title" id="txtNotesTitleSubs">Coach Match & Rotation Notes</div>
+          <textarea id="coachNotesSubs">Horizontal Pitch Strategy:
+- 15m Scoring Line: Goals only count when shot or touched inside the 15m line!
+- Build-up: Push wide via LB (Liv) and RB (Sai Jiya)
+- Sub Rotation: Sub-DEF (Hannah) rotates with Defense; Sub-MID (Shanaya) rotates with Midfield/Attack.</textarea>
+        </div>
+      </div>
+
+      <!-- Right Column: Lineup Dropdowns & Squad Management -->
+      <div class="side-panel" style="width: 100%;">
+        <div class="panel-title">
+          <span id="txtSideTitle">🏃 Starting Lineup</span>
+        </div>
+
+        <div class="roster-instruction" id="txtSideInstruction">
+          🔄 <strong>Easy Lineup Selection:</strong> Assign available players to each starting position.
+        </div>
+
+        <div class="roster-cards" id="sidebarPositionsList"></div>
+
+        <div class="panel-title" style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px;">
+          <span id="txtManageSquadTitleSubs">👥 Gameweek Attendance & Availability</span>
+          <span id="attendanceSummaryBadge" style="font-size: 0.68rem; font-weight: 700; color: #38bdf8; background: #0c1017; border: 1px solid #232c3d; padding: 2px 6px; border-radius: 4px;">Loading...</span>
+        </div>
+
+        <!-- Quick actions -->
+        <div style="display: flex; gap: 4px; margin-bottom: 6px; font-size: 0.7rem;">
+          <button onclick="setAllAttendance(true)" style="flex: 1; padding: 3px 6px; background: #1e293b; border: 1px solid #334155; color: #94a3b8; border-radius: 4px; cursor: pointer; font-size: 0.68rem;">✓ Select All</button>
+          <button onclick="setAllAttendance(false)" style="flex: 1; padding: 3px 6px; background: #1e293b; border: 1px solid #334155; color: #94a3b8; border-radius: 4px; cursor: pointer; font-size: 0.68rem;">✗ Clear</button>
+          <button onclick="resetDefaultAttendance()" style="flex: 1; padding: 3px 6px; background: #1e293b; border: 1px solid #334155; color: #38bdf8; border-radius: 4px; cursor: pointer; font-size: 0.68rem;">🔄 Reset Matchday</button>
+        </div>
+
+        <!-- Add Player / Borrowed Guest Form -->
+        <div class="add-player" style="display: flex; gap: 4px; margin-bottom: 6px; background: #0c1017; padding: 6px; border: 1px solid #232c3d; border-radius: 5px; flex-wrap: wrap;">
+          <input type="text" id="newPlayerInputSubs" placeholder="Player or Guest Name" style="flex: 1; min-width: 100px; background: #161b26; border: 1px solid #334155; color: #fff; padding: 4px 6px; border-radius: 4px; font-size: 0.72rem;">
+          <select id="newPlayerGenderSubs" style="background: #161b26; border: 1px solid #334155; color: #fff; padding: 4px 4px; border-radius: 4px; font-size: 0.72rem;">
+            <option value="auto">Auto ⚧</option>
+            <option value="F">👩 F</option>
+            <option value="M">👨 M</option>
+          </select>
+          <label style="display: flex; align-items: center; gap: 3px; font-size: 0.65rem; color: #fbbf24; cursor: pointer; user-select: none;" title="Check if this is a borrowed / guest player for this matchday">
+            <input type="checkbox" id="newPlayerIsGuestSubs" checked style="cursor: pointer;"> Guest
+          </label>
+          <button onclick="addSquadPlayer(true)" style="padding: 4px 8px; background: #059669; border-color: #10b981; color: white; border-radius: 4px; font-weight: 700; font-size: 0.72rem; cursor: pointer;">+ Add</button>
+        </div>
+
+        <div class="roster-instruction" style="font-size: 0.65rem; margin-bottom: 4px; color: #94a3b8;">
+          💡 Check players who are <strong>attending this matchday</strong>. Only checked players appear on the pitch and in substitution matrices.
+        </div>
+
+        <div id="squadListContainerSubs" style="display: flex; flex-direction: column; gap: 4px; max-height: 220px; overflow-y: auto; background: #0c1017; padding: 6px; border: 1px solid #232c3d; border-radius: 5px; margin-bottom: 10px;"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MATCH SITUATIONS TAB -->
+  <div id="view-situations" style="display: none; max-width: 1240px; margin: 0 auto;">
+    <div class="toolbar" style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+      <div class="tool-group" id="sitButtonsGroup" style="display: flex; gap: 4px; flex-wrap: wrap; align-items: center;">
+        <span class="tool-label">Match Phase / Situation:</span>
+        <button onclick="applySituation('standard')" id="btnSitStandard" class="active">📍 Standard Base</button>
+        <button onclick="applySituation('attack_left')" id="btnSitAttLeft">⚡ Attack Left</button>
+        <button onclick="applySituation('attack_right')" id="btnSitAttRight">⚡ Attack Right</button>
+        <button onclick="applySituation('defend_left')" id="btnSitDefLeft">🛡️ Defend Left</button>
+        <button onclick="applySituation('defend_right')" id="btnSitDefRight">🛡️ Defend Right</button>
+        <button onclick="applySituation('high_press')" id="btnSitHighPress">🔥 High Press</button>
+      </div>
+
+      <div class="tool-group" style="display: flex; gap: 4px; align-items: center;">
+        <button id="btnToggleSitOpponents" onclick="toggleOpponentsVisibility()" class="active">👁️ Opponents: On</button>
+        <button onclick="saveCurrentSituation()" class="primary">💾 Save Situation</button>
+        <button onclick="addNewCustomSituation()" class="purple">➕ Add Custom Play</button>
+        <button onclick="resetCurrentSituation()" style="background: #1e293b; color: #94a3b8; border: 1px solid #334155;">🔄 Reset Setup</button>
+      </div>
+    </div>
+
+    <div class="main-layout">
+      <!-- Pitch Area for Situations -->
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
+        <div class="board-container" id="sitBoardContainer" style="position: relative; width: 100%; aspect-ratio: 1.55 / 1; background: #1f8a4c; border: 3px solid #ffffff; border-radius: 8px; overflow: hidden;">
+          <svg id="sitPitchSvg" viewBox="0 0 1100 700" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></svg>
+          <canvas id="sitCanvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></canvas>
+          <div id="sitBoardTokens" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></div>
+        </div>
+        <div style="display: flex; gap: 14px; font-size: 0.75rem; color: #94a3b8; justify-content: center; background: #0c1017; padding: 6px; border-radius: 5px; border: 1px solid #232c3d;">
+          <span>🏃 <strong>Field Players:</strong> Situation positions</span>
+          <span>⚽ <strong>White Ball:</strong> Active ball position</span>
+          <span>🛋️ <strong>Substitutes:</strong> Kept in dugout area</span>
+        </div>
+      </div>
+
+      <!-- Situation Details & Notes Sidebar -->
+      <div class="side-panel" style="width: 320px;">
+        <div class="panel-title">
+          <span>📋 Tactical Situation Breakdown</span>
+        </div>
+
+        <div id="situationTipText" style="background: #0c1017; padding: 10px; border-radius: 6px; border-left: 4px solid #38bdf8; border: 1px solid #232c3d; font-size: 0.78rem; line-height: 1.4; color: #e2e8f0; margin-bottom: 12px;">
+          💡 <strong>Base Formation:</strong> Neutral balanced positioning for build-up and kickoff.
+        </div>
+
+        <div class="panel-title" style="margin-top: 10px;">
+          <span>✏️ Coach Notes for this Situation</span>
+        </div>
+        <textarea id="situationCoachNotes" oninput="saveSituationNotes()" placeholder="Enter custom coaching notes or tactical cues for this match situation..." style="width: 100%; height: 160px; background: #0c1017; color: #fff; border: 1px solid #232c3d; border-radius: 6px; padding: 8px; font-size: 0.76rem; resize: vertical; outline: none; line-height: 1.35;"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div id="view-rules" style="display: none; max-width: 1200px; margin: 0 auto; padding: 10px;">
+    <div class="rules-panel">
+      <div class="panel-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+        <div>
+          <span id="txtRulesHeader">📖 KNHB Match Rules & Guidelines</span>
+          <span style="font-size:0.68rem; color:#38bdf8;">Netherlands Youth & Adult Hockey Reference</span>
+        </div>
+        <a href="https://www.knhb.nl/kenniscentrum/competities/competitie-aanbod-veldhockey-jongste-jeugd" target="_blank" style="font-size:0.7rem; color:#38bdf8; text-decoration:none; display:inline-flex; align-items:center; gap:4px; font-weight:700; border: 1px solid #334155; padding: 4px 8px; border-radius: 4px; background: #1c2230;">
+          🇳🇱 KNHB Official Rules & Downloads ➔
+        </a>
+      </div>
+      
+      <div class="rules-grid" id="rulesGrid"></div>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast">Ready</div>
+
+<script>
+  let currentLang = 'en';
+
+  
+
+  let squadLocal = null;
+  try {
+    const raw = localStorage.getItem('hv_myra_squad');
+    if (raw) squadLocal = JSON.parse(raw);
+  } catch (e) {
+    console.error("Error parsing squad", e);
+  }
+  let squadPlayers = (squadLocal && Array.isArray(squadLocal) && squadLocal.length > 0) ? squadLocal : [
+    "Sai Jiya", "Defne", "Shanaya", "Alina", "Liv", "Mira", "Hannah", "Kyra", "Kate", "Liz"
+  ];
+
+
+  function getDisplayName(fullName) {
+    if (!fullName) return '';
+    if (typeof fullName === 'object' && fullName.name) fullName = fullName.name;
+    const parts = fullName.trim().split(' ');
+    return parts[0];
+  }
+
+  function getPlayerLine(playerName) {
+    if (!playerName) return 'MID';
+    const nameStr = typeof playerName === 'string' ? playerName : playerName.name || '';
+    const pObj = squadPlayers.find(sp => (typeof sp === 'string' ? sp : sp.name) === nameStr);
+    if (pObj && typeof pObj === 'object' && pObj.role) {
+      let r = pObj.role.toUpperCase();
+      if (r === 'ATT') r = 'FWD';
+      return r;
+    }
+    const nameLower = nameStr.toLowerCase().trim();
+
+    // 1. Check current tactical assignment on pitch / dugout
+    for (const [posId, assignedName] of Object.entries(currentAssignments)) {
+      if (assignedName && assignedName.toLowerCase() === nameLower) {
+        if (posId === 'gk') return 'GK';
+        if (['lb', 'lcb', 'cb', 'rcb', 'rb', 'sub_def', 'sub_def_att', 'sub_field_3'].includes(posId)) return 'DEF';
+        if (['cdm', 'lm', 'cm', 'lcm', 'rcm', 'rm', 'sub_mid', 'sub_field_2'].includes(posId)) return 'MID';
+        if (['lf', 'cf', 'st', 'rf', 'sub_fwd', 'sub_att', 'sub_field_1'].includes(posId)) return 'FWD';
+      }
+    }
+
+    // 2. Primary line for known Trimmers squad members
+    const trimmersGK = ['sander', 'robert'];
+    const trimmersDEF = ['norbert', 'boris', 'marije', 'noortje', 'gregor', 'eelco', 'marnix'];
+    const trimmersMID = ['rajeev', 'hester', 'tom', 'elise', 'glenn', 'jeff'];
+    const trimmersFWD = ['saskia', 'arold', 'anna', 'frances', 'andré', 'andre', 'willem'];
+
+    if (trimmersGK.some(n => nameLower.includes(n))) return 'GK';
+    if (trimmersDEF.some(n => nameLower.includes(n))) return 'DEF';
+    if (trimmersMID.some(n => nameLower.includes(n))) return 'MID';
+    if (trimmersFWD.some(n => nameLower.includes(n))) return 'FWD';
+
+    // 3. Primary line for known MO10 squad members
+    const mo10GK = ['liz'];
+    const mo10DEF = ['liv', 'defne', 'hannah'];
+    const mo10MID = ['kyra', 'mira', 'alina', 'shanaya'];
+    const mo10FWD = ['kate', 'sai'];
+
+    if (mo10GK.some(n => nameLower.includes(n))) return 'GK';
+    if (mo10DEF.some(n => nameLower.includes(n))) return 'DEF';
+    if (mo10MID.some(n => nameLower.includes(n))) return 'MID';
+    if (mo10FWD.some(n => nameLower.includes(n))) return 'FWD';
+
+    return 'FWD';
+  }
+
+  function sortPlayersByRoleAndName(playerList) {
+    const roleWeight = { 'GK': 1, 'DEF': 2, 'MID': 3, 'ATT': 4, 'FWD': 4 };
+    return [...playerList].sort((a, b) => {
+      const nameA = typeof a === 'string' ? a : a.name;
+      const nameB = typeof b === 'string' ? b : b.name;
+      const roleA = getPlayerLine(nameA);
+      const roleB = getPlayerLine(nameB);
+      const wA = roleWeight[roleA] || 5;
+      const wB = roleWeight[roleB] || 5;
+      if (wA !== wB) return wA - wB;
+      return nameA.localeCompare(nameB, undefined, { sensitivity: 'base' });
+    });
+  }
+
+  function getAvailablePlayers() {
+    const avail = squadPlayers.filter(p => {
+      if (typeof p === 'string') return true;
+      return p.isAvailable !== false;
+    });
+    return sortPlayersByRoleAndName(avail);
+  }
+
+  function getSubIntervals() {
+    if (currentTeam === 'Trimmers') {
+      return [
+        { label: 'Q1.1', time: '0-8.5m' },
+        { label: 'Q1.2', time: '8.5-17.5m' },
+        { label: 'Q2.1', time: '17.5-26m' },
+        { label: 'Q2.2', time: '26-35m' },
+        { label: 'Q3.1', time: '35-43.5m' },
+        { label: 'Q3.2', time: '43.5-52.5m' },
+        { label: 'Q4.1', time: '52.5-61m' },
+        { label: 'Q4.2', time: '61-70m' }
+      ];
+    } else {
+      return [
+        { label: '0-6m', time: '0-6m' },
+        { label: '6-12m', time: '6-12m' },
+        { label: '12-18m', time: '12-18m' },
+        { label: '18-24m', time: '18-24m' },
+        { label: '24-30m', time: '24-30m' }
+      ];
+    }
+  }
+
+  function renderSubstitutionMatrix() {
+    const thead = document.getElementById('subMatrixHead');
+    const tbody = document.getElementById('subMatrixBody');
+    if (!tbody) return;
+    
+    const intervals = getSubIntervals();
+    const numIntervals = intervals.length;
+
+    if (thead) {
+      thead.innerHTML = `
+        <tr>
+          <th style="min-width: 130px; text-align: left; padding-left: 10px;">Player</th>
+          ${intervals.map(it => `<th style="padding: 4px 2px;"><div style="font-size:0.75rem; font-weight:bold;">${it.label}</div><div style="font-size:0.58rem; opacity:0.75; font-weight:normal;">${it.time}</div></th>`).join('')}
+        </tr>
+      `;
+    }
+
+    tbody.innerHTML = '';
+    
+    const available = getAvailablePlayers();
+    available.forEach((p, index) => {
+      if (typeof p === 'string') {
+        p = { name: p, gender: getInitialGender(p), isAvailable: true };
+      }
+      const name = p.name;
+      if (!subMatrixState[name] || subMatrixState[name].length !== numIntervals) {
+        let defaultPlay = new Array(numIntervals).fill(true);
+        subMatrixState[name] = defaultPlay;
+      }
+    });
+
+    Object.keys(subMatrixState).forEach(name => {
+      const exists = available.some(p => (typeof p === 'string' ? p : p.name) === name);
+      if (!exists) delete subMatrixState[name];
+      else if (subMatrixState[name].length !== numIntervals) {
+        subMatrixState[name] = new Array(numIntervals).fill(true);
+      }
+    });
+
+    const names = available.map(p => typeof p === 'string' ? p : p.name);
+
+    // Group players into 4 distinct positional lines: GK, DEF, MID, FWD
+    const gkGroup = [];
+    const defGroup = [];
+    const midGroup = [];
+    const fwdGroup = [];
+
+    names.forEach(playerName => {
+      const line = getPlayerLine(playerName);
+      if (line === 'GK') gkGroup.push({ player: playerName, label: 'GK' });
+      else if (line === 'DEF') defGroup.push({ player: playerName, label: 'DEF' });
+      else if (line === 'MID') midGroup.push({ player: playerName, label: 'MID' });
+      else fwdGroup.push({ player: playerName, label: 'FWD' });
+    });
+
+    const groupedPlayers = [...gkGroup, ...defGroup, ...midGroup, ...fwdGroup];
+
+    groupedPlayers.forEach(item => {
+      const player = item.player;
+      if (subMatrixState[player]) {
+        const tr = document.createElement('tr');
+        
+        if (item.label === 'GK') tr.style.backgroundColor = '#1e3a8a';
+        else if (item.label === 'DEF') tr.style.backgroundColor = '#064e3b';
+        else if (item.label === 'MID') tr.style.backgroundColor = '#3730a3';
+        else if (item.label === 'FWD') tr.style.backgroundColor = '#831843';
+        else tr.style.backgroundColor = '#3f3f46';
+        
+        const pObj = squadPlayers.find(sp => (typeof sp === 'string' ? sp : sp.name) === player);
+        const isGuest = pObj && typeof pObj === 'object' && pObj.isGuest;
+        const guestBadge = isGuest ? `<span style="background: #b45309; color: #fef3c7; border-radius: 3px; padding: 1px 3px; font-size: 0.52rem; font-weight: 700; margin-left: 2px;">GUEST</span>` : '';
+
+        const lineBadgeColors = {
+          'GK': 'background: #3b82f6; color: #fff;',
+          'DEF': 'background: #10b981; color: #fff;',
+          'MID': 'background: #6366f1; color: #fff;',
+          'FWD': 'background: #ec4899; color: #fff;'
+        };
+        const badgeStyle = lineBadgeColors[item.label] || 'background: #64748b; color: #fff;';
+        const lineBadge = `<span style="${badgeStyle} border-radius: 4px; padding: 1px 5px; font-size: 0.58rem; font-weight: 800; margin-left: 4px;">${item.label}</span>`;
+
+        const tdName = document.createElement('td');
+        const displayName = getDisplayName(player);
+        tdName.innerHTML = `<strong>${displayName}</strong> ${lineBadge} ${guestBadge}`;
+        tdName.title = player;
+        tdName.style.textAlign = 'left';
+        tdName.style.paddingLeft = '10px';
+        tr.appendChild(tdName);
+
+        for (let i = 0; i < numIntervals; i++) {
+          const td = document.createElement('td');
+          const cb = document.createElement('input');
+          cb.type = 'checkbox';
+          cb.className = 'sub-matrix-checkbox';
+          cb.checked = subMatrixState[player][i];
+          if (i === 0) cb.disabled = true; // Managed by tactics
+          cb.onchange = (e) => {
+            subMatrixState[player][i] = e.target.checked;
+            validateSubstitutionMatrix();
+          };
+          td.appendChild(cb);
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      }
+    });
+    
+    validateSubstitutionMatrix();
+  }
+
+  function validateSubstitutionMatrix() {
+    const tbody = document.getElementById('subMatrixBody');
+    const valMsg = document.getElementById('subMatrixValidation');
+    if (!tbody) return;
+
+    const intervals = getSubIntervals();
+    const numIntervals = intervals.length;
+    const rows = tbody.querySelectorAll('tr');
+    let isValid = true;
+    let errors = [];
+
+    const expectedColCount = currentTeam === 'MO10' ? 8 : 11;
+
+    const colCounts = new Array(numIntervals).fill(0);
+    const colWomenCounts = new Array(numIntervals).fill(0);
+    
+    squadPlayers.forEach(p => {
+      const name = typeof p === 'string' ? p : p.name;
+      const gender = typeof p === 'string' ? getInitialGender(p) : (p.gender || 'M');
+      const checks = subMatrixState[name];
+      if (checks && Array.isArray(checks)) {
+        checks.forEach((c, i) => {
+          if (i < numIntervals && c) {
+            colCounts[i]++;
+            if (gender === 'F') colWomenCounts[i]++;
+          }
+        });
+      }
+    });
+
+    const table = document.getElementById('subMatrixTable');
+    for (let i = 0; i < numIntervals; i++) {
+      const isCountValid = colCounts[i] === expectedColCount;
+      const isWomenValid = currentTeam !== 'Trimmers' || colWomenCounts[i] >= 4;
+      const isColValid = isCountValid && isWomenValid;
+
+      table.querySelectorAll(`tr td:nth-child(${i+2}), th:nth-child(${i+2})`).forEach(cell => {
+        if (!isColValid) cell.classList.add('invalid-col');
+        else cell.classList.remove('invalid-col');
+      });
+
+      if (!isCountValid) {
+        isValid = false;
+        errors.push(`Block ${i+1} (${intervals[i].label}): needs ${expectedColCount} players (has ${colCounts[i]}).`);
+      }
+      if (!isWomenValid) {
+        isValid = false;
+        errors.push(`Block ${i+1} (${intervals[i].label}): needs ≥4 women (has ${colWomenCounts[i]}).`);
+      }
+    }
+
+    rows.forEach(tr => {
+      const playerText = tr.querySelector('td').innerText;
+      const name = playerText.split('(')[0].trim();
+      const count = subMatrixState[name] ? subMatrixState[name].filter(Boolean).length : 0;
+      if (count === 0) {
+        tr.classList.add('invalid-row');
+        isValid = false;
+        errors.push(`Player ${name} has 0 playing blocks.`);
+      } else {
+        tr.classList.remove('invalid-row');
+      }
+    });
+
+    if (valMsg) {
+      if (isValid) {
+        valMsg.style.color = '#10b981';
+        valMsg.innerHTML = currentTeam === 'Trimmers' 
+          ? `✅ <strong>Valid Rotation:</strong> Exactly 11 players (≥4 women) active in all 8 blocks!`
+          : `✅ <strong>Valid Rotation:</strong> Exactly 8 players active in all blocks!`;
+      } else {
+        valMsg.style.color = '#ef4444';
+        valMsg.innerHTML = `⚠️ <strong>Rotation Alerts:</strong> ` + errors.slice(0, 3).join(' • ');
+      }
+    }
+  }
+
+  function switchTab(tab) {
+    document.getElementById('view-tactics').style.display = tab === 'tactics' ? 'block' : 'none';
+    document.getElementById('view-situations').style.display = tab === 'situations' ? 'block' : 'none';
+    document.getElementById('view-subs').style.display = tab === 'subs' ? 'block' : 'none';
+    document.getElementById('view-rules').style.display = tab === 'rules' ? 'block' : 'none';
+    
+    document.getElementById('tab-tactics').className = tab === 'tactics' ? 'nav-tab active' : 'nav-tab';
+    document.getElementById('tab-situations').className = tab === 'situations' ? 'nav-tab active' : 'nav-tab';
+    document.getElementById('tab-subs').className = tab === 'subs' ? 'nav-tab active' : 'nav-tab';
+    document.getElementById('tab-rules').className = tab === 'rules' ? 'nav-tab active' : 'nav-tab';
+
+    if (tab === 'situations') {
+      renderPitchSvg();
+      renderSituationsBoard();
+    }
+  }
+  let googleClientId = '1083993716124-rle31j9i93h345fg33o536o5ur6vmp6s.apps.googleusercontent.com';
+  let coachEmails = JSON.parse(localStorage.getItem('hv_myra_coaches')) || ["singhalrajeev89@gmail.com"];
+  let currentUserRole = 'parent';
+  let currentTeam = localStorage.getItem('hv_myra_active_team') || 'Trimmers';
+  let activeFormation = '1-2-3-2';
+
+  function changeTeam(teamId) {
+    currentTeam = teamId;
+    localStorage.setItem('hv_myra_active_team', teamId);
+    
+    const selector = document.getElementById('teamSelector');
+    if (selector) selector.value = teamId;
+    
+    const appTitle = document.getElementById('appTitle');
+    if (appTitle) appTitle.innerText = `HV Myra ${teamId} Matchday Board (${teamId === 'MO10' ? '8 vs 8' : '11 vs 11'})`;
+
+    const formMO10 = document.getElementById('formationsMO10');
+    const formTrimmers = document.getElementById('formationsTrimmers');
+    if (formMO10) formMO10.style.display = (teamId === 'MO10') ? 'flex' : 'none';
+    if (formTrimmers) formTrimmers.style.display = (teamId === 'Trimmers') ? 'flex' : 'none';
+
+    activeFormation = (teamId === 'MO10') ? '1-2-3-2' : '4-3-3';
+    applyFormation(activeFormation);
+
+    loadConfigFromServer().then(() => {
+      updatePositionsConfig();
+      initDefaultAssignments(true);
+      renderPitchSvg();
+      renderTokens();
+      renderSituationsBoard();
+      initDropdowns();
+      renderSquadManager();
+      validateWomenQuota();
+      if (typeof syncMatrixFromTactics === 'function') syncMatrixFromTactics();
+      
+      const clientIdInput = document.getElementById('googleClientIdInput');
+      if (clientIdInput) clientIdInput.value = googleClientId;
+
+      const emailsInput = document.getElementById('coachEmailsInput');
+      if (emailsInput) {
+        emailsInput.value = coachEmails.join(', ');
+      }
+      
+      const overlayInput = document.getElementById('googleClientIdInputOverlay');
+      if (overlayInput) {
+        overlayInput.value = googleClientId;
+      }
+      
+      initGoogleAuth();
+      
+      if (currentUserRole === 'coach') {
+        loadTacticsLocal();
+      } else {
+        loadActiveTacticsFromServer();
+      }
+      
+      syncBanner();
+    });
+  }
+
+  // Server Integration Helper Functions
+  async function loadConfigFromServer() {
+    try {
+      const res = await fetch(`/api/config?team_id=${currentTeam}`);
+      if (res.ok) {
+        const config = await res.json();
+        if (config.google_client_id) googleClientId = config.google_client_id;
+        if (config.coach_emails) coachEmails = config.coach_emails;
+        if (config.squad_players) {
+          squadPlayers = config.squad_players.map(p => {
+            if (typeof p === 'string') {
+              const pName = currentTeam === 'MO10' ? p.split(' ')[0] : p;
+              const isInactive = currentTeam === 'Trimmers' && (
+                pName.toLowerCase().includes('andré') || 
+                pName.toLowerCase().includes('andre') || 
+                pName.toLowerCase().includes('willem')
+              );
+              return {
+                name: pName,
+                gender: getInitialGender(pName),
+                isAvailable: !isInactive
+              };
+            } else if (p && p.name) {
+              const pName = currentTeam === 'MO10' ? p.name.split(' ')[0] : p.name;
+              p.name = pName;
+              if (p.isAvailable === undefined) {
+                const isInactive = currentTeam === 'Trimmers' && (
+                  pName.toLowerCase().includes('andré') || 
+                  pName.toLowerCase().includes('andre') || 
+                  pName.toLowerCase().includes('willem')
+                );
+                p.isAvailable = !isInactive;
+              }
+              return p;
+            }
+            return p;
+          });
+        }
+        if (config.custom_positions) customPositionNames = config.custom_positions;
+
+        localStorage.setItem('hv_myra_google_client_id', googleClientId);
+        localStorage.setItem('hv_myra_coaches', JSON.stringify(coachEmails));
+        localStorage.setItem('hv_myra_squad', JSON.stringify(squadPlayers));
+        localStorage.setItem('hv_myra_custom_positions', JSON.stringify(customPositionNames));
+        
+        // Initialize default assignments with the loaded squad players
+        if (typeof initDefaultAssignments === 'function') initDefaultAssignments();
+      }
+    } catch (e) {
+      console.warn("Failed to load config from server, using local fallbacks:", e);
+    }
+  }
+
+  async function saveConfigToServer() {
+    const token = localStorage.getItem('hv_myra_user_token');
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    
+    try {
+      const res = await fetch(`/api/config?team_id=${currentTeam}`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({
+          google_client_id: googleClientId,
+          coach_emails: coachEmails,
+          squad_players: squadPlayers,
+          custom_positions: customPositionNames
+        })
+      });
+      if (res.ok) {
+        showToast('Configuration synced to server!');
+      } else {
+        const errData = await res.json();
+        showToast(`Server sync failed: ${errData.detail || res.statusText}`);
+      }
+    } catch (e) {
+      console.error("Failed to save config to server:", e);
+    }
+  }
+
+  async function saveTacticsToServer(data) {
+    const token = localStorage.getItem('hv_myra_user_token');
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    try {
+      const res = await fetch(`/api/tactics?team_id=${currentTeam}`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({
+          match_date: data.matchDate,
+          opponent: data.matchOpponent,
+          quarter: data.matchQuarter,
+          data: data
+        })
+      });
+      if (res.ok) {
+        showToast('Setup saved and synced to server!');
+      } else {
+        const errData = await res.json();
+        showToast(`Server sync failed: ${errData.detail || res.statusText}`);
+      }
+    } catch (e) {
+      console.error("Failed to save tactics to server:", e);
+    }
+  }
+
+  async function loadTacticsFromServer() {
+    const date = document.getElementById('matchDatePicker').value;
+    const opponent = document.getElementById('matchOpponent').value;
+    const quarter = document.getElementById('matchQuarter').value;
+
+    try {
+      const url = `/api/tactics?team_id=${currentTeam}&match_date=${encodeURIComponent(date)}&opponent=${encodeURIComponent(opponent)}&quarter=${encodeURIComponent(quarter)}`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const tactics = await res.json();
+        if (tactics && tactics.data) {
+          applyTacticsData(tactics.data);
+          showToast('Setup Loaded from Server!');
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to load from server, checking local fallback:", e);
+    }
+    loadTacticsLocal();
+  }
+
+  async function loadActiveTacticsFromServer() {
+    try {
+      const res = await fetch(`/api/tactics/active?team_id=${currentTeam}`);
+      if (res.ok) {
+        const active = await res.json();
+        if (active && active.data) {
+          applyTacticsData(active.data);
+          showToast('Loaded latest active matchday board!');
+        }
+      } else if (res.status === 404) {
+        if (typeof initDefaultAssignments === 'function') initDefaultAssignments();
+        initDropdowns();
+        if (typeof syncMatrixFromTactics === 'function') syncMatrixFromTactics();
+      }
+    } catch (e) {
+      console.warn("Failed to load active tactics from server:", e);
+    }
+  }
+
+  function toggleGoogleConfig() {
+    const panel = document.getElementById('googleConfigPanel');
+    if (panel) {
+      panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+    }
+  }
+
+  function saveGoogleConfig() {
+    const input = document.getElementById('googleClientIdInput');
+    const val = input.value.trim();
+    if (!val) {
+      showToast('Please enter a valid Client ID');
+      return;
+    }
+    localStorage.setItem('hv_myra_google_client_id', val);
+    googleClientId = val;
+
+    if (currentUserRole === 'coach') {
+      const emailsInput = document.getElementById('coachEmailsInput');
+      if (emailsInput) {
+        const emailsVal = emailsInput.value.split(',')
+          .map(e => e.trim().toLowerCase())
+          .filter(e => e.length > 0);
+        if (!emailsVal.includes('singhalrajeev89@gmail.com')) {
+          emailsVal.push('singhalrajeev89@gmail.com');
+        }
+        coachEmails = emailsVal;
+        localStorage.setItem('hv_myra_coaches', JSON.stringify(coachEmails));
+      }
+    }
+
+    toggleGoogleConfig();
+    initGoogleAuth();
+    showToast('Configuration saved! Initializing...');
+    saveConfigToServer();
+  }
+
+  function determineUserRole(userEmail) {
+    if (userEmail && coachEmails.includes(userEmail.toLowerCase())) {
+      currentUserRole = 'coach';
+      loadTacticsLocal();
+    } else {
+      currentUserRole = 'parent';
+      loadActiveTacticsFromServer();
+    }
+    applyRolePrivileges();
+  }
+
+  function applyRolePrivileges() {
+    const isCoach = (currentUserRole === 'coach');
+
+    const badge = document.getElementById('roleBadge');
+    if (badge) {
+      if (isCoach) {
+        badge.innerText = '👑 Coach';
+        badge.style.backgroundColor = '#059669';
+        badge.style.borderColor = '#10b981';
+      } else {
+        badge.innerText = '👪 Parent (Read-Only)';
+        badge.style.backgroundColor = '#475569';
+        badge.style.borderColor = '#64748b';
+      }
+    }
+
+    const drawBtn = document.getElementById('modeDraw');
+    const arrowBtn = document.getElementById('modeArrow');
+    const eraserBtn = document.getElementById('modeEraser');
+    const clearBtn = document.getElementById('btnResetLines');
+    const form1 = document.getElementById('btnForm1');
+    const form2 = document.getElementById('btnForm2');
+    const form3 = document.getElementById('btnForm3');
+    const saveBtn = document.getElementById('btnSave');
+    const loadBtn = document.getElementById('btnLoad');
+    const notes = document.getElementById('coachNotes');
+
+    if (!isCoach) {
+      setMode('select');
+      if (drawBtn) drawBtn.disabled = true;
+      if (arrowBtn) arrowBtn.disabled = true;
+      if (eraserBtn) eraserBtn.disabled = true;
+      if (clearBtn) clearBtn.disabled = true;
+      if (form1) form1.disabled = true;
+      if (form2) form2.disabled = true;
+      if (form3) form3.disabled = true;
+      if (saveBtn) saveBtn.style.display = 'none';
+      if (loadBtn) loadBtn.style.display = 'none';
+      if (notes) notes.readOnly = true;
+    } else {
+      if (drawBtn) drawBtn.disabled = false;
+      if (arrowBtn) arrowBtn.disabled = false;
+      if (eraserBtn) eraserBtn.disabled = false;
+      if (clearBtn) clearBtn.disabled = false;
+      if (form1) form1.disabled = false;
+      if (form2) form2.disabled = false;
+      if (form3) form3.disabled = false;
+      if (saveBtn) saveBtn.style.display = 'inline-flex';
+      if (loadBtn) loadBtn.style.display = 'inline-flex';
+      if (notes) notes.readOnly = false;
+    }
+
+    const squadTitles = [
+      document.getElementById('txtManageSquadTitle'),
+      document.getElementById('txtManageSquadTitleSubs')
+    ];
+    squadTitles.forEach(title => {
+      if (title) title.style.display = isCoach ? 'block' : 'none';
+    });
+
+    document.querySelectorAll('.add-player').forEach(div => {
+      div.style.display = isCoach ? 'flex' : 'none';
+    });
+
+    document.querySelectorAll('.player-chip .gender-badge, .player-chip .delete-btn').forEach(el => {
+      el.style.display = isCoach ? 'inline-block' : 'none';
+    });
+
+    document.querySelectorAll('.player-select-pill, .sidebar-select').forEach(select => {
+      select.disabled = !isCoach;
+    });
+
+    const emailsGroup = document.getElementById('googleConfigEmailsGroup');
+    if (emailsGroup) {
+      emailsGroup.style.display = isCoach ? 'flex' : 'none';
+    }
+  }
+
+  function saveGoogleConfigOverlay() {
+    const input = document.getElementById('googleClientIdInputOverlay');
+    const val = input.value.trim();
+    if (!val) {
+      showToast('Please enter a valid Client ID');
+      return;
+    }
+    localStorage.setItem('hv_myra_google_client_id', val);
+    googleClientId = val;
+    initGoogleAuth();
+    showToast('Client ID saved!');
+    saveConfigToServer();
+  }
+
+  let googleLoadAttempts = 0;
+  function initGoogleAuth() {
+    const overlay = document.getElementById('loginOverlay');
+    if (!googleClientId) {
+      if (overlay) overlay.style.display = 'flex';
+      document.getElementById('googleAuthSetupOverlay').style.display = 'flex';
+      document.getElementById('googleSignInButtonOverlay').style.display = 'none';
+      currentUserRole = 'parent';
+      applyRolePrivileges();
+      return;
+    }
+    
+    document.getElementById('googleAuthSetupOverlay').style.display = 'none';
+
+    // Show bypass button immediately if on localhost
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const bypassBtn = document.getElementById('btnLocalBypass');
+    if (bypassBtn) {
+      bypassBtn.style.display = isLocalhost ? 'flex' : 'none';
+    }
+
+    // Check if user is already logged in locally first (allows offline bypass)
+    const localUser = localStorage.getItem('hv_myra_user');
+    if (localUser) {
+      if (overlay) overlay.style.display = 'none';
+      showUserLoggedIn(JSON.parse(localUser));
+      return;
+    }
+
+    // Set view-only state for not-logged-in users
+    currentUserRole = 'parent';
+    applyRolePrivileges();
+    if (overlay) overlay.style.display = 'flex';
+    document.getElementById('googleSignInButtonOverlay').style.display = 'block';
+    document.getElementById('googleUserProfile').style.display = 'none';
+    loadActiveTacticsFromServer();
+
+    // Check for GSI Google Auth library
+    if (typeof google === 'undefined') {
+      googleLoadAttempts++;
+      if (googleLoadAttempts >= 3) {
+        document.getElementById('googleSignInButtonOverlay').style.display = 'block';
+        document.getElementById('googleSignInButtonOverlay').innerHTML = `
+          <div style="color: #fca5a5; font-size: 0.75rem; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); padding: 10px; border-radius: 6px; text-align: left; max-width: 280px; line-height: 1.4; margin: 0 auto;">
+            <strong>⚠️ Google Auth blocked or offline:</strong><br>
+            The Google Sign-In script failed to load. If you are using an ad-blocker, Brave Shields, or a privacy extension, please disable it for this page and reload.
+          </div>
+        `;
+      }
+      setTimeout(initGoogleAuth, 1000);
+      return;
+    }
+
+    // Reset warning box on successful load
+    const signinButtonContainer = document.getElementById("googleSignInButtonOverlay");
+    if (signinButtonContainer) {
+      signinButtonContainer.innerHTML = '';
+      signinButtonContainer.style.display = 'block';
+    }
+
+    console.log("🚨🚨🚨 GOOGLE CLIENT ID BEING USED:", googleClientId, "🚨🚨🚨");
+    google.accounts.id.initialize({
+      client_id: googleClientId,
+      callback: handleCredentialResponse
+    });
+
+    google.accounts.id.renderButton(
+      document.getElementById("googleSignInButtonOverlay"),
+      { theme: "filled_blue", size: "large", text: "signin_with", shape: "pill", width: 240 }
+    );
+  }
+
+  function bypassGoogleAuth() {
+    const mockUser = {
+      email: "singhalrajeev89@gmail.com",
+      name: "Test Coach",
+      given_name: "Coach",
+      picture: "public/favicon.svg"
+    };
+    localStorage.setItem('hv_myra_user', JSON.stringify(mockUser));
+    localStorage.setItem('hv_myra_user_token', 'dummy-token-bypass');
+    showUserLoggedIn(mockUser);
+    showToast("Logged in as Coach (Local Bypass)");
+  }
+
+  function handleCredentialResponse(response) {
+    const payload = decodeJwtResponse(response.credential);
+    localStorage.setItem('hv_myra_user', JSON.stringify(payload));
+    localStorage.setItem('hv_myra_user_token', response.credential);
+    showUserLoggedIn(payload);
+    showToast(`Welcome, ${payload.name}!`);
+  }
+
+  function decodeJwtResponse(token) {
+    var base64Url = token.split('.')[1];
+    var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    var jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
+  }
+
+  function showUserLoggedIn(user) {
+    const overlay = document.getElementById('loginOverlay');
+    if (overlay) overlay.style.display = 'none';
+    
+    document.getElementById('googleUserProfile').style.display = 'flex';
+    document.getElementById('userAvatar').src = user.picture;
+    document.getElementById('userName').innerText = user.given_name || user.name;
+
+    determineUserRole(user.email);
+  }
+
+  function logoutGoogle() {
+    localStorage.removeItem('hv_myra_user');
+    localStorage.removeItem('hv_myra_user_token');
+    document.getElementById('googleUserProfile').style.display = 'none';
+    currentUserRole = 'parent';
+    applyRolePrivileges();
+    
+    const overlay = document.getElementById('loginOverlay');
+    if (overlay) overlay.style.display = 'flex';
+    
+    initGoogleAuth();
+    showToast('Logged out');
+  }
+
+  
+
+  function syncMatrixFromTactics() {
+    if (typeof subMatrixState === 'undefined') return;
+    const intervals = getSubIntervals();
+    const numIntervals = intervals.length;
+    const expectedColCount = currentTeam === 'MO10' ? 8 : 11;
+    
+    // Initialize state for squad players if missing
+    if (typeof squadPlayers !== 'undefined') {
+      squadPlayers.forEach(p => {
+        const name = typeof p === 'string' ? p : p.name;
+        if (!subMatrixState[name] || subMatrixState[name].length !== numIntervals) {
+          subMatrixState[name] = new Array(numIntervals).fill(false);
+        }
+      });
+    }
+
+    // First, clear block 0 for everyone
+    Object.keys(subMatrixState).forEach(name => {
+      if (subMatrixState[name] && subMatrixState[name].length === numIntervals) {
+        subMatrixState[name][0] = false;
+      }
+    });
+    
+    // Then, set block 0 for everyone on the pitch (excluding subs)
+    const gkPlayer = currentAssignments['gk'];
+    for (const [posId, name] of Object.entries(currentAssignments)) {
+      if (posId === 'sub_def_att' || posId === 'sub_mid' || posId.includes('sub')) continue;
+      if (name && subMatrixState[name] && subMatrixState[name].length === numIntervals) {
+        subMatrixState[name][0] = true;
+      }
+    }
+    
+    // Lock GK for the whole match
+    if (gkPlayer && subMatrixState[gkPlayer]) {
+      for(let i=0; i<numIntervals; i++) subMatrixState[gkPlayer][i] = true;
+    }
+
+    // Check if any column exceeds expected team size (11 for Trimmers, 8 for MO10)
+    let needsAutoFill = false;
+    for (let i = 0; i < numIntervals; i++) {
+      let count = 0;
+      Object.keys(subMatrixState).forEach(n => {
+        if (subMatrixState[n] && subMatrixState[n][i]) count++;
+      });
+      if (count > expectedColCount) {
+        needsAutoFill = true;
+        break;
+      }
+    }
+
+    if (needsAutoFill) {
+      autoFillRotation(true);
+      return;
+    }
+    
+    renderSubstitutionMatrix();
+  }
+
+  function autoFillRotation(silent = false) {
+    const intervals = getSubIntervals();
+    const numIntervals = intervals.length;
+    const available = getAvailablePlayers();
+    const availNames = available.map(p => typeof p === 'string' ? p : p.name);
+
+    if (currentTeam === 'MO10') {
+      const gkPlayer = currentAssignments['gk'];
+      const mo10MatchdayPlayers = Object.values(currentAssignments).filter(Boolean);
+
+      // Default all squad players to false across all blocks
+      availNames.forEach(name => {
+        subMatrixState[name] = new Array(5).fill(false);
+      });
+
+      // Set active MO10 matchday players (8 pitch + 2 dugout subs) to true
+      mo10MatchdayPlayers.forEach(name => {
+        if (subMatrixState[name]) {
+          subMatrixState[name].fill(true);
+        }
+      });
+
+      // Block 0: subs rest
+      const subDef = currentAssignments['cb'] || currentAssignments['sub_def'];
+      const subMid = currentAssignments['sub_mid'];
+      if (subDef && subMatrixState[subDef]) subMatrixState[subDef][0] = false;
+      if (subMid && subMatrixState[subMid]) subMatrixState[subMid][0] = false;
+
+      const lb = currentAssignments['lb'];
+      const rb = currentAssignments['rb'];
+      const lm = currentAssignments['lm'];
+      const cm = currentAssignments['cm'];
+      const rm = currentAssignments['rm'];
+      const lf = currentAssignments['lf'];
+      const rf = currentAssignments['rf'];
+
+      // Block 1 (6-12m): Rest LB and LM
+      if (lb && subMatrixState[lb]) subMatrixState[lb][1] = false;
+      if (lm && subMatrixState[lm]) subMatrixState[lm][1] = false;
+
+      // Block 2 (12-18m): Rest RB and CM
+      if (rb && subMatrixState[rb]) subMatrixState[rb][2] = false;
+      if (cm && subMatrixState[cm]) subMatrixState[cm][2] = false;
+
+      // Block 3 (18-24m): Rest LF and RM
+      if (lf && subMatrixState[lf]) subMatrixState[lf][3] = false;
+      if (rm && subMatrixState[rm]) subMatrixState[rm][3] = false;
+
+      // Block 4 (24-30m): Rest RF and sub_mid
+      if (rf && subMatrixState[rf]) subMatrixState[rf][4] = false;
+      if (subMid && subMatrixState[subMid]) subMatrixState[subMid][4] = false;
+
+      // Goalkeeper plays all 5 blocks
+      if (gkPlayer && subMatrixState[gkPlayer]) {
+        for (let i = 0; i < 5; i++) subMatrixState[gkPlayer][i] = true;
+      }
+    } else {
+      // Trimmers (4 Quarters x 17.5m = 8 Intervals, 11 on pitch + 3 dugout subs)
+      const gkPlayer = currentAssignments['gk'];
+      const matchdayPlayers = Object.values(currentAssignments).filter(Boolean);
+
+      // Default ALL squad players to false across all 8 blocks
+      availNames.forEach(name => {
+        subMatrixState[name] = new Array(8).fill(false);
+      });
+
+      // Set matchday players (11 pitch + 3 dugout subs) to true
+      matchdayPlayers.forEach(name => {
+        if (subMatrixState[name]) {
+          subMatrixState[name].fill(true);
+        }
+      });
+
+      // Block 0: 3 dugout subs rest
+      const subDef0 = currentAssignments['sub_def'] || currentAssignments['sub_field_3'];
+      const subMid0 = currentAssignments['sub_mid'] || currentAssignments['sub_field_2'];
+      const subFwd0 = currentAssignments['sub_fwd'] || currentAssignments['sub_field_1'];
+      if (subDef0 && subMatrixState[subDef0]) subMatrixState[subDef0][0] = false;
+      if (subMid0 && subMatrixState[subMid0]) subMatrixState[subMid0][0] = false;
+      if (subFwd0 && subMatrixState[subFwd0]) subMatrixState[subFwd0][0] = false;
+
+      // 1. DEFENDERS POOL (Starting defenders + sub_def)
+      const defPositions = ['lb', 'lcb', 'cb', 'rcb', 'rb'];
+      const defPlayers = defPositions.map(id => currentAssignments[id]).filter(Boolean);
+      const subDef = currentAssignments['sub_def'] || currentAssignments['sub_field_3'];
+      const defPool = [...defPlayers];
+      if (subDef && !defPool.includes(subDef)) defPool.push(subDef);
+
+      // 2. MIDFIELDERS POOL (Starting midfielders + sub_mid)
+      const midPositions = ['cdm', 'lm', 'cm', 'lcm', 'rcm', 'rm'];
+      const midPlayers = midPositions.map(id => currentAssignments[id]).filter(Boolean);
+      const subMid = currentAssignments['sub_mid'] || currentAssignments['sub_field_2'];
+      const midPool = [...midPlayers];
+      if (subMid && !midPool.includes(subMid)) midPool.push(subMid);
+
+      // 3. FORWARDS POOL (Starting forwards + sub_fwd)
+      const fwdPositions = ['lf', 'cf', 'st', 'rf'];
+      const fwdPlayers = fwdPositions.map(id => currentAssignments[id]).filter(Boolean);
+      const subFwd = currentAssignments['sub_fwd'] || currentAssignments['sub_field_1'];
+      const fwdPool = [...fwdPlayers];
+      if (subFwd && !fwdPool.includes(subFwd)) fwdPool.push(subFwd);
+
+      // Spread substitutions evenly: 1 Defender, 1 Midfielder, 1 Forward rest at each interval (1..7)
+      for (let i = 1; i < 8; i++) {
+        if (defPool.length > 0) {
+          const restDefIdx = (i - 1) % defPool.length;
+          const restDef = defPool[restDefIdx];
+          if (restDef && subMatrixState[restDef]) subMatrixState[restDef][i] = false;
+        }
+
+        if (midPool.length > 0) {
+          const restMidIdx = (i - 1) % midPool.length;
+          const restMid = midPool[restMidIdx];
+          if (restMid && subMatrixState[restMid]) subMatrixState[restMid][i] = false;
+        }
+
+        if (fwdPool.length > 0) {
+          const restFwdIdx = (i - 1) % fwdPool.length;
+          const restFwd = fwdPool[restFwdIdx];
+          if (restFwd && subMatrixState[restFwd]) subMatrixState[restFwd][i] = false;
+        }
+      }
+
+      // Goalkeeper plays all 8 blocks
+      if (gkPlayer && subMatrixState[gkPlayer]) {
+        for (let i = 0; i < 8; i++) subMatrixState[gkPlayer][i] = true;
+      }
+    }
+
+    renderSubstitutionMatrix();
+    if (!silent) {
+      showToast(currentTeam === 'MO10' ? 'MO10 Rotation Auto-Filled (8 on pitch)!' : 'Trimmers Rotation Auto-Filled (11 on pitch)!');
+    }
+  }
+
+  function saveSquadLocal() {
+    localStorage.setItem('hv_myra_squad', JSON.stringify(squadPlayers));
+    saveConfigToServer();
+  }
+
+  function togglePlayerAttendance(index) {
+    if (squadPlayers[index]) {
+      const p = squadPlayers[index];
+      if (typeof p === 'string') {
+        squadPlayers[index] = { name: p, gender: getInitialGender(p), isAvailable: false };
+      } else {
+        p.isAvailable = p.isAvailable === false ? true : false;
+      }
+      
+      const pName = typeof squadPlayers[index] === 'string' ? squadPlayers[index] : squadPlayers[index].name;
+      if (!squadPlayers[index].isAvailable) {
+        for (const [posId, assigned] of Object.entries(currentAssignments)) {
+          if (assigned === pName) {
+            const available = getAvailablePlayers();
+            const usedNames = Object.values(currentAssignments);
+            const replacement = available.find(ap => {
+              const apName = typeof ap === 'string' ? ap : ap.name;
+              return !usedNames.includes(apName);
+            });
+            currentAssignments[posId] = replacement ? (typeof replacement === 'string' ? replacement : replacement.name) : '';
+          }
+        }
+      }
+
+      // Trimmers GK priority handling: Sander primary, Robert backup
+      if (currentTeam === 'Trimmers') {
+        const available = getAvailablePlayers();
+        const availNames = available.map(ap => typeof ap === 'string' ? ap : ap.name);
+        const sander = availNames.find(n => n.toLowerCase().includes('sander'));
+        const robert = availNames.find(n => n.toLowerCase().includes('robert'));
+        if (sander && currentAssignments['gk'] !== sander) {
+          currentAssignments['gk'] = sander;
+        } else if (!sander && robert && currentAssignments['gk'] !== robert) {
+          currentAssignments['gk'] = robert;
+        }
+      }
+
+      saveSquadLocal();
+      renderSquadManager();
+      initDropdowns();
+      validateWomenQuota();
+      if (typeof renderSubstitutionMatrix === 'function') renderSubstitutionMatrix();
+    }
+  }
+
+  function setAllAttendance(val) {
+    squadPlayers.forEach((p, idx) => {
+      if (typeof p === 'string') {
+        squadPlayers[idx] = { name: p, gender: getInitialGender(p), isAvailable: val };
+      } else {
+        p.isAvailable = val;
+      }
+    });
+    if (!val) {
+      currentAssignments = {};
+    } else {
+      initDefaultAssignments();
+    }
+    saveSquadLocal();
+    renderSquadManager();
+    initDropdowns();
+    validateWomenQuota();
+    if (typeof renderSubstitutionMatrix === 'function') renderSubstitutionMatrix();
+    showToast(val ? 'All players marked available' : 'Cleared attendance list');
+  }
+
+  function resetDefaultAttendance() {
+    if (currentTeam === 'Trimmers') {
+      const neverJoins = ['andré', 'andre', 'willem'];
+      squadPlayers.forEach((p, idx) => {
+        const name = (typeof p === 'string' ? p : p.name).toLowerCase();
+        const isAvail = !neverJoins.some(nj => name.includes(nj));
+        if (typeof p === 'string') {
+          squadPlayers[idx] = { name: p, gender: getInitialGender(p), isAvailable: isAvail };
+        } else {
+          p.isAvailable = isAvail;
+        }
+      });
+    } else {
+      const defaultLimit = 10;
+      squadPlayers.forEach((p, idx) => {
+        const isAvail = idx < defaultLimit;
+        if (typeof p === 'string') {
+          squadPlayers[idx] = { name: p, gender: getInitialGender(p), isAvailable: isAvail };
+        } else {
+          p.isAvailable = isAvail;
+        }
+      });
+    }
+    initDefaultAssignments();
+    saveSquadLocal();
+    renderSquadManager();
+    initDropdowns();
+    validateWomenQuota();
+    if (typeof renderSubstitutionMatrix === 'function') renderSubstitutionMatrix();
+    showToast(`Reset to standard ${defaultLimit} matchday players`);
+  }
+
+  function renderSquadManager() {
+    let availableCount = 0;
+    let femaleCount = 0;
+    let maleCount = 0;
+
+    squadPlayers.forEach((p, index) => {
+      if (typeof p === 'string') {
+        p = { name: p, gender: getInitialGender(p), isAvailable: true };
+        squadPlayers[index] = p;
+      }
+      if (p.isAvailable === undefined) p.isAvailable = true;
+
+      if (p.isAvailable) {
+        availableCount++;
+        if (p.gender === 'F') femaleCount++;
+        else maleCount++;
+      }
+    });
+
+    const sortedSquad = squadPlayers
+      .map((p, origIndex) => ({ player: p, origIndex }))
+      .sort((a, b) => {
+        const nameA = typeof a.player === 'string' ? a.player : a.player.name;
+        const nameB = typeof b.player === 'string' ? b.player : b.player.name;
+        const roleA = getPlayerLine(nameA);
+        const roleB = getPlayerLine(nameB);
+        const roleWeight = { 'GK': 1, 'DEF': 2, 'MID': 3, 'ATT': 4, 'FWD': 4 };
+        const wA = roleWeight[roleA] || 5;
+        const wB = roleWeight[roleB] || 5;
+        if (wA !== wB) return wA - wB;
+        return nameA.localeCompare(nameB, undefined, { sensitivity: 'base' });
+      });
+
+    ['squadListContainer', 'squadListContainerSubs'].forEach(containerId => {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = '';
+
+      sortedSquad.forEach(({ player: p, origIndex }) => {
+        const isAvail = p.isAvailable;
+        const row = document.createElement('div');
+        row.className = 'squad-player-row';
+        row.style.cssText = `
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          background: ${isAvail ? '#161e2e' : '#0e1219'};
+          border: 1px solid ${isAvail ? '#2563eb55' : '#1e293b'};
+          padding: 4px 8px;
+          border-radius: 5px;
+          font-size: 0.72rem;
+          transition: all 0.15s;
+          opacity: ${isAvail ? '1' : '0.55'};
+        `;
+
+        const genderColor = p.gender === 'F' ? '#ec4899' : '#3b82f6';
+        const guestBadge = p.isGuest ? `<span style="background: #b45309; color: #fef3c7; border-radius: 3px; padding: 1px 4px; font-size: 0.55rem; font-weight: 700; margin-left: 4px;">GUEST</span>` : '';
+        const displayName = getDisplayName(p.name);
+
+        const currentRole = (p.role || getPlayerLine(p.name)).toUpperCase();
+        let roleDisplay = currentRole === 'FWD' ? 'ATT' : currentRole;
+        const roleColors = { 'GK': '#3b82f6', 'DEF': '#10b981', 'MID': '#6366f1', 'ATT': '#ec4899', 'FWD': '#ec4899' };
+        const roleColor = roleColors[roleDisplay] || '#64748b';
+
+        row.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0;">
+            <input type="checkbox" ${isAvail ? 'checked' : ''} onchange="togglePlayerAttendance(${origIndex})" style="cursor: pointer; accent-color: #10b981; transform: scale(1.15);" title="Toggle gameweek attendance">
+            <span style="font-weight: ${isAvail ? '700' : '400'}; color: ${isAvail ? '#fff' : '#64748b'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${p.name}">${displayName}</span>
+            ${guestBadge}
+          </div>
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <span onclick="cyclePlayerRole(${origIndex})" style="background: ${roleColor}; color: white; border-radius: 3px; padding: 1px 5px; font-size: 0.58rem; font-weight: 800; cursor: pointer; user-select: none;" title="Click to cycle position role (GK/DEF/MID/ATT)">${roleDisplay}</span>
+            <span onclick="togglePlayerGender(${origIndex})" style="background: ${genderColor}; color: white; border-radius: 3px; padding: 1px 5px; font-size: 0.58rem; font-weight: 800; cursor: pointer; user-select: none;" title="Click to toggle gender (F/M)">${p.gender || 'M'}</span>
+            <span onclick="deleteSquadPlayer('${p.name.replace(/'/g, "\\'")}')" style="color: #ef4444; cursor: pointer; font-weight: bold; font-size: 0.9rem; padding: 0 4px;" title="Remove player">&times;</span>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    });
+
+  function cyclePlayerRole(index) {
+    if (!squadPlayers[index]) return;
+    const p = squadPlayers[index];
+    const pName = typeof p === 'string' ? p : p.name;
+    const roles = ['DEF', 'MID', 'ATT', 'GK'];
+    let current = (typeof p === 'object' && p.role) ? p.role.toUpperCase() : getPlayerLine(pName);
+    if (current === 'FWD') current = 'ATT';
+    const nextIdx = (roles.indexOf(current) + 1) % roles.length;
+    const newRole = roles[nextIdx];
+
+    if (typeof p === 'string') {
+      squadPlayers[index] = { name: p, gender: getInitialGender(p), role: newRole, isAvailable: true };
+    } else {
+      p.role = newRole;
+    }
+
+    saveSquadLocal();
+    renderSquadManager();
+    initDropdowns();
+    renderPositionLabels();
+    if (typeof renderSubstitutionMatrix === 'function') renderSubstitutionMatrix();
+    showToast(`${getDisplayName(pName)} position set to ${newRole}`);
+  }
+
+    ['attendanceSummaryBadge', 'attendanceSummaryBadgeTactics'].forEach(badgeId => {
+      const badge = document.getElementById(badgeId);
+      if (badge) {
+        badge.innerHTML = `🟢 <strong>${availableCount}</strong> / ${squadPlayers.length} Available (${femaleCount} 👩 / ${maleCount} 👨)`;
+      }
+    });
+  }
+
+  function addSquadPlayer(fromSubs = false) {
+    const input = document.getElementById(fromSubs ? 'newPlayerInputSubs' : 'newPlayerInput');
+    if (!input) return;
+    const name = input.value.trim();
+    if (!name) return;
+
+    const genderSelect = document.getElementById(fromSubs ? 'newPlayerGenderSubs' : 'newPlayerGenderTactics');
+    let gender = genderSelect ? genderSelect.value : 'auto';
+    if (gender === 'auto') gender = getInitialGender(name);
+
+    const isGuestCheck = document.getElementById(fromSubs ? 'newPlayerIsGuestSubs' : 'newPlayerIsGuestTactics');
+    const isGuest = isGuestCheck ? isGuestCheck.checked : false;
+
+    const exists = squadPlayers.some(p => (typeof p === 'string' ? p : p.name).toLowerCase() === name.toLowerCase());
+    if (exists) {
+      showToast('Player already in squad list');
+      return;
+    }
+
+    squadPlayers.push({
+      name: name,
+      gender: gender,
+      isAvailable: true,
+      isGuest: isGuest
+    });
+
+    input.value = '';
+    const otherInput = document.getElementById(fromSubs ? 'newPlayerInput' : 'newPlayerInputSubs');
+    if (otherInput) otherInput.value = '';
+
+    saveSquadLocal();
+    renderSquadManager();
+    initDropdowns();
+    validateWomenQuota();
+    if (typeof renderSubstitutionMatrix === 'function') renderSubstitutionMatrix();
+    showToast(isGuest ? `Added borrowed/guest player ${name}` : `Added player ${name}`);
+  }
+
+  function deleteSquadPlayer(name) {
+    if (squadPlayers.length <= 1) {
+      showToast('Must have at least 1 player');
+      return;
+    }
+    squadPlayers = squadPlayers.filter(p => (typeof p === 'string' ? p : p.name) !== name);
+    
+    // Fallback if deleted player was assigned
+    for (const [posId, assignedName] of Object.entries(currentAssignments)) {
+      if (assignedName === name) {
+        const available = getAvailablePlayers();
+        const usedNames = Object.values(currentAssignments);
+        const replacement = available.find(ap => {
+          const apName = typeof ap === 'string' ? ap : ap.name;
+          return !usedNames.includes(apName);
+        });
+        currentAssignments[posId] = replacement ? (typeof replacement === 'string' ? replacement : replacement.name) : '';
+      }
+    }
+    
+    saveSquadLocal();
+    renderSquadManager();
+    initDropdowns();
+    validateWomenQuota();
+    if (typeof renderSubstitutionMatrix === 'function') renderSubstitutionMatrix();
+    showToast(`${name} removed`);
+  }
+
+  function getPositionTranslations(posId) {
+    const dict = {
+      gk: { en: { code: 'GK', label: 'GK' }, nl: { code: 'K', label: 'Keeper' } },
+      lb: { en: { code: 'LB', label: 'LB' }, nl: { code: 'LA', label: 'Linksachter' } },
+      cb: { en: { code: 'CB', label: 'CB' }, nl: { code: 'CA', label: 'Centrale Achter' } },
+      rb: { en: { code: 'RB', label: 'RB' }, nl: { code: 'RA', label: 'Rechtsachter' } },
+      lcb: { en: { code: 'LCB', label: 'Left Center Back' }, nl: { code: 'LVA', label: 'Linker Vrijverdediger' } },
+      rcb: { en: { code: 'RCB', label: 'Right Center Back' }, nl: { code: 'RVA', label: 'Rechter Vrijverdediger' } },
+      lm: { en: { code: 'LM', label: 'LM' }, nl: { code: 'LM', label: 'Linksmidden' } },
+      cm: { en: { code: 'CM', label: 'CM' }, nl: { code: 'CM', label: 'Centraalmidden' } },
+      rm: { en: { code: 'RM', label: 'RM' }, nl: { code: 'RM', label: 'Rechtsmidden' } },
+      lf: { en: { code: 'LF', label: 'LF' }, nl: { code: 'LA', label: 'Linksaanvaller' } },
+      rf: { en: { code: 'RF', label: 'RF' }, nl: { code: 'RA', label: 'Rechtsaanvaller' } },
+      st: { en: { code: 'ST', label: 'ST' }, nl: { code: 'SP', label: 'Spits' } },
+      cf: { en: { code: 'CF', label: 'CF' }, nl: { code: 'SP', label: 'Spits' } },
+      sub_def: { en: { code: 'SUB-DEF', label: 'SUB-DEF' }, nl: { code: 'WISSEL-VER', label: 'WISSEL-VER' } },
+      sub_mid: { en: { code: 'SUB-MID', label: 'SUB-MID' }, nl: { code: 'WISSEL-MID', label: 'WISSEL-MID' } },
+      sub_fwd: { en: { code: 'SUB-FWD', label: 'SUB-FWD' }, nl: { code: 'WISSEL-AAN', label: 'WISSEL-AAN' } },
+      sub_def_att: { en: { code: 'SUB-DEF', label: 'SUB-DEF' }, nl: { code: 'WISSEL-VER', label: 'WISSEL-VER' } },
+      sub_field_1: { en: { code: 'SUB-FWD', label: 'SUB-FWD' }, nl: { code: 'WISSEL-AAN', label: 'WISSEL-AAN' } },
+      sub_field_2: { en: { code: 'SUB-MID', label: 'SUB-MID' }, nl: { code: 'WISSEL-MID', label: 'WISSEL-MID' } },
+      sub_field_3: { en: { code: 'SUB-DEF', label: 'SUB-DEF' }, nl: { code: 'WISSEL-VER', label: 'WISSEL-VER' } }
+    };
+    return dict[posId] || {
+      en: { code: posId.toUpperCase(), label: posId.toUpperCase() },
+      nl: { code: posId.toUpperCase(), label: posId.toUpperCase() }
+    };
+  }
+
+
+  function getPositionsConfig() {
+    if (currentTeam === 'MO10') {
+      return [
+        { id: 'gk', default: 'Liz', label: 'GK', x: '6%', y: '50%' },
+        { id: 'lb', default: 'Liv', label: 'LB', x: '23%', y: '32%' },
+        { id: 'rb', default: 'Defne', label: 'RB', x: '23%', y: '68%' },
+        { id: 'cb', default: 'Hannah', label: 'CB', x: '25%', y: '93%', isSubDef: true },
+        { id: 'lm', default: 'Kyra', label: 'LM', x: '47%', y: '26%' },
+        { id: 'cm', default: 'Mira', label: 'CM', x: '45%', y: '50%' },
+        { id: 'rm', default: 'Alina', label: 'RM', x: '47%', y: '74%' },
+        { id: 'lf', default: 'Kate', label: 'LF', x: '70%', y: '35%' },
+        { id: 'rf', default: 'Sai Jiya', label: 'RF', x: '70%', y: '65%' },
+        { id: 'sub_mid', default: 'Shanaya', label: 'SUB-MID', x: '55%', y: '93%', isSubMid: true }
+      ];
+    } else {
+      return [
+        { id: 'gk', default: 'Sander Duivesteijn', label: 'GK', x: '6%', y: '43.5%' },
+        { id: 'lb', default: 'Noortje Semmelink', label: 'LB', x: '22%', y: '12%' },
+        { id: 'lcb', default: 'Robert-Jan van Weerd', label: 'LCB', x: '16%', y: '34%' },
+        { id: 'rcb', default: 'Norbert van Haaften', label: 'RCB', x: '16%', y: '53%' },
+        { id: 'rb', default: 'Marije Koelink', label: 'RB', x: '22%', y: '75%' },
+        { id: 'lm', default: 'Rajeev Singhal', label: 'LM', x: '48%', y: '18%' },
+        { id: 'cm', default: 'Hester Kuis', label: 'CM', x: '44%', y: '43.5%' },
+        { id: 'rm', default: 'Tom Weller', label: 'RM', x: '48%', y: '69%' },
+        { id: 'lf', default: 'Saskia Klaverstijn', label: 'LF', x: '74%', y: '14%' },
+        { id: 'cf', default: 'Glenn Groenewegen', label: 'CF', x: '76%', y: '43.5%' },
+        { id: 'rf', default: 'Jeff Zwijsen', label: 'RF', x: '74%', y: '73%' },
+        { id: 'sub_def', default: 'Gregor de Vries', label: 'SUB-DEF', x: '18%', y: '93%', isSubDef: true, isSub: true },
+        { id: 'sub_mid', default: 'Elise Visscher', label: 'SUB-MID', x: '46%', y: '93%', isSubMid: true, isSub: true },
+        { id: 'sub_fwd', default: 'Frances Handoko-de Man', label: 'SUB-FWD', x: '74%', y: '93%', isSubFwd: true, isSub: true }
+      ];
+    }
+  }
+
+  let positionsConfig = getPositionsConfig();
+
+  function updatePositionsConfig() {
+    positionsConfig = getPositionsConfig();
+  }
+
+  function getRulesDictionary() {
+    if (currentTeam === 'MO10') {
+      return {
+        en: [
+          { title: "🎯 15-Meter Flat Scoring Line", desc: "In 8v8 cross-pitch hockey, goals only count if the ball is hit or touched by an attacker <strong>past the straight 15-meter line</strong> into the goal." },
+          { title: "🥅 Horizontal Cross-Pitch Format", desc: "Played across one half of a full hockey field (sideline to sideline). Teams play <strong>8 vs 8</strong> (1 Goalkeeper + 7 Outfield players)." },
+          { title: "📏 5-Meter Distance Rule", desc: "Opponents must always keep at least <strong>5 meters distance</strong> on all free hits and side-ins. Self-passes are allowed immediately." },
+          { title: "⏱️ Match Duration & Quarters", desc: "Played as <strong>4 x 15 minutes</strong> with 2-minute quarter breaks and a 5-minute half-time. Great for rotating all 10 players evenly." },
+          { title: "🚫 Feet & Back of Stick (Bolle Kant)", desc: "Players may only play the ball with the <strong>flat side of the stick</strong>. Kicking or intentionally stopping the ball with feet/body is a foul." },
+          { title: "⚠️ Dangerous Play & Safety", desc: "Slap shots and pushes are encouraged. Hard lifted balls or raising the stick above shoulder height near other players is forbidden." }
+        ],
+        nl: [
+          { title: "🎯 15-Meter Doellijn (Geen Cirkel)", desc: "Bij 8-tallen op een half veld is er <strong>geen ronde cirkel</strong>. Een doelpunt telt alleen als de bal binnen of voorbij de <strong>rechte 15-meterlijn</strong> is geraakt door een aanvaller." },
+          { title: "🥅 Dwars Veld (8 tegen 8)", desc: "Er wordt overdwars op een half veld gespeeld (van zijlijn to zijlijn). Elk team speelt met <strong>8 spelers</strong> (1 Keeper + 7 Veldspelers)." },
+          { title: "📏 5 Meter Afstand Houden", desc: "Tegenstanders moeten altijd minimaal <strong>5 meter afstand</strong> houden bij vrije slagen en inslaan. Zelfpass is direct toegestaan." },
+          { title: "⏱️ Speeltijd & Kwartalen", desc: "De wedstrijd duurt <strong>4 x 15 minuten</strong> met 2 minuten rust tussen kwarten en 5 minuten rust halverwege." },
+          { title: "🚫 Voet & Bolle Kant van de Stick", desc: "De bal mag alleen gespeeld worden met de <strong>platte kant van de stick</strong>. Afhouden of de bal met de voet stoppen is een overtreding." },
+          { title: "⚠️ Veiligheid & Hoge Ballen", desc: "Schuifslag en flatsen worden aangemoedigd. Gevaarlijk hoog spelen of de stick boven schouderhoogte zwaaien bij tegenstanders is niet toegestaan." }
+        ]
+      };
+    } else {
+      return {
+        en: [
+          { title: "🎯 Striking Circle (D-Circle)", desc: "Played on a full field. Goals are only valid if shot/touched by an attacking player <strong>inside the striking circle</strong>." },
+          { title: "🥅 Standard 11 vs 11 Format", desc: "Played on a full-size hockey pitch with 11 players on each side (1 Goalkeeper + 10 Outfield players)." },
+          { title: "👩 Active Women Quota", desc: "Recreational rule: There must always be <strong>at least 4 women</strong> actively playing on the field (excluding substitutions)." },
+          { title: "📏 5-Meter Distance Rule", desc: "Opponents must keep at least <strong>5 meters distance</strong> on all free hits. Outside the 23m area, a self-pass is immediately allowed." },
+          { title: "⏱️ Match Duration", desc: "Standard recreational matches are played as <strong>2 halves of 35 minutes</strong> (or 4 x 17.5 minutes depending on league agreement)." },
+          { title: "🚫 Safety & Raising the Ball", desc: "Hard lifted balls into the circle are dangerous. Raise balls only into clear space. Raising stick above shoulders is a safety foul." }
+        ],
+        nl: [
+          { title: "🎯 Slagcirkel (D-Cirkel)", desc: "Gespeeld op een heel veld. Doelpunten zijn alleen geldig als ze <strong>binnen de cirkel</strong> door een aanvaller zijn aangeraakt/geschoten." },
+          { title: "🥅 Standaard 11 tegen 11", desc: "Gespeeld op een officieel heel hockeyveld met 11 spelers per team (1 Keeper + 10 Veldspelers)." },
+          { title: "👩 Minimaal 4 Dames op Veld", desc: "Trimmers recreatieregel: Er moeten altijd <strong>minimaal 4 dames</strong> tegelijk op het veld staan." },
+          { title: "📏 5 Meter Afstand Houden", desc: "Tegenstanders moeten 5 meter afstand houden bij alle vrije slagen. Buiten het 23m-gebied is zelfpass direct toegestaan." },
+          { title: "⏱️ Speelduur Wedstrijd", desc: "Wedstrijden duren standaard <strong>2 x 35 minuten</strong> (of 4 kwarten van 17.5 min) met een rustperiode halverwege." },
+          { title: "🚫 Veiligheid & Hoge Ballen", desc: "Gevaarlijk hoge slag of hoge bal in de cirkel is niet toegestaan. Bal alleen omhoog spelen in vrije ruimte." }
+        ]
+      };
+    }
+  }
+
+  function getOpponentPositions() {
+    if (currentTeam === 'MO10') {
+      return [
+        { x: '95%', y: '50%', label: 'GK' },
+        { x: '81%', y: '30%', label: 'LD' },
+        { x: '81%', y: '70%', label: 'RD' },
+        { x: '56%', y: '26%', label: 'LM' },
+        { x: '55%', y: '50%', label: 'CM' },
+        { x: '56%', y: '74%', label: 'RM' },
+        { x: '32%', y: '35%', label: 'LF' },
+        { x: '32%', y: '65%', label: 'RF' }
+      ];
+    } else {
+      return [
+        { x: '95%', y: '50%', label: 'GK' },
+        { x: '82%', y: '20%', label: 'LB' },
+        { x: '84%', y: '40%', label: 'LCB' },
+        { x: '84%', y: '60%', label: 'RCB' },
+        { x: '82%', y: '80%', label: 'RB' },
+        { x: '58%', y: '20%', label: 'LM' },
+        { x: '57%', y: '50%', label: 'CM' },
+        { x: '58%', y: '80%', label: 'RM' },
+        { x: '35%', y: '20%', label: 'LF' },
+        { x: '34%', y: '50%', label: 'CF' },
+        { x: '35%', y: '80%', label: 'RF' }
+      ];
+    }
+  }
+
+  function getInitialGender(name) {
+    const females = [
+      "shanaya", "kyra", "hannah", "liv", "kate", "alina", "mira", "defne",
+      "anna", "erdmann",
+      "frances", "handoko",
+      "saskia", "klaverstijn",
+      "marije", "koelink",
+      "hester", "kuis",
+      "noortje", "semmelink",
+      "elise", "visscher",
+      "anchal", "meenakshi", "michelle", "marjolein", "zeliha", "mine",
+      "liz", "sai"
+    ];
+    const n = name.toLowerCase().trim();
+    for (const f of females) {
+      if (n.includes(f) || f.includes(n)) return 'F';
+    }
+    return 'M';
+  }
+
+  function togglePlayerGender(index) {
+    if (squadPlayers[index]) {
+      const p = squadPlayers[index];
+      p.gender = p.gender === 'F' ? 'M' : 'F';
+      saveSquadLocal();
+      renderSquadManager();
+      validateWomenQuota();
+      if (typeof renderSubstitutionMatrix === 'function') renderSubstitutionMatrix();
+    }
+  }
+
+  function validateWomenQuota() {
+    const quotaBanner = document.getElementById('womenQuotaBanner');
+    if (currentTeam !== 'Trimmers') {
+      if (quotaBanner) quotaBanner.style.display = 'none';
+      return;
+    }
+    if (quotaBanner) quotaBanner.style.display = 'flex';
+
+    let womenCount = 0;
+    const activePositions = ['gk', 'lb', 'cb', 'rb', 'lm', 'cm', 'rm', 'lf', 'cf', 'rf'];
+    activePositions.forEach(posId => {
+      const playerName = currentAssignments[posId];
+      if (playerName) {
+        const playerObj = squadPlayers.find(p => (typeof p === 'string' ? p : p.name) === playerName);
+        if (playerObj) {
+          const gender = typeof playerObj === 'string' ? getInitialGender(playerObj) : (playerObj.gender || 'M');
+          if (gender === 'F') womenCount++;
+        }
+      }
+    });
+
+    const statusEl = document.getElementById('womenQuotaStatus');
+    if (statusEl) {
+      if (womenCount >= 4) {
+        statusEl.innerHTML = `<span style="color: #10b981; font-weight: 800;">👩 Women on Pitch: ${womenCount} / 4 (Met ✅)</span>`;
+      } else {
+        statusEl.innerHTML = `<span style="color: #f97316; font-weight: 800;">👩 Women on Pitch: ${womenCount} / 4 (⚠️ Minimum 4 required)</span>`;
+      }
+    }
+  }
+
+  function renderPitchSvg() {
+    const svgs = [document.getElementById('pitchSvg'), document.getElementById('sitPitchSvg')].filter(Boolean);
+    svgs.forEach(svg => {
+      let html = '<rect x="0" y="0" width="1100" height="610" fill="none" stroke="#ffffff" stroke-width="4" />';
+      if (svg.id === 'pitchSvg') {
+        html += '<rect x="0" y="610" width="1100" height="90" fill="#0f172a" stroke="#ffffff" stroke-dasharray="8,6" stroke-width="2" />';
+        html += '<text x="550" y="688" fill="#94a3b8" opacity="0.3" font-size="11" font-weight="bold" text-anchor="middle" letter-spacing="2">🛋️ WISSELBENCH / DUGOUT</text>';
+      }
+    
+    // Dugout / Wisselbench area (610 to 700px height)
+    html += '<rect x="0" y="610" width="1100" height="90" fill="#0f172a" stroke="#ffffff" stroke-dasharray="8,6" stroke-width="2" />';
+    html += '<text x="550" y="688" fill="#94a3b8" opacity="0.3" font-size="11" font-weight="bold" text-anchor="middle" letter-spacing="2">🛋️ WISSELBENCH / DUGOUT</text>';
+
+    if (currentTeam === 'MO10') {
+      html += `
+        <rect x="0" y="225" width="22" height="160" fill="rgba(255,255,255,0.25)" stroke="#ffffff" stroke-width="3" />
+        <rect x="1078" y="225" width="22" height="160" fill="rgba(255,255,255,0.25)" stroke="#ffffff" stroke-width="3" />
+        <line x1="220" y1="0" x2="220" y2="610" stroke="#f59e0b" stroke-width="3" stroke-dasharray="10,8" />
+        <rect x="12" y="12" width="170" height="22" fill="#090d14" rx="4" stroke="#f59e0b" stroke-width="1"/>
+        <text x="18" y="27" fill="#f59e0b" font-size="11" font-weight="bold">🛡️ Defending 15m Line</text>
+        <line x1="880" y1="0" x2="880" y2="610" stroke="#f59e0b" stroke-width="3" stroke-dasharray="10,8" />
+        <rect x="918" y="12" width="170" height="22" fill="#090d14" rx="4" stroke="#f59e0b" stroke-width="1"/>
+        <text x="924" y="27" fill="#f59e0b" font-size="11" font-weight="bold">🎯 Scoring Zone (15m)</text>
+        <rect x="880" y="0" width="220" height="610" fill="rgba(245,158,11,0.06)" />
+        <line x1="550" y1="0" x2="550" y2="610" stroke="#ffffff" stroke-width="3" />
+        <circle cx="550" cy="305" r="45" fill="none" stroke="#ffffff" stroke-width="2.5" />
+        <circle cx="550" cy="305" r="4" fill="#ffffff" />
+        <path d="M 460 590 L 640 590 M 625 580 L 640 590 L 625 600" fill="none" stroke="#38bdf8" stroke-width="2.5" />
+        <text x="550" y="575" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">Attacking Direction ➔</text>
+      `;
+    } else {
+      html += `
+        <rect x="0" y="225" width="22" height="160" fill="rgba(255,255,255,0.25)" stroke="#ffffff" stroke-width="3" />
+        <rect x="1078" y="225" width="22" height="160" fill="rgba(255,255,255,0.25)" stroke="#ffffff" stroke-width="3" />
+        <line x1="550" y1="0" x2="550" y2="610" stroke="#ffffff" stroke-width="3" />
+        <circle cx="550" cy="305" r="60" fill="none" stroke="#ffffff" stroke-width="2.5" />
+        <circle cx="550" cy="305" r="5" fill="#ffffff" />
+        <line x1="275" y1="0" x2="275" y2="610" stroke="#ffffff" stroke-width="2" stroke-dasharray="8,6" />
+        <line x1="825" y1="0" x2="825" y2="610" stroke="#ffffff" stroke-width="2" stroke-dasharray="8,6" />
+        <path d="M 0 125 A 180 180 0 0 1 180 305 A 180 180 0 0 1 0 485" fill="none" stroke="#ffffff" stroke-width="2.5" />
+        <path d="M 1100 125 A 180 180 0 0 0 920 305 A 180 180 0 0 0 1100 485" fill="none" stroke="#ffffff" stroke-width="2.5" />
+      `;
+    }
+    svg.innerHTML = html;
+    });
+  }
+
+  function getPosClass(pos) {
+    if (pos.id === 'gk') return 'myra-gk';
+    if (pos.isSub || pos.isSubDef || pos.isSubMid || pos.isSubFwd) {
+      if (pos.id === 'sub_def' || pos.id === 'sub_def_att' || pos.isSubDef) return 'myra-sub-def';
+      if (pos.id === 'sub_mid' || pos.isSubMid) return 'myra-sub-mid';
+      if (pos.id === 'sub_fwd' || pos.id === 'sub_att' || pos.isSubFwd) return 'myra-sub-fwd';
+      return 'myra-sub-def';
+    }
+    return 'myra-field';
+  }
+
+  let showOpponents = localStorage.getItem('hv_myra_show_opponents') !== 'false';
+
+  function updateOpponentsVisibility() {
+    const oppTokens = document.querySelectorAll('#board .token.opp, #sitBoardTokens .token.opp');
+    oppTokens.forEach(t => {
+      t.style.display = showOpponents ? 'flex' : 'none';
+    });
+    const btns = [document.getElementById('btnToggleOpponents'), document.getElementById('btnToggleSitOpponents')].filter(Boolean);
+    btns.forEach(btn => {
+      btn.innerHTML = showOpponents ? '👁️ Opponents: On' : '🙈 Opponents: Off';
+      btn.classList.toggle('active', showOpponents);
+      if (!showOpponents) {
+        btn.style.borderColor = '#f59e0b';
+        btn.style.color = '#fcd34d';
+      } else {
+        btn.style.borderColor = '';
+        btn.style.color = '';
+      }
+    });
+  }
+
+  function toggleOpponentsVisibility() {
+    showOpponents = !showOpponents;
+    localStorage.setItem('hv_myra_show_opponents', showOpponents);
+    updateOpponentsVisibility();
+    if (document.getElementById('view-situations').style.display === 'block') {
+      renderSituationsBoard();
+    }
+    showToast(showOpponents ? 'Opponents Visible' : 'Opponents Hidden');
+  }
+
+  function renderTokens() {
+    const board = document.getElementById('board');
+    if (!board) return;
+    board.querySelectorAll('.token:not(.ball)').forEach(t => t.remove());
+
+    positionsConfig.forEach(pos => {
+      const token = document.createElement('div');
+      const typeClass = getPosClass(pos);
+      token.className = `token draggable-token ${typeClass}`;
+      token.id = `pos_${pos.id}`;
+      token.style.left = pos.x;
+      token.style.top = pos.y;
+      
+      const dict = getPositionDict(pos.id);
+      
+      token.innerHTML = `
+        <div class="token-circle" id="circle_${pos.id}" style="cursor: pointer;" title="Double-click to rename" ondblclick="renamePosition('${pos.id}')">${dict.circle}</div>
+        <select class="player-select-pill" id="select_board_${pos.id}" onchange="onPositionChanged('${pos.id}', this.value)"></select>
+      `;
+      board.appendChild(token);
+    });
+
+    const oppPositions = getOpponentPositions();
+    oppPositions.forEach((opp, idx) => {
+      const token = document.createElement('div');
+      token.className = 'token opp draggable-token';
+      token.id = `opp_${idx}`;
+      token.style.left = opp.x;
+      token.style.top = opp.y;
+      token.style.display = showOpponents ? 'flex' : 'none';
+      token.innerHTML = `<div class="token-circle">${opp.label}</div>`;
+      board.appendChild(token);
+    });
+    updateOpponentsVisibility();
+  }
+
+  let currentAssignments = {};
+
+  function initDefaultAssignments(force = false) {
+    const available = getAvailablePlayers();
+    const availableNames = available.map(sp => typeof sp === 'string' ? sp : sp.name);
+
+    if (force || !currentAssignments) {
+      currentAssignments = {};
+    }
+
+    // Purge any position assignments that do not belong to the active team's available roster
+    Object.keys(currentAssignments).forEach(posId => {
+      const assignedName = currentAssignments[posId];
+      if (assignedName && !availableNames.includes(assignedName)) {
+        currentAssignments[posId] = '';
+      }
+    });
+
+    const unassigned = availableNames.filter(name => !Object.values(currentAssignments).includes(name));
+
+    if (currentTeam === 'Trimmers') {
+      let chosenGK = null;
+      const sander = unassigned.find(n => n.toLowerCase().includes('sander'));
+      const robert = unassigned.find(n => n.toLowerCase().includes('robert'));
+      if (sander) chosenGK = sander;
+      else if (robert) chosenGK = robert;
+      else if (unassigned.length > 0) chosenGK = unassigned[0];
+
+      if (chosenGK && !currentAssignments['gk']) {
+        currentAssignments['gk'] = chosenGK;
+      }
+      if (currentAssignments['gk']) {
+        const idx = unassigned.indexOf(currentAssignments['gk']);
+        if (idx !== -1) unassigned.splice(idx, 1);
+      }
+
+      positionsConfig.forEach(p => {
+        if (p.id === 'gk' && currentAssignments['gk']) return;
+        if (currentAssignments[p.id] && availableNames.includes(currentAssignments[p.id])) {
+          return;
+        }
+        const matchedIdx = unassigned.findIndex(name => {
+          const def = (p.default || '').toLowerCase();
+          const nm = name.toLowerCase();
+          return nm.includes(def) || def.includes(nm) || nm.startsWith(def.substring(0, 3));
+        });
+        if (matchedIdx !== -1) {
+          currentAssignments[p.id] = unassigned[matchedIdx];
+          unassigned.splice(matchedIdx, 1);
+        }
+      });
+
+      positionsConfig.forEach(p => {
+        if (!currentAssignments[p.id]) {
+          if (unassigned.length > 0) {
+            currentAssignments[p.id] = unassigned.shift();
+          } else {
+            currentAssignments[p.id] = '';
+          }
+        }
+      });
+    } else {
+      // MO10 (8v8)
+      positionsConfig.forEach(p => {
+        if (currentAssignments[p.id] && availableNames.includes(currentAssignments[p.id])) {
+          return;
+        }
+        const matchedIdx = unassigned.findIndex(name => {
+          const def = (p.default || '').toLowerCase();
+          const nm = name.toLowerCase();
+          return nm.includes(def) || def.includes(nm) || nm.startsWith(def.substring(0, 3));
+        });
+        if (matchedIdx !== -1) {
+          currentAssignments[p.id] = unassigned[matchedIdx];
+          unassigned.splice(matchedIdx, 1);
+        }
+      });
+
+      positionsConfig.forEach(p => {
+        if (!currentAssignments[p.id]) {
+          if (unassigned.length > 0) {
+            currentAssignments[p.id] = unassigned.shift();
+          } else {
+            currentAssignments[p.id] = '';
+          }
+        }
+      });
+    }
+  }
+
+  // Set initial layout
+  updatePositionsConfig();
+  initDefaultAssignments();
+
+  const board = document.getElementById('board');
+  const canvas = document.getElementById('drawCanvas');
+  const ctx = canvas.getContext('2d');
+
+  let currentMode = 'select';
+  let isDrawing = false;
+  let startX = 0, startY = 0;
+  let snapshot = null;
+
+  // Track drawn strokes so drawings scale and don't disappear on resize
+  let drawnObjects = [];
+
+  function resizeCanvas() {
+    canvas.width = board.clientWidth;
+    canvas.height = board.clientHeight;
+    redrawCanvas();
+  }
+  window.addEventListener('resize', resizeCanvas);
+  setTimeout(resizeCanvas, 100);
+
+  function redrawCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawnObjects.forEach(item => {
+      ctx.save();
+      if (item.type === 'line') {
+        ctx.strokeStyle = item.color;
+        ctx.lineWidth = item.width;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        item.points.forEach((pt, idx) => {
+          const x = pt.x * canvas.width;
+          const y = pt.y * canvas.height;
+          if (idx === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+      } else if (item.type === 'arrow') {
+        const x1 = item.from.x * canvas.width;
+        const y1 = item.from.y * canvas.height;
+        const x2 = item.to.x * canvas.width;
+        const y2 = item.to.y * canvas.height;
+        drawArrowDirect(x1, y1, x2, y2, item.color, item.width);
+      }
+      ctx.restore();
+    });
+  }
+
+  function formatDateForDisplay(isoDateString, lang) {
+    if (!isoDateString) return "Saturday, 29 Aug 2026";
+    const [year, month, day] = isoDateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    const targetLang = lang || currentLang;
+    const options = { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' };
+    return date.toLocaleDateString(targetLang === 'en' ? 'en-GB' : 'nl-NL', options);
+  }
+
+  function onDateSelected(isoValue) { syncBanner(); }
+
+  function syncBanner() {
+    document.getElementById('bannerMatchTitle').innerText = document.getElementById('matchOpponent').value || 'HV Myra O10 Match';
+    const datePickerVal = document.getElementById('matchDatePicker').value;
+    document.getElementById('bannerDate').innerText = '📅 ' + formatDateForDisplay(datePickerVal);
+    document.getElementById('bannerQuarter').innerText = '⏱️ ' + (document.getElementById('matchQuarter').value || 'Lineup');
+  }
+
+  function renderStrategyTips() {
+    // Strategy tips removed per coach request
+  }
+
+  function setLanguage(lang) {
+    currentLang = lang || 'en';
+    const btnEN = document.getElementById('btnLangEN');
+    const btnNL = document.getElementById('btnLangNL');
+    if (btnEN) btnEN.classList.toggle('active', currentLang === 'en');
+    if (btnNL) btnNL.classList.toggle('active', currentLang === 'nl');
+
+    const svgDefLine = document.getElementById('svgPitchDefLine');
+    if (svgDefLine) svgDefLine.textContent = "🛡️ Defending 15m Line";
+    const svgScoreLine = document.getElementById('svgPitchScoreLine');
+    if (svgScoreLine) svgScoreLine.textContent = "🎯 Scoring Zone (15m)";
+    const svgDir = document.getElementById('svgPitchDirection');
+    if (svgDir) svgDir.textContent = "Attacking Direction ➔";
+    
+    const txtSideTitle = document.getElementById('txtSideTitle');
+    if (txtSideTitle) txtSideTitle.innerText = "🏃 Starting Lineup";
+    const txtNotesTitle = document.getElementById('txtNotesTitle');
+    if (txtNotesTitle) txtNotesTitle.innerText = "✏️ Coach Notes";
+    const txtRulesHeader = document.getElementById('txtRulesHeader');
+    if (txtRulesHeader) txtRulesHeader.innerText = "📖 KNHB Match Rules & Guidelines";
+
+    renderPositionLabels();
+    renderRules();
+    syncBanner();
+  }
+
+  let customPositionNames = JSON.parse(localStorage.getItem('hv_myra_custom_positions')) || {};
+
+  function getPositionDict(posId) {
+    const base = getPositionTranslations(posId)[currentLang];
+    const custom = customPositionNames[posId] ? customPositionNames[posId][currentLang] : null;
+    const finalTrans = custom ? { ...base, ...custom } : base;
+    return {
+      code: finalTrans.code,
+      label: finalTrans.label,
+      circle: posId.includes('sub') ? `SUB<span class="sub-tag">${finalTrans.code.replace('SUB', '').replace('WISSEL', '').replace('1','1').replace('2','2').replace('3','3')}</span>` : finalTrans.code
+    };
+  }
+
+  function renamePosition(posId) {
+    const currentDict = getPositionDict(posId);
+    const newName = prompt(
+      currentLang === 'en' 
+        ? `Enter new label for ${currentDict.label || posId} (max 4 characters):` 
+        : `Voer nieuwe afkorting in voor ${currentDict.label || posId} (max 4 tekens):`, 
+      currentDict.code
+    );
+    if (newName === null) return;
+    const cleanName = newName.trim().substring(0, 4);
+    if (!cleanName) return;
+
+    if (!customPositionNames[posId]) {
+      customPositionNames[posId] = { en: {}, nl: {} };
+    }
+    
+    customPositionNames[posId][currentLang] = { code: cleanName, circle: cleanName };
+    const otherLang = currentLang === 'en' ? 'nl' : 'en';
+    if (!customPositionNames[posId][otherLang]) {
+      customPositionNames[posId][otherLang] = { code: cleanName, circle: cleanName };
+    }
+
+    localStorage.setItem('hv_myra_custom_positions', JSON.stringify(customPositionNames));
+    renderPositionLabels();
+    initDropdowns();
+    showToast(`Position renamed to ${cleanName}`);
+    saveConfigToServer();
+  }
+
+  function renderPositionLabels() {
+    positionsConfig.forEach(pos => {
+      const circleEl = document.getElementById(`circle_${pos.id}`);
+      if (!circleEl) return;
+      
+      let label = '';
+      if (currentTeam === 'MO10') {
+        if (activeFormation === '1-3-3-1') {
+          if (pos.id === 'gk') label = currentLang === 'en' ? 'GK' : 'K';
+          else if (pos.id === 'lb') label = currentLang === 'en' ? 'LB' : 'LA';
+          else if (pos.id === 'cb') label = currentLang === 'en' ? 'CB' : 'CA';
+          else if (pos.id === 'rb') label = currentLang === 'en' ? 'RB' : 'RA';
+          else if (pos.id === 'lm') label = 'LM';
+          else if (pos.id === 'cm') label = 'CM';
+          else if (pos.id === 'rm') label = 'RM';
+          else if (pos.id === 'lf') label = currentLang === 'en' ? 'ST' : 'SP';
+          else if (pos.id === 'rf') label = currentLang === 'en' ? 'SUB<span class="sub-tag">ATT</span>' : 'WIS<span class="sub-tag">AAN</span>';
+          else if (pos.id === 'sub_mid') label = currentLang === 'en' ? 'SUB<span class="sub-tag">MID</span>' : 'WIS<span class="sub-tag">MID</span>';
+        } else {
+          if (pos.id === 'gk') label = currentLang === 'en' ? 'GK' : 'K';
+          else if (pos.id === 'lb') label = currentLang === 'en' ? 'LB' : 'LA';
+          else if (pos.id === 'rb') label = currentLang === 'en' ? 'RB' : 'RA';
+          else if (pos.id === 'cb') label = currentLang === 'en' ? 'SUB<span class="sub-tag">DEF</span>' : 'WIS<span class="sub-tag">VER</span>';
+          else if (pos.id === 'lm') label = 'LM';
+          else if (pos.id === 'cm') label = 'CM';
+          else if (pos.id === 'rm') label = 'RM';
+          else if (pos.id === 'lf') label = currentLang === 'en' ? 'LF' : 'LA';
+          else if (pos.id === 'rf') label = currentLang === 'en' ? 'RF' : 'RA';
+          else if (pos.id === 'sub_mid') label = currentLang === 'en' ? 'SUB<span class="sub-tag">MID</span>' : 'WIS<span class="sub-tag">MID</span>';
+        }
+      } else {
+        // Trimmers
+        if (activeFormation === '4-4-2') {
+          if (pos.id === 'cm') label = 'LCM';
+          else if (pos.id === 'cf') label = 'RCM';
+          else if (pos.id === 'lf') label = currentLang === 'en' ? 'LF' : 'LA';
+          else if (pos.id === 'rf') label = currentLang === 'en' ? 'RF' : 'RA';
+          else label = getPositionDict(pos.id).circle;
+        } else if (activeFormation === '3-1-3-3') {
+          if (pos.id === 'lcb') label = currentLang === 'en' ? 'CB' : 'CA';
+          else if (pos.id === 'rcb') label = currentLang === 'en' ? 'CDM' : 'CVM';
+          else label = getPositionDict(pos.id).circle;
+        } else {
+          label = getPositionDict(pos.id).circle;
+        }
+      }
+      circleEl.innerHTML = label;
+    });
+
+    const sidebarContainer = document.getElementById('sidebarPositionsList');
+    if (sidebarContainer) {
+      sidebarContainer.innerHTML = '';
+      positionsConfig.forEach(pos => {
+        let code = '';
+        let isSub = false;
+        if (currentTeam === 'MO10') {
+          if (activeFormation === '1-3-3-1') {
+            if (pos.id === 'gk') code = currentLang === 'en' ? 'GK' : 'K';
+            else if (pos.id === 'lb') code = currentLang === 'en' ? 'LB' : 'LA';
+            else if (pos.id === 'cb') code = currentLang === 'en' ? 'CB' : 'CA';
+            else if (pos.id === 'rb') code = currentLang === 'en' ? 'RB' : 'RA';
+            else if (pos.id === 'lm') code = 'LM';
+            else if (pos.id === 'cm') code = 'CM';
+            else if (pos.id === 'rm') code = 'RM';
+            else if (pos.id === 'lf') code = currentLang === 'en' ? 'ST' : 'SP';
+            else if (pos.id === 'rf') { code = currentLang === 'en' ? 'SUB-ATT' : 'WIS-AAN'; isSub = true; }
+            else if (pos.id === 'sub_mid') { code = currentLang === 'en' ? 'SUB-MID' : 'WIS-MID'; isSub = true; }
+          } else {
+            if (pos.id === 'gk') code = currentLang === 'en' ? 'GK' : 'K';
+            else if (pos.id === 'lb') code = currentLang === 'en' ? 'LB' : 'LA';
+            else if (pos.id === 'rb') code = currentLang === 'en' ? 'RB' : 'RA';
+            else if (pos.id === 'cb') { code = currentLang === 'en' ? 'SUB-DEF' : 'WIS-VER'; isSub = true; }
+            else if (pos.id === 'lm') code = 'LM';
+            else if (pos.id === 'cm') code = 'CM';
+            else if (pos.id === 'rm') code = 'RM';
+            else if (pos.id === 'lf') code = currentLang === 'en' ? 'LF' : 'LA';
+            else if (pos.id === 'rf') code = currentLang === 'en' ? 'RF' : 'RA';
+            else if (pos.id === 'sub_mid') { code = currentLang === 'en' ? 'SUB-MID' : 'WIS-MID'; isSub = true; }
+          }
+        } else {
+          // Trimmers
+          if (activeFormation === '4-4-2') {
+            if (pos.id === 'cm') code = 'LCM';
+            else if (pos.id === 'cf') code = 'RCM';
+            else code = getPositionDict(pos.id).code;
+          } else if (activeFormation === '3-1-3-3') {
+            if (pos.id === 'lcb') code = currentLang === 'en' ? 'CB' : 'CA';
+            else if (pos.id === 'rcb') code = currentLang === 'en' ? 'CDM' : 'CVM';
+            else code = getPositionDict(pos.id).code;
+          } else {
+            code = getPositionDict(pos.id).code;
+          }
+          isSub = pos.isSub;
+        }
+        
+        const available = getAvailablePlayers();
+        const row = document.createElement('div');
+        row.className = 'position-row';
+        let tagClass = 'pos-tag';
+        if (pos.isSub || pos.isSubDef || pos.isSubMid || pos.isSubFwd) {
+          if (pos.id === 'sub_def' || pos.id === 'cb' || pos.isSubDef) tagClass = 'pos-tag tag-sub-def';
+          else if (pos.id === 'sub_mid' || pos.isSubMid) tagClass = 'pos-tag tag-sub-mid';
+          else if (pos.id === 'sub_fwd' || pos.id === 'rf' || pos.isSubFwd) tagClass = 'pos-tag tag-sub-fwd';
+          else tagClass = 'pos-tag tag-sub-def';
+        }
+        row.innerHTML = `
+          <span class="${tagClass}" style="cursor: pointer;" title="Double-click to rename" ondblclick="renamePosition('${pos.id}')">${code}</span>
+          <select class="sidebar-select" id="select_side_${pos.id}" onchange="onPositionChanged('${pos.id}', this.value)"></select>
+        `;
+        sidebarContainer.appendChild(row);
+        const sideSelect = document.getElementById(`select_side_${pos.id}`);
+        if (sideSelect) populateSelectWithOptions(sideSelect, available, currentAssignments[pos.id] || '');
+      });
+    }
+
+    if (currentTeam === 'MO10') {
+      if (activeFormation === '1-3-3-1') {
+        const oppLabels = [
+          currentLang === 'en' ? 'GK' : 'K',
+          currentLang === 'en' ? 'LB' : 'LA',
+          currentLang === 'en' ? 'CB' : 'CA',
+          currentLang === 'en' ? 'RB' : 'RA',
+          'LM', 'CM', 'RM',
+          currentLang === 'en' ? 'ST' : 'SP'
+        ];
+        oppLabels.forEach((lbl, idx) => {
+          const el = document.getElementById(`opp_${idx}`);
+          if (el) el.querySelector('.token-circle').innerText = lbl;
+        });
+      } else {
+        const oppLabels = [
+          currentLang === 'en' ? 'GK' : 'K',
+          currentLang === 'en' ? 'LB' : 'LA',
+          currentLang === 'en' ? 'RB' : 'RA',
+          'LM', 'CM', 'RM',
+          currentLang === 'en' ? 'LF' : 'LA',
+          currentLang === 'en' ? 'RF' : 'RA'
+        ];
+        oppLabels.forEach((lbl, idx) => {
+          const el = document.getElementById(`opp_${idx}`);
+          if (el) el.querySelector('.token-circle').innerText = lbl;
+        });
+      }
+    } else {
+      // Trimmers Opponents
+      if (activeFormation === '4-4-2') {
+        const oppLabels = [
+          currentLang === 'en' ? 'GK' : 'K',
+          currentLang === 'en' ? 'LB' : 'LA',
+          currentLang === 'en' ? 'LCB' : 'LVA',
+          currentLang === 'en' ? 'RCB' : 'RVA',
+          currentLang === 'en' ? 'RB' : 'RA',
+          'LM', 'LCM', 'RCM', 'RM',
+          currentLang === 'en' ? 'LF' : 'LA',
+          currentLang === 'en' ? 'RF' : 'RA'
+        ];
+        oppLabels.forEach((lbl, idx) => {
+          const el = document.getElementById(`opp_${idx}`);
+          if (el) el.querySelector('.token-circle').innerText = lbl;
+        });
+      } else if (activeFormation === '3-1-3-3') {
+        const oppLabels = [
+          currentLang === 'en' ? 'GK' : 'K',
+          currentLang === 'en' ? 'LB' : 'LA',
+          currentLang === 'en' ? 'CB' : 'CA',
+          currentLang === 'en' ? 'RB' : 'RA',
+          currentLang === 'en' ? 'CDM' : 'CVM',
+          'LM', 'CM', 'RM',
+          currentLang === 'en' ? 'LF' : 'LA',
+          currentLang === 'en' ? 'CF' : 'SP',
+          currentLang === 'en' ? 'RF' : 'RA'
+        ];
+        oppLabels.forEach((lbl, idx) => {
+          const el = document.getElementById(`opp_${idx}`);
+          if (el) el.querySelector('.token-circle').innerText = lbl;
+        });
+      } else {
+        // Standard 4-3-3
+        const oppLabels = [
+          currentLang === 'en' ? 'GK' : 'K',
+          currentLang === 'en' ? 'LB' : 'LA',
+          currentLang === 'en' ? 'LCB' : 'LVA',
+          currentLang === 'en' ? 'RCB' : 'RVA',
+          currentLang === 'en' ? 'RB' : 'RA',
+          'LM', 'CM', 'RM',
+          currentLang === 'en' ? 'LF' : 'LA',
+          currentLang === 'en' ? 'CF' : 'SP',
+          currentLang === 'en' ? 'RF' : 'RA'
+        ];
+        oppLabels.forEach((lbl, idx) => {
+          const el = document.getElementById(`opp_${idx}`);
+          if (el) el.querySelector('.token-circle').innerText = lbl;
+        });
+      }
+    }
+  }
+
+  function renderRules() {
+    const grid = document.getElementById('rulesGrid');
+    grid.innerHTML = '';
+    getRulesDictionary()[currentLang].forEach(r => {
+      const card = document.createElement('div');
+      card.className = 'rule-card';
+      card.innerHTML = `<div class="rule-title">${r.title}</div><p>${r.desc}</p>`;
+      grid.appendChild(card);
+    });
+  }
+
+  function populateSelectWithOptions(select, available, selectedValue = '') {
+    if (!select) return;
+    select.innerHTML = '';
+    const emptyOpt = document.createElement('option');
+    emptyOpt.value = '';
+    emptyOpt.innerText = '-- Select --';
+    select.appendChild(emptyOpt);
+
+    const groups = [
+      { key: 'GK', label: '🧤 Goalkeepers (GK)', players: [] },
+      { key: 'DEF', label: '🛡️ Defenders (DEF)', players: [] },
+      { key: 'MID', label: '🏃 Midfielders (MID)', players: [] },
+      { key: 'ATT', label: '⚡ Attackers (ATT)', players: [] }
+    ];
+
+    available.forEach(p => {
+      const name = typeof p === 'string' ? p : p.name;
+      let line = getPlayerLine(name);
+      if (line === 'FWD') line = 'ATT';
+      const targetGrp = groups.find(g => g.key === line) || groups[3];
+      targetGrp.players.push(p);
+    });
+
+    groups.forEach(grp => {
+      if (grp.players.length > 0) {
+        grp.players.sort((a, b) => {
+          const nameA = typeof a === 'string' ? a : a.name;
+          const nameB = typeof b === 'string' ? b : b.name;
+          return nameA.localeCompare(nameB, undefined, { sensitivity: 'base' });
+        });
+
+        const optGroup = document.createElement('optgroup');
+        optGroup.label = grp.label;
+
+        grp.players.forEach(p => {
+          const name = typeof p === 'string' ? p : p.name;
+          const isGuest = typeof p === 'object' && p.isGuest;
+          const dName = getDisplayName(name);
+          const opt = document.createElement('option');
+          opt.value = name;
+          opt.innerText = isGuest ? `${dName} (Guest)` : dName;
+          optGroup.appendChild(opt);
+        });
+
+        select.appendChild(optGroup);
+      }
+    });
+
+    select.value = selectedValue || '';
+  }
+
+  function initDropdowns() {
+    const available = getAvailablePlayers();
+    positionsConfig.forEach(pos => {
+      const boardSelect = document.getElementById(`select_board_${pos.id}`);
+      const sideSelect = document.getElementById(`select_side_${pos.id}`);
+      const assignedVal = currentAssignments[pos.id] || '';
+      if (boardSelect) populateSelectWithOptions(boardSelect, available, assignedVal);
+      if (sideSelect) populateSelectWithOptions(sideSelect, available, assignedVal);
+    });
+    renderPositionLabels();
+    renderRules();
+  }
+
+  function onPositionChanged(posId, selectedPlayer) {
+    const previousPlayerAtThisPos = currentAssignments[posId];
+    let otherPosWithThisPlayer = null;
+    for (const [pId, pName] of Object.entries(currentAssignments)) {
+      if (pId !== posId && pName === selectedPlayer) {
+        otherPosWithThisPlayer = pId;
+        break;
+      }
+    }
+
+    currentAssignments[posId] = selectedPlayer;
+    if (otherPosWithThisPlayer) {
+      currentAssignments[otherPosWithThisPlayer] = previousPlayerAtThisPos;
+    }
+
+    // Determine target category for posId and update player's position role
+    if (selectedPlayer) {
+      let targetRole = null;
+      if (posId === 'gk') targetRole = 'GK';
+      else if (['lb', 'lcb', 'cb', 'rcb', 'rb', 'sub_def', 'sub_def_att', 'sub_field_3'].includes(posId)) targetRole = 'DEF';
+      else if (['cdm', 'lm', 'cm', 'lcm', 'rcm', 'rm', 'sub_mid', 'sub_field_2'].includes(posId)) targetRole = 'MID';
+      else if (['lf', 'cf', 'st', 'rf', 'sub_fwd', 'sub_att', 'sub_field_1'].includes(posId)) targetRole = 'ATT';
+
+      if (targetRole) {
+        const pObj = squadPlayers.find(sp => (typeof sp === 'string' ? sp : sp.name) === selectedPlayer);
+        if (pObj && typeof pObj === 'object') {
+          pObj.role = targetRole;
+        } else if (pObj && typeof pObj === 'string') {
+          const idx = squadPlayers.indexOf(pObj);
+          if (idx !== -1) {
+            squadPlayers[idx] = { name: pObj, gender: getInitialGender(pObj), role: targetRole, isAvailable: true };
+          }
+        }
+        saveSquadLocal();
+      }
+    }
+
+    positionsConfig.forEach(pos => {
+      const boardSelect = document.getElementById(`select_board_${pos.id}`);
+      const sideSelect = document.getElementById(`select_side_${pos.id}`);
+      if (boardSelect) boardSelect.value = currentAssignments[pos.id] || '';
+      if (sideSelect) sideSelect.value = currentAssignments[pos.id] || '';
+    });
+    
+    renderPositionLabels();
+    renderSquadManager();
+    saveTacticsLocal();
+    if (typeof syncMatrixFromTactics === 'function') syncMatrixFromTactics();
+  }
+
+  /* Draggable Opponents & Ball via Event Delegation */
+  let activeElement = null;
+  let offsetX = 0, offsetY = 0;
+
+  function showToast(message) {
+    const toast = document.getElementById('toast');
+    toast.innerText = message;
+    toast.classList.add('show');
+    setTimeout(() => { toast.classList.remove('show'); }, 2000);
+  }
+
+  function initDragDelegation() {
+    const board = document.getElementById('board');
+    if (!board) return;
+
+    board.addEventListener('pointerdown', (e) => {
+      const token = e.target.closest('.draggable-token');
+      if (!token) return;
+      if (currentMode !== 'select') return;
+      if (currentUserRole !== 'coach') return; // Parents cannot drag
+      if (e.target.tagName.toLowerCase() === 'select') return;
+
+      activeElement = token;
+      const rect = token.getBoundingClientRect();
+      offsetX = e.clientX - (rect.left + rect.width / 2);
+      offsetY = e.clientY - (rect.top + rect.height / 2);
+      token.setPointerCapture(e.pointerId);
+    });
+
+    board.addEventListener('pointermove', (e) => {
+      if (!activeElement) return;
+      const boardRect = board.getBoundingClientRect();
+      let x = e.clientX - boardRect.left - offsetX;
+      let y = e.clientY - boardRect.top - offsetY;
+      x = Math.max(15, Math.min(boardRect.width - 15, x));
+      y = Math.max(15, Math.min(boardRect.height - 15, y));
+      activeElement.style.left = `${(x / boardRect.width) * 100}%`;
+      activeElement.style.top = `${(y / boardRect.height) * 100}%`;
+    });
+
+    board.addEventListener('pointerup', (e) => {
+      if (activeElement) {
+        activeElement.releasePointerCapture(e.pointerId);
+        activeElement = null;
+      }
+    });
+  }
+
+  /* -------------------------------------------------------------
+     FIXED DRAWING & ERASER LOGIC (Robust, Point-to-Path, Erasable)
+     ------------------------------------------------------------- */
+  let currentStroke = [];
+
+  function setMode(mode) {
+    currentMode = mode;
+    ['modeSelect', 'modeDraw', 'modeArrow', 'modeEraser'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) btn.classList.remove('active');
+    });
+    if (mode === 'select') document.getElementById('modeSelect').classList.add('active');
+    if (mode === 'draw') document.getElementById('modeDraw').classList.add('active');
+    if (mode === 'arrow') document.getElementById('modeArrow').classList.add('active');
+    if (mode === 'eraser') document.getElementById('modeEraser').classList.add('active');
+
+    // Pointer events activate whenever not in select mode
+    canvas.style.pointerEvents = (mode === 'select') ? 'none' : 'all';
+  }
+
+  function getCanvasCoords(e) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: (e.clientX - rect.left),
+      y: (e.clientY - rect.top),
+      normX: (e.clientX - rect.left) / canvas.width,
+      normY: (e.clientY - rect.top) / canvas.height
+    };
+  }
+
+  canvas.addEventListener('pointerdown', (e) => {
+    if (currentMode === 'select') return;
+    if (currentUserRole !== 'coach') return; // Parents cannot draw!
+    isDrawing = true;
+    const coords = getCanvasCoords(e);
+    startX = coords.x;
+    startY = coords.y;
+
+    if (currentMode === 'draw') {
+      currentStroke = [{ x: coords.normX, y: coords.normY }];
+      ctx.strokeStyle = '#facc15';
+      ctx.lineWidth = 3.5;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+    } else if (currentMode === 'arrow') {
+      snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    } else if (currentMode === 'eraser') {
+      eraseAtPoint(coords.normX, coords.normY);
+    }
+  });
+
+  canvas.addEventListener('pointermove', (e) => {
+    if (!isDrawing) return;
+    const coords = getCanvasCoords(e);
+
+    if (currentMode === 'draw') {
+      currentStroke.push({ x: coords.normX, y: coords.normY });
+      ctx.lineTo(coords.x, coords.y);
+      ctx.stroke();
+    } else if (currentMode === 'arrow') {
+      if (snapshot) ctx.putImageData(snapshot, 0, 0);
+      drawArrowDirect(startX, startY, coords.x, coords.y, '#38bdf8', 3.5);
+    } else if (currentMode === 'eraser') {
+      eraseAtPoint(coords.normX, coords.normY);
+    }
+  });
+
+  canvas.addEventListener('pointerup', (e) => {
+    if (!isDrawing) return;
+    isDrawing = false;
+    const coords = getCanvasCoords(e);
+
+    if (currentMode === 'draw') {
+      if (currentStroke.length > 1) {
+        drawnObjects.push({
+          type: 'line',
+          color: '#facc15',
+          width: 3.5,
+          points: currentStroke
+        });
+      }
+      currentStroke = [];
+    } else if (currentMode === 'arrow') {
+      drawnObjects.push({
+        type: 'arrow',
+        color: '#38bdf8',
+        width: 3.5,
+        from: { x: startX / canvas.width, y: startY / canvas.height },
+        to: { x: coords.normX, y: coords.normY }
+      });
+      redrawCanvas();
+    }
+  });
+
+  function drawArrowDirect(x1, y1, x2, y2, color, width) {
+    const headlen = 14;
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = width;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - headlen * Math.cos(angle - Math.PI / 6), y2 - headlen * Math.sin(angle - Math.PI / 6));
+    ctx.lineTo(x2 - headlen * Math.cos(angle + Math.PI / 6), y2 - headlen * Math.sin(angle + Math.PI / 6));
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Erase closest stroke or segment on eraser touch
+  function eraseAtPoint(normX, normY) {
+    const threshold = 0.035; // Sensitivity radius
+    let changed = false;
+
+    drawnObjects = drawnObjects.filter(obj => {
+      if (obj.type === 'line') {
+        const nearPoint = obj.points.some(pt => {
+          const dist = Math.hypot(pt.x - normX, pt.y - normY);
+          return dist < threshold;
+        });
+        if (nearPoint) { changed = true; return false; }
+      } else if (obj.type === 'arrow') {
+        const distFrom = Math.hypot(obj.from.x - normX, obj.from.y - normY);
+        const distTo = Math.hypot(obj.to.x - normX, obj.to.y - normY);
+        if (distFrom < threshold || distTo < threshold) { changed = true; return false; }
+      }
+      return true;
+    });
+
+    if (changed) {
+      redrawCanvas();
+      showToast('Line Erased');
+    }
+  }
+
+  function clearDrawings() {
+    drawnObjects = [];
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    showToast('All Lines Cleared');
+  }
+
+  const formations = {
+    // MO10 Formations (8v8)
+    '1-2-3-2': {
+      'pos_gk': [6, 50], 'pos_lb': [23, 34], 'pos_rb': [23, 66], 'pos_cb': [25, 93],
+      'pos_lm': [47, 26], 'pos_cm': [45, 50], 'pos_rm': [47, 74],
+      'pos_lf': [70, 35], 'pos_rf': [70, 65], 'pos_sub_mid': [55, 93],
+      'ball': [50, 50],
+      'opp_0': [95, 50], 'opp_1': [81, 34], 'opp_2': [81, 66],
+      'opp_3': [56, 26], 'opp_4': [55, 50], 'opp_5': [56, 74],
+      'opp_6': [32, 35], 'opp_7': [32, 65]
+    },
+    '1-3-3-1': {
+      'pos_gk': [6, 50], 'pos_lb': [23, 28], 'pos_cb': [20, 50], 'pos_rb': [23, 72],
+      'pos_lm': [47, 26], 'pos_cm': [45, 50], 'pos_rm': [47, 74],
+      'pos_lf': [70, 50], 'pos_rf': [55, 93], 'pos_sub_mid': [25, 93],
+      'ball': [50, 50],
+      'opp_0': [95, 50], 'opp_1': [81, 28], 'opp_2': [84, 50], 'opp_3': [81, 72],
+      'opp_4': [56, 26], 'opp_5': [55, 50], 'opp_6': [56, 74], 'opp_7': [32, 50]
+    },
+    // Trimmers Formations (11v11)
+    '4-3-3': {
+      'pos_gk': [6, 43.5],
+      'pos_lb': [22, 12], 'pos_lcb': [16, 34], 'pos_rcb': [16, 53], 'pos_rb': [22, 75],
+      'pos_lm': [48, 18], 'pos_cm': [44, 43.5], 'pos_rm': [48, 69],
+      'pos_lf': [74, 14], 'pos_cf': [76, 43.5], 'pos_rf': [74, 73],
+      'pos_sub_def': [18, 93], 'pos_sub_mid': [46, 93], 'pos_sub_fwd': [74, 93],
+      'pos_sub_field_1': [74, 93], 'pos_sub_field_2': [46, 93], 'pos_sub_field_3': [18, 93],
+      'ball': [50, 43.5],
+      'opp_0': [95, 43.5],
+      'opp_1': [82, 12], 'opp_2': [82, 34], 'opp_3': [82, 53], 'opp_4': [82, 75],
+      'opp_5': [58, 18], 'opp_6': [57, 43.5], 'opp_7': [58, 69],
+      'opp_8': [35, 14], 'opp_9': [34, 43.5], 'opp_10': [35, 73]
+    },
+    '4-4-2': {
+      'pos_gk': [6, 43.5],
+      'pos_lb': [22, 12], 'pos_lcb': [16, 34], 'pos_rcb': [16, 53], 'pos_rb': [22, 75],
+      'pos_lm': [48, 14], 'pos_cm': [44, 33], 'pos_cf': [44, 54], 'pos_rm': [48, 73],
+      'pos_lf': [74, 32], 'pos_rf': [74, 55],
+      'pos_sub_def': [18, 93], 'pos_sub_mid': [46, 93], 'pos_sub_fwd': [74, 93],
+      'pos_sub_field_1': [74, 93], 'pos_sub_field_2': [46, 93], 'pos_sub_field_3': [18, 93],
+      'ball': [50, 43.5],
+      'opp_0': [95, 43.5],
+      'opp_1': [82, 12], 'opp_2': [82, 34], 'opp_3': [82, 53], 'opp_4': [82, 75],
+      'opp_5': [58, 14], 'opp_6': [57, 33], 'opp_7': [57, 54], 'opp_8': [58, 73],
+      'opp_9': [35, 32], 'opp_10': [35, 55]
+    },
+    '3-1-3-3': {
+      'pos_gk': [6, 43.5],
+      'pos_lb': [22, 16], 'pos_lcb': [16, 43.5], 'pos_rb': [22, 71],
+      'pos_rcb': [30, 43.5],
+      'pos_lm': [50, 18], 'pos_cm': [48, 43.5], 'pos_rm': [50, 69],
+      'pos_lf': [74, 14], 'pos_cf': [76, 43.5], 'pos_rf': [74, 73],
+      'pos_sub_def': [18, 93], 'pos_sub_mid': [46, 93], 'pos_sub_fwd': [74, 93],
+      'pos_sub_field_1': [74, 93], 'pos_sub_field_2': [46, 93], 'pos_sub_field_3': [18, 93],
+      'ball': [50, 43.5],
+      'opp_0': [95, 43.5],
+      'opp_1': [82, 18], 'opp_2': [86, 43.5], 'opp_3': [82, 69],
+      'opp_4': [69, 43.5],
+      'opp_5': [55, 18], 'opp_6': [54, 43.5], 'opp_7': [55, 69],
+      'opp_8': [35, 18], 'opp_9': [34, 43.5], 'opp_10': [35, 69]
+    }
+  };
+
+  function applyFormation(name) {
+    activeFormation = name;
+    
+    // Update toolbar active states
+    ['btnForm1', 'btnForm2', 'btnFormTrimmers433', 'btnFormTrimmers442', 'btnFormTrimmers3133'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) btn.classList.remove('active');
+    });
+    if (name === '1-2-3-2') document.getElementById('btnForm1')?.classList.add('active');
+    if (name === '1-3-3-1') document.getElementById('btnForm2')?.classList.add('active');
+    if (name === '4-3-3') document.getElementById('btnFormTrimmers433')?.classList.add('active');
+    if (name === '4-4-2') document.getElementById('btnFormTrimmers442')?.classList.add('active');
+    if (name === '3-1-3-3') document.getElementById('btnFormTrimmers3133')?.classList.add('active');
+
+    const setup = formations[name];
+    if (!setup) return;
+    for (const [id, [left, top]] of Object.entries(setup)) {
+      let el = document.getElementById(id);
+      if (!el && id.startsWith('pos_')) {
+        el = document.getElementById(id.replace('pos_', ''));
+      }
+      if (!el && !id.startsWith('pos_')) {
+        el = document.getElementById('pos_' + id);
+      }
+      if (el) { el.style.left = `${left}%`; el.style.top = `${top}%`; }
+    }
+    renderPositionLabels();
+    showToast(`Applied ${name} Formation`);
+  }
+
+  let activeSituation = 'standard';
+
+  const situationTips = {
+    'standard': '💡 <strong>Base Formation:</strong> Neutral balanced positioning for build-up and kickoff.',
+    'start_middle': '⚽ <strong>Start Middle:</strong> Kickoff pass-back from center circle (start of half or after goal conceded). CF & CM set kickoff backwards to CM/LM.',
+    'start_lb': '🧱 <strong>Start LB:</strong> 16m restart taken by LB on left touchline. LCB & RCB open up wide; LM drops to 25yd channel to receive.',
+    'start_lcb': '🧱 <strong>Start LCB:</strong> 16m restart taken by LCB dead center. LB & RB stretch wide to touchlines; CM drops to 25yd line for central pivot.',
+    'start_rb': '🧱 <strong>Start RB:</strong> 16m restart taken by RB on right touchline. RCB & LCB open up wide; RM drops to 25yd channel to receive.',
+    'attack_left': '⚡ <strong>Attack Left:</strong> LB & LM overlap down the left flank. LF holds wide circle corner; CF attacks near post; RF cuts inside for far post rebound.',
+    'attack_right': '⚡ <strong>Attack Right:</strong> RB & RM overlap down the right flank. RF holds wide circle corner; CF attacks near post; LF cuts inside for far post rebound.',
+    'defend_left': '🛡️ <strong>Defend Left:</strong> Opponent attacking left flank (ball with opponent). LB engages ball carrier; LCB covers inside; RCB & RB shift across compactly.',
+    'defend_right': '🛡️ <strong>Defend Right:</strong> Opponent attacking right flank (ball with opponent). RB engages ball carrier; RCB covers inside; LCB & LB shift across compactly.',
+    'high_press': '🔥 <strong>High Press / Possession:</strong> Whole team steps up 15 meters into opponent half. Forwards lock opponent defenders; Midfielders intercept outlets.'
+  };
+
+  let customSituations = JSON.parse(localStorage.getItem('hv_myra_custom_situations')) || {};
+
+  function getSituationPositions(sitName) {
+    if (customSituations[currentTeam] && customSituations[currentTeam][sitName] && customSituations[currentTeam][sitName].coords) {
+      return customSituations[currentTeam][sitName].coords;
+    }
+
+    if (currentTeam === 'Trimmers') {
+      if (sitName === 'start_middle') {
+        return {
+          'gk': [6, 43.5],
+          'lb': [20, 14], 'lcb': [16, 34], 'rcb': [16, 53], 'rb': [20, 73],
+          'lm': [36, 22], 'cm': [35, 43.5], 'rm': [36, 65],
+          'lf': [48, 20], 'cf': [50, 43.5], 'rf': [48, 67],
+          'ball': [50, 43.5],
+          'opp_0': [95, 43.5],
+          'opp_1': [80, 14], 'opp_2': [80, 32], 'opp_3': [80, 52], 'opp_4': [80, 68],
+          'opp_5': [68, 22], 'opp_6': [68, 43.5], 'opp_7': [68, 65],
+          'opp_8': [60, 36], 'opp_9': [60, 43.5], 'opp_10': [60, 51]
+        };
+      }
+      if (sitName === 'start_lb' || sitName === 'outlet_left') {
+        return {
+          'gk': [6, 43.5],
+          'lb': [18, 12], 'lcb': [16, 28], 'rcb': [16, 50], 'rb': [20, 72],
+          'lm': [38, 16], 'cm': [36, 43.5], 'rm': [45, 68],
+          'lf': [65, 14], 'cf': [68, 43.5], 'rf': [65, 72],
+          'ball': [18, 10],
+          'opp_0': [95, 43.5],
+          'opp_1': [75, 14], 'opp_2': [76, 32], 'opp_3': [76, 52], 'opp_4': [75, 68],
+          'opp_5': [48, 16], 'opp_6': [50, 43.5], 'opp_7': [52, 65],
+          'opp_8': [35, 18], 'opp_9': [34, 43.5], 'opp_10': [35, 68]
+        };
+      }
+      if (sitName === 'start_lcb' || sitName === 'outlet_center') {
+        return {
+          'gk': [6, 43.5],
+          'lcb': [16, 35], 'rcb': [16, 52], 'lb': [22, 12], 'rb': [22, 75],
+          'cm': [35, 43.5], 'lm': [42, 22], 'rm': [42, 65],
+          'lf': [65, 16], 'cf': [70, 43.5], 'rf': [65, 71],
+          'ball': [18, 35],
+          'opp_0': [95, 43.5],
+          'opp_1': [75, 14], 'opp_2': [76, 32], 'opp_3': [76, 52], 'opp_4': [75, 68],
+          'opp_5': [48, 22], 'opp_6': [50, 43.5], 'opp_7': [48, 65],
+          'opp_8': [35, 18], 'opp_9': [34, 43.5], 'opp_10': [35, 68]
+        };
+      }
+      if (sitName === 'start_rb' || sitName === 'outlet_right') {
+        return {
+          'gk': [6, 43.5],
+          'lb': [20, 16], 'lcb': [16, 38], 'rcb': [16, 60], 'rb': [18, 75],
+          'lm': [45, 18], 'cm': [36, 43.5], 'rm': [38, 71],
+          'lf': [65, 16], 'cf': [68, 43.5], 'rf': [65, 74],
+          'ball': [18, 77],
+          'opp_0': [95, 43.5],
+          'opp_1': [75, 14], 'opp_2': [76, 32], 'opp_3': [76, 52], 'opp_4': [75, 68],
+          'opp_5': [52, 18], 'opp_6': [50, 43.5], 'opp_7': [48, 71],
+          'opp_8': [35, 18], 'opp_9': [34, 43.5], 'opp_10': [35, 68]
+        };
+      }
+      if (sitName === 'attack_left') {
+        return {
+          'gk': [8, 43.5],
+          'lb': [60, 14], 'lcb': [38, 30], 'rcb': [32, 48], 'rb': [40, 68],
+          'lm': [68, 25], 'cm': [64, 43.5], 'rm': [58, 62],
+          'lf': [82, 15], 'cf': [85, 43.5], 'rf': [80, 65],
+          'ball': [84, 16],
+          'opp_0': [95, 43.5],
+          'opp_1': [80, 65], 'opp_2': [85, 48], 'opp_3': [85, 36], 'opp_4': [82, 16],
+          'opp_5': [58, 60], 'opp_6': [62, 43.5], 'opp_7': [66, 25],
+          'opp_8': [40, 20], 'opp_9': [38, 43.5], 'opp_10': [40, 65]
+        };
+      }
+      if (sitName === 'attack_right') {
+        return {
+          'gk': [8, 43.5],
+          'lb': [40, 18], 'lcb': [32, 38], 'rcb': [38, 54], 'rb': [60, 73],
+          'lm': [58, 26], 'cm': [64, 43.5], 'rm': [68, 65],
+          'lf': [80, 22], 'cf': [85, 43.5], 'rf': [82, 71],
+          'ball': [84, 70],
+          'opp_0': [95, 43.5],
+          'opp_1': [82, 72], 'opp_2': [85, 52], 'opp_3': [85, 38], 'opp_4': [80, 22],
+          'opp_5': [66, 66], 'opp_6': [62, 43.5], 'opp_7': [58, 28],
+          'opp_8': [40, 20], 'opp_9': [38, 43.5], 'opp_10': [40, 65]
+        };
+      }
+      if (sitName === 'defend_left') {
+        return {
+          'gk': [6, 43.5],
+          'lb': [22, 16], 'lcb': [18, 30], 'rcb': [16, 45], 'rb': [18, 62],
+          'lm': [35, 20], 'cm': [32, 38], 'rm': [38, 55],
+          'lf': [45, 18], 'cf': [52, 40], 'rf': [55, 60],
+          'ball': [34, 16],
+          'opp_0': [95, 43.5],
+          'opp_1': [34, 16], 'opp_2': [36, 30], 'opp_3': [36, 48], 'opp_4': [34, 65],
+          'opp_5': [48, 20], 'opp_6': [50, 40], 'opp_7': [52, 58],
+          'opp_8': [65, 18], 'opp_9': [65, 43.5], 'opp_10': [65, 68]
+        };
+      }
+      if (sitName === 'defend_right') {
+        return {
+          'gk': [6, 43.5],
+          'lb': [18, 25], 'lcb': [16, 42], 'rcb': [18, 57], 'rb': [22, 71],
+          'lm': [38, 32], 'cm': [32, 49], 'rm': [35, 67],
+          'lf': [55, 27], 'cf': [52, 47], 'rf': [45, 69],
+          'ball': [34, 71],
+          'opp_0': [95, 43.5],
+          'opp_1': [34, 22], 'opp_2': [36, 38], 'opp_3': [36, 56], 'opp_4': [34, 71],
+          'opp_5': [52, 28], 'opp_6': [50, 47], 'opp_7': [48, 67],
+          'opp_8': [65, 18], 'opp_9': [65, 43.5], 'opp_10': [65, 68]
+        };
+      }
+      if (sitName === 'high_press') {
+        return {
+          'gk': [10, 43.5],
+          'lb': [48, 16], 'lcb': [38, 33], 'rcb': [38, 54], 'rb': [48, 71],
+          'lm': [65, 22], 'cm': [60, 43.5], 'rm': [65, 65],
+          'lf': [82, 18], 'cf': [85, 43.5], 'rf': [82, 69],
+          'ball': [84, 18],
+          'opp_0': [8, 43.5],
+          'opp_1': [84, 18], 'opp_2': [86, 33], 'opp_3': [86, 54], 'opp_4': [84, 69],
+          'opp_5': [68, 22], 'opp_6': [63, 43.5], 'opp_7': [68, 65],
+          'opp_8': [45, 18], 'opp_9': [42, 43.5], 'opp_10': [45, 69]
+        };
+      }
+    } else {
+      // MO10 Situations (8v8)
+      if (sitName === 'start_middle') {
+        return {
+          'gk': [6, 50], 'lb': [20, 28], 'rb': [20, 68],
+          'lm': [36, 28], 'cm': [35, 50], 'rm': [36, 68],
+          'lf': [48, 30], 'rf': [48, 66],
+          'ball': [50, 50],
+          'opp_0': [95, 50], 'opp_1': [80, 26], 'opp_2': [80, 74],
+          'opp_3': [68, 26], 'opp_4': [68, 50], 'opp_5': [68, 74],
+          'opp_6': [60, 42], 'opp_7': [60, 58]
+        };
+      }
+      if (sitName === 'start_lb' || sitName === 'outlet_left') {
+        return {
+          'gk': [6, 50], 'lb': [20, 24], 'rb': [22, 68],
+          'lm': [38, 24], 'cm': [36, 50], 'rm': [45, 70],
+          'lf': [65, 26], 'rf': [65, 65],
+          'ball': [20, 22],
+          'opp_0': [95, 50], 'opp_1': [76, 26], 'opp_2': [76, 74],
+          'opp_3': [48, 24], 'opp_4': [50, 50], 'opp_5': [54, 70],
+          'opp_6': [35, 26], 'opp_7': [34, 60]
+        };
+      }
+      if (sitName === 'start_lcb' || sitName === 'outlet_center') {
+        return {
+          'gk': [6, 50], 'lb': [22, 24], 'rb': [22, 72],
+          'cm': [35, 50], 'lm': [42, 28], 'rm': [42, 68],
+          'lf': [65, 30], 'rf': [65, 66],
+          'ball': [20, 50],
+          'opp_0': [95, 50], 'opp_1': [76, 26], 'opp_2': [76, 74],
+          'opp_3': [48, 28], 'opp_4': [50, 50], 'opp_5': [48, 68],
+          'opp_6': [35, 30], 'opp_7': [35, 65]
+        };
+      }
+      if (sitName === 'start_rb' || sitName === 'outlet_right') {
+        return {
+          'gk': [6, 50], 'lb': [22, 28], 'rb': [20, 72],
+          'lm': [45, 26], 'cm': [36, 50], 'rm': [38, 72],
+          'lf': [65, 30], 'rf': [65, 70],
+          'ball': [20, 74],
+          'opp_0': [95, 50], 'opp_1': [76, 26], 'opp_2': [76, 74],
+          'opp_3': [54, 26], 'opp_4': [50, 50], 'opp_5': [48, 72],
+          'opp_6': [34, 30], 'opp_7': [35, 70]
+        };
+      }
+      if (sitName === 'attack_left') {
+        return {
+          'gk': [8, 50], 'lb': [60, 26], 'rb': [40, 68],
+          'lm': [70, 24], 'cm': [62, 50], 'rm': [58, 70],
+          'lf': [82, 30], 'rf': [80, 60],
+          'ball': [84, 30],
+          'opp_0': [95, 50], 'opp_1': [82, 30], 'opp_2': [80, 65],
+          'opp_3': [66, 28], 'opp_4': [62, 50], 'opp_5': [58, 70],
+          'opp_6': [40, 30], 'opp_7': [38, 65]
+        };
+      }
+      if (sitName === 'attack_right') {
+        return {
+          'gk': [8, 50], 'lb': [40, 28], 'rb': [60, 68],
+          'lm': [58, 28], 'cm': [62, 50], 'rm': [70, 72],
+          'lf': [80, 40], 'rf': [82, 70],
+          'ball': [84, 70],
+          'opp_0': [95, 50], 'opp_1': [80, 32], 'opp_2': [82, 68],
+          'opp_3': [58, 28], 'opp_4': [62, 50], 'opp_5': [66, 72],
+          'opp_6': [38, 30], 'opp_7': [40, 65]
+        };
+      }
+      if (sitName === 'defend_left') {
+        return {
+          'gk': [6, 50], 'lb': [22, 28], 'rb': [18, 65],
+          'lm': [35, 24], 'cm': [32, 48], 'rm': [38, 68],
+          'lf': [45, 30], 'rf': [52, 60],
+          'ball': [34, 26],
+          'opp_0': [95, 50], 'opp_1': [34, 26], 'opp_2': [36, 60],
+          'opp_3': [48, 28], 'opp_4': [50, 50], 'opp_5': [52, 68],
+          'opp_6': [65, 30], 'opp_7': [65, 66]
+        };
+      }
+      if (sitName === 'defend_right') {
+        return {
+          'gk': [6, 50], 'lb': [18, 32], 'rb': [22, 68],
+          'lm': [38, 28], 'cm': [32, 52], 'rm': [35, 72],
+          'lf': [52, 38], 'rf': [45, 68],
+          'ball': [34, 70],
+          'opp_0': [95, 50], 'opp_1': [36, 30], 'opp_2': [34, 70],
+          'opp_3': [52, 28], 'opp_4': [50, 50], 'opp_5': [48, 68],
+          'opp_6': [65, 30], 'opp_7': [65, 66]
+        };
+      }
+      if (sitName === 'high_press') {
+        return {
+          'gk': [10, 50], 'lb': [48, 28], 'rb': [48, 68],
+          'lm': [65, 24], 'cm': [60, 50], 'rm': [65, 72],
+          'lf': [82, 32], 'rf': [82, 68],
+          'ball': [84, 30],
+          'opp_0': [8, 50], 'opp_1': [84, 30], 'opp_2': [84, 68],
+          'opp_3': [65, 32], 'opp_4': [60, 50], 'opp_5': [65, 68],
+          'opp_6': [45, 30], 'opp_7': [45, 66]
+        };
+      }
+    }
+    return null;
+  }
+
+  function saveCurrentSituation(silent = false) {
+    if (activeSituation === 'standard') {
+      if (!silent) showToast('Standard formation is updated on Tactics Board');
+      return;
+    }
+
+    const container = document.getElementById('sitBoardTokens');
+    if (!container) return;
+
+    const coords = {};
+    container.querySelectorAll('.token').forEach(t => {
+      const posId = t.id ? t.id.replace('sit_', '') : (t.classList.contains('ball') ? 'ball' : null);
+      if (posId) {
+        const leftPct = Math.round(parseFloat(t.style.left) * 10) / 10;
+        const topPct = Math.round(parseFloat(t.style.top) * 10) / 10;
+        coords[posId] = [leftPct, topPct];
+      }
+    });
+
+    const notesText = document.getElementById('situationCoachNotes')?.value || '';
+
+    if (!customSituations[currentTeam]) customSituations[currentTeam] = {};
+    if (!customSituations[currentTeam][activeSituation]) customSituations[currentTeam][activeSituation] = {};
+    
+    customSituations[currentTeam][activeSituation].coords = coords;
+    customSituations[currentTeam][activeSituation].notes = notesText;
+
+    localStorage.setItem('hv_myra_custom_situations', JSON.stringify(customSituations));
+    saveConfigToServer();
+    if (!silent) showToast(`💾 Situation Saved!`);
+  }
+
+  function saveSituationNotes() {
+    saveCurrentSituation(true);
+  }
+
+  function addNewCustomSituation() {
+    const playName = prompt('Enter a name for your custom play / situation (e.g., Penalty Corner Attack, Press 2-3-1):');
+    if (!playName || !playName.trim()) return;
+    const cleanName = playName.trim();
+    const sitKey = 'custom_' + cleanName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+
+    if (!customSituations[currentTeam]) customSituations[currentTeam] = {};
+    customSituations[currentTeam][sitKey] = {
+      title: cleanName,
+      tip: `💡 <strong>${cleanName}:</strong> Custom play created by coach.`,
+      notes: '',
+      coords: getSituationPositions('attack_left') || {}
+    };
+
+    localStorage.setItem('hv_myra_custom_situations', JSON.stringify(customSituations));
+    saveConfigToServer();
+    renderSituationButtons();
+    applySituation(sitKey);
+    showToast(`Added Play: ${cleanName}`);
+  }
+
+  function resetCurrentSituation() {
+    if (activeSituation === 'standard') return;
+    if (customSituations[currentTeam] && customSituations[currentTeam][activeSituation]) {
+      delete customSituations[currentTeam][activeSituation];
+      localStorage.setItem('hv_myra_custom_situations', JSON.stringify(customSituations));
+      saveConfigToServer();
+    }
+    applySituation(activeSituation);
+    showToast('🔄 Situation Reset to Default');
+  }
+
+  function renderSituationButtons() {
+    const group = document.getElementById('sitButtonsGroup');
+    if (!group) return;
+
+    const baseButtons = [
+      { id: 'standard', title: '📍 Standard Base' },
+      { id: 'start_middle', title: '⚽ Start Middle' },
+      { id: 'start_lb', title: '🧱 Start LB' },
+      { id: 'start_lcb', title: '🧱 Start LCB' },
+      { id: 'start_rb', title: '🧱 Start RB' },
+      { id: 'attack_left', title: '⚡ Attack Left' },
+      { id: 'attack_right', title: '⚡ Attack Right' },
+      { id: 'defend_left', title: '🛡️ Defend Left' },
+      { id: 'defend_right', title: '🛡️ Defend Right' },
+      { id: 'high_press', title: '🔥 High Press' }
+    ];
+
+    let html = `<span class="tool-label">Match Phase / Situation:</span>`;
+    baseButtons.forEach(b => {
+      const activeClass = activeSituation === b.id ? 'class="active"' : '';
+      html += `<button onclick="applySituation('${b.id}')" id="btnSit_${b.id}" ${activeClass}>${b.title}</button>`;
+    });
+
+    const teamCustom = customSituations[currentTeam] || {};
+    Object.keys(teamCustom).forEach(key => {
+      if (!baseButtons.some(b => b.id === key)) {
+        const item = teamCustom[key];
+        const title = item.title || key;
+        const activeClass = activeSituation === key ? 'class="active"' : '';
+        html += `<button onclick="applySituation('${key}')" id="btnSit_${key}" ${activeClass}>📋 ${title}</button>`;
+      }
+    });
+
+    group.innerHTML = html;
+  }
+
+  function renderSituationsBoard() {
+    updatePositionsConfig();
+    renderSituationButtons();
+    const container = document.getElementById('sitBoardTokens');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const sitCoords = getSituationPositions(activeSituation) || formations[activeFormation] || {};
+    
+    positionsConfig.forEach(pos => {
+      const token = document.createElement('div');
+      const typeClass = getPosClass(pos);
+      token.className = `token ${typeClass}`;
+      token.id = `sit_${pos.id}`;
+      
+      let left = pos.x;
+      let top = pos.y;
+
+      // Keep dugout subs in the dugout area (y: 93%) aligned with Tactics Board
+      const targetCoords = sitCoords[pos.id] || sitCoords['pos_' + pos.id];
+      if (pos.isSub || pos.isSubDef || pos.isSubMid || pos.isSubFwd || pos.id.includes('sub')) {
+        top = '93%';
+        if (targetCoords) {
+          left = `${targetCoords[0]}%`;
+        }
+      } else if (targetCoords) {
+        left = `${targetCoords[0]}%`;
+        top = `${targetCoords[1]}%`;
+      }
+      
+      token.style.left = left;
+      token.style.top = top;
+      token.style.position = 'absolute';
+      token.style.transform = 'translate(-50%, -50%)';
+      token.style.cursor = 'grab';
+      
+      const dict = getPositionDict(pos.id);
+      const playerName = currentAssignments[pos.id] || '';
+      const displayName = getDisplayName(playerName);
+
+      token.innerHTML = `
+        <div class="token-circle">${dict.circle}</div>
+        <div class="static-pill">${displayName}</div>
+      `;
+      container.appendChild(token);
+    });
+
+    // Render prominent WHITE BALL
+    const ballPos = sitCoords['ball'] ? [sitCoords['ball'][0], sitCoords['ball'][1]] : [50, 43.5];
+    const ballToken = document.createElement('div');
+    ballToken.className = 'token ball';
+    ballToken.style.position = 'absolute';
+    ballToken.style.left = `${ballPos[0]}%`;
+    ballToken.style.top = `${ballPos[1]}%`;
+    ballToken.style.transform = 'translate(-50%, -50%)';
+    ballToken.style.cursor = 'grab';
+    ballToken.style.zIndex = '10';
+    ballToken.innerHTML = `
+      <div class="token-circle" style="width:24px; height:24px; background:#ffffff; border:3px solid #0f172a; border-radius:50%; box-shadow: 0 0 10px rgba(255,255,255,0.9); display:flex; align-items:center; justify-content:center;">
+        <div style="width:6px; height:6px; background:#0f172a; border-radius:50%;"></div>
+      </div>
+      <div class="static-pill" style="background:#ffffff; color:#0f172a; border-color:#0f172a; font-weight:900;">⚽ BALL</div>
+    `;
+    container.appendChild(ballToken);
+
+    // Render Opponents if showOpponents is true
+    if (showOpponents) {
+      const oppCount = currentTeam === 'MO10' ? 8 : 11;
+      const oppRoles = currentTeam === 'MO10' 
+        ? ['GK', 'LB', 'CB', 'RB', 'LM', 'CM', 'RM', 'ATT']
+        : ['GK', 'LB', 'LCB', 'RCB', 'RB', 'LM', 'CM', 'RM', 'LF', 'CF', 'RF'];
+
+      const defaultOppSetup = {
+        'opp_0': [95, 43.5],
+        'opp_1': [75, 14], 'opp_2': [76, 32], 'opp_3': [76, 52], 'opp_4': [75, 68],
+        'opp_5': [58, 25], 'opp_6': [56, 43.5], 'opp_7': [54, 65],
+        'opp_8': [35, 18], 'opp_9': [34, 43.5], 'opp_10': [35, 68]
+      };
+
+      for (let i = 0; i < oppCount; i++) {
+        const oppId = `opp_${i}`;
+        let left = 85;
+        let top = 43.5;
+        if (sitCoords[oppId]) {
+          left = sitCoords[oppId][0];
+          top = sitCoords[oppId][1];
+        } else if (defaultOppSetup[oppId]) {
+          left = defaultOppSetup[oppId][0];
+          top = defaultOppSetup[oppId][1];
+        }
+
+        const token = document.createElement('div');
+        token.className = 'token opp';
+        token.id = `sit_${oppId}`;
+        token.style.left = `${left}%`;
+        token.style.top = `${top}%`;
+        token.style.position = 'absolute';
+        token.style.transform = 'translate(-50%, -50%)';
+        token.style.cursor = 'grab';
+
+        const roleLabel = oppRoles[i] || 'OPP';
+        token.innerHTML = `
+          <div class="token-circle" style="background:#ef4444; border-color:#991b1b; color:#fff;">🔴</div>
+          <div class="static-pill" style="background:#450a0a; color:#fca5a5; border-color:#991b1b;">${roleLabel}</div>
+        `;
+        container.appendChild(token);
+      }
+    }
+
+    // Populate notes
+    const notesEl = document.getElementById('situationCoachNotes');
+    if (notesEl) {
+      notesEl.value = (customSituations[currentTeam] && customSituations[currentTeam][activeSituation] && customSituations[currentTeam][activeSituation].notes) || '';
+    }
+
+    drawSituationCanvasArrows();
+  }
+
+  function drawSituationCanvasArrows() {
+    const canvas = document.getElementById('sitCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('sitBoardContainer');
+    if (container) {
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
+    }
+    // Clean pitch without arrows as requested by coach
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  function drawArrowDirectCanvas(ctx, x1, y1, x2, y2, color, width) {
+    const headlen = 12;
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = width;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - headlen * Math.cos(angle - Math.PI / 6), y2 - headlen * Math.sin(angle - Math.PI / 6));
+    ctx.lineTo(x2 - headlen * Math.cos(angle + Math.PI / 6), y2 - headlen * Math.sin(angle + Math.PI / 6));
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function applySituation(sitName) {
+    activeSituation = sitName;
+
+    renderSituationButtons();
+
+    // Display situation banner tip
+    const tipText = document.getElementById('situationTipText');
+    if (tipText) {
+      let tipHTML = situationTips[sitName];
+      if (!tipHTML && customSituations[currentTeam] && customSituations[currentTeam][sitName]) {
+        tipHTML = customSituations[currentTeam][sitName].tip || `💡 <strong>${customSituations[currentTeam][sitName].title}:</strong> Custom Play`;
+      }
+      tipText.innerHTML = tipHTML || '💡 <strong>Base Formation:</strong> Neutral balanced positioning for build-up and kickoff.';
+    }
+
+    renderSituationsBoard();
+    showToast(`Situation: ${sitName.replace('custom_', '').replace('_', ' ').toUpperCase()}`);
+  }
+
+  function saveTacticsLocal() {
+    const data = {
+      assignments: currentAssignments,
+      matchDate: document.getElementById('matchDatePicker').value,
+      matchOpponent: document.getElementById('matchOpponent').value,
+      matchQuarter: document.getElementById('matchQuarter').value,
+      notes: document.getElementById('coachNotes').value,
+      drawings: drawnObjects,
+      activeFormation: activeFormation,
+      activeSituation: activeSituation,
+      subMatrixState: subMatrixState
+    };
+    localStorage.setItem('hv_myra_clean_pdf_board', JSON.stringify(data));
+    showToast('Setup Saved Locally!');
+    saveTacticsToServer(data);
+  }
+
+  function loadTacticsLocal() {
+    const raw = localStorage.getItem('hv_myra_clean_pdf_board');
+    if (!raw) { alert('No saved setup found.'); return; }
+    const data = JSON.parse(raw);
+    applyTacticsData(data);
+    showToast('Setup Loaded!');
+  }
+
+  function applyTacticsData(data) {
+    if (data.assignments) {
+      let a = data.assignments;
+      if (a.ld && !a.lb) a.lb = a.ld;
+      if (a.rd && !a.rb) a.rb = a.rd;
+      if (a.sub_def_att && !a.cb) a.cb = a.sub_def_att;
+      if (a.sub_field_3 && !a.sub_def) a.sub_def = a.sub_field_3;
+      if (a.sub_field_2 && !a.sub_mid) a.sub_mid = a.sub_field_2;
+      if (a.sub_field_1 && !a.sub_fwd) a.sub_fwd = a.sub_field_1;
+      currentAssignments = a;
+    }
+    if (data.matchDate) document.getElementById('matchDatePicker').value = data.matchDate;
+    if (data.matchOpponent) document.getElementById('matchOpponent').value = data.matchOpponent;
+    if (data.matchQuarter) document.getElementById('matchQuarter').value = data.matchQuarter;
+    if (data.notes) document.getElementById('coachNotes').value = data.notes;
+    
+    if (data.activeFormation) {
+      activeFormation = data.activeFormation;
+    } else {
+      activeFormation = (currentTeam === 'MO10') ? '1-2-3-2' : '4-3-3';
+    }
+
+    if (data.activeSituation && data.activeSituation !== 'standard') {
+      applySituation(data.activeSituation);
+    }
+
+    // Render dynamic structures
+    renderPitchSvg();
+    renderTokens();
+    applyFormation(activeFormation);
+    renderSituationsBoard();
+
+    if (data.drawings) {
+      drawnObjects = data.drawings;
+      redrawCanvas();
+    }
+
+    if (data.subMatrixState) {
+      subMatrixState = data.subMatrixState;
+    }
+    initDropdowns();
+    syncBanner();
+    validateWomenQuota();
+    if (typeof syncMatrixFromTactics === 'function') syncMatrixFromTactics();
+  }
+
+  /* READ-ONLY HTML EXPORT: Clean, static, non-editable match sheet */
+  function downloadReadOnlyHTML() {
+    const datePickerVal = document.getElementById('matchDatePicker').value || '2026-08-29';
+    const matchVal = document.getElementById('matchOpponent').value || 'HV Myra Match';
+    const quarterVal = document.getElementById('matchQuarter').value || 'Lineup';
+    const dateFormatted = formatDateForDisplay(datePickerVal);
+    const notes = document.getElementById('coachNotes').value;
+
+    let tokensHTML = '';
+    positionsConfig.forEach(pos => {
+      const el = document.getElementById(`pos_${pos.id}`);
+      const left = el ? el.style.left : pos.x;
+      const top = el ? el.style.top : pos.y;
+      const dict = getPositionDict(pos.id);
+      const circleEl = document.getElementById(`circle_${pos.id}`);
+      const circleText = circleEl ? circleEl.innerHTML : dict.circle;
+      const playerName = currentAssignments[pos.id] || '';
+      const typeClass = getPosClass(pos);
+
+      const displayName = getDisplayName(playerName);
+      tokensHTML += `
+        <div class="token ${typeClass}" style="position:absolute; top:${top}; left:${left}; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center;">
+          <div class="token-circle">${circleText}</div>
+          <div class="static-pill">${displayName}</div>
+        </div>
+      `;
+    });
+
+    if (showOpponents) {
+      const oppTokens = document.querySelectorAll('#board .token.opp');
+      oppTokens.forEach(opp => {
+        const left = opp.style.left;
+        const top = opp.style.top;
+        const label = opp.querySelector('.token-circle').innerText;
+        tokensHTML += `
+          <div class="token opp" style="position:absolute; top:${top}; left:${left}; transform:translate(-50%,-50%);">
+            <div class="token-circle">${label}</div>
+          </div>
+        `;
+      });
+    }
+
+    tokensHTML += `
+      <div class="token ball" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);">
+        <div class="token-circle" style="width:20px; height:20px; background:#fff; border:2px solid #1e293b; border-radius:50%;"></div>
+      </div>
+    `;
+
+    let rosterRowsHTML = '';
+    positionsConfig.forEach(pos => {
+      const trans = getPositionTranslations(pos.id);
+      const enCode = trans.en.code;
+      const nlCode = trans.nl.code;
+      const playerName = currentAssignments[pos.id] || '';
+      const displayName = getDisplayName(playerName);
+      const typeClass = getPosClass(pos);
+      const tagColor = typeClass === 'myra-sub-def' ? '#34d399' : (typeClass === 'myra-sub-mid' ? '#818cf8' : (typeClass === 'myra-sub-fwd' ? '#f472b6' : '#38bdf8'));
+
+      rosterRowsHTML += `
+        <div class="roster-row">
+          <span style="font-weight:800; color:${tagColor};">[${enCode} / ${nlCode}]</span>
+          <span style="font-weight:700; color:#ffffff;">${displayName}</span>
+        </div>
+      `;
+    });
+
+    let rulesHTML = '';
+    getRulesDictionary()[currentLang].forEach(r => {
+      rulesHTML += `<div class="rule-card"><div class="rule-title">${r.title}</div><p>${r.desc}</p></div>`;
+    });
+
+    const readOnlyHTML = `<!DOCTYPE html>
+<html lang="${currentLang}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HV Myra O10 Match Sheet - ${datePickerVal}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  body { background: #12161f; color: #eef4f8; padding: 12px; display: flex; justify-content: center; }
+  .sheet-container { width: 100%; max-width: 1240px; display: flex; flex-direction: column; gap: 12px; }
+  .header-bar { background: #1c2230; padding: 12px 18px; border-radius: 10px; border-left: 4px solid #f59e0b; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+  .header-title { font-size: 1.1rem; font-weight: 800; color: #fff; }
+  .header-meta { font-size: 0.85rem; font-weight: 700; color: #f59e0b; display: flex; gap: 10px; }
+  .main-grid { display: grid; grid-template-columns: 1fr 340px; gap: 12px; }
+  @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
+  .board-container { position: relative; width: 100%; aspect-ratio: 1.55 / 1; background: #1f8a4c; border: 3px solid #ffffff; border-radius: 8px; overflow: hidden; }
+  .token { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; transform: translate(-50%, -50%); }
+  .token-circle { width: 36px; height: 36px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 800; font-size: 0.68rem; border: 2px solid white; line-height: 1; }
+  .token.myra-field .token-circle { background: #003366; color: #ffffff; }
+  .token.myra-gk .token-circle { background: #f59e0b; color: #000; }
+  .token.myra-sub-def .token-circle { background: #059669; color: #fff; border-color: #a7f3d0; }
+  .token.myra-sub-mid .token-circle { background: #4f46e5; color: #fff; border-color: #c7d2fe; }
+  .token.myra-sub-fwd .token-circle { background: #db2777; color: #fff; border-color: #fbcfe8; }
+  .token.opp .token-circle { background: #c1121f; color: white; border-color: #fee2e2; }
+  .static-pill { margin-top: 3px; background: rgba(9,13,20,0.95); color: #fff; border: 1px solid rgba(255,255,255,0.6); border-radius: 10px; font-size: 0.65rem; font-weight: 700; padding: 1.5px 6px; white-space: nowrap; }
+  .side-card { background: #1c2230; padding: 12px; border-radius: 8px; display: flex; flex-direction: column; gap: 10px; }
+  .card-title { font-size: 0.85rem; font-weight: 800; color: #38bdf8; border-bottom: 1px solid #334155; padding-bottom: 4px; }
+  .roster-row { display: flex; justify-content: space-between; align-items: center; background: #0c1017; padding: 5px 8px; border-radius: 5px; font-size: 0.78rem; border: 1px solid #232c3d; }
+  .notes-box { background: #0c1017; border: 1px solid #232c3d; border-radius: 5px; padding: 8px; font-size: 0.76rem; color: #cbd5e1; white-space: pre-wrap; line-height: 1.35; }
+  .rules-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  @media (max-width: 900px) { .rules-grid { grid-template-columns: 1fr; } }
+  .rule-card { background: #0c1017; border: 1px solid #232c3d; border-radius: 6px; padding: 8px 10px; }
+  .rule-title { font-size: 0.76rem; font-weight: 700; color: #38bdf8; margin-bottom: 2px; }
+  .rule-card p { font-size: 0.7rem; color: #cbd5e1; line-height: 1.3; }
+  .legend-bar { display: flex; justify-content: center; gap: 14px; font-size: 0.75rem; color: #94a3b8; margin-top: 4px; flex-wrap: wrap; }
+
+  .nav-tabs { display: flex; gap: 4px; padding: 0 14px 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 12px; margin-top: 10px; }
+  .nav-tab { background: transparent; color: #94a3b8; border: none; font-size: 0.85rem; font-weight: 700; padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+  .nav-tab:hover { background: rgba(255,255,255,0.05); color: white; }
+  .nav-tab.active { background: #38bdf8; color: #0b0f19; }
+  .sub-matrix-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; color: white; background: #0c1017; border: 1px solid #232c3d; }
+  .sub-matrix-table th, .sub-matrix-table td { border: 1px solid #232c3d; padding: 4px; text-align: center; }
+  .sub-matrix-table th { background: #1e293b; color: #94a3b8; font-weight: 600; }
+  .sub-matrix-table td:first-child { text-align: left; font-weight: bold; color: #38bdf8; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sub-matrix-checkbox { cursor: pointer; width: 14px; height: 14px; }
+  .invalid-col { background: rgba(239, 68, 68, 0.2); }
+  .invalid-row { background: rgba(239, 68, 68, 0.2); }
+
+</style>
+</head>
+<body>
+  <div class="sheet-container">
+    <div class="header-bar">
+      <div class="header-title">HV Myra O10 &bull; \${matchVal}</div>
+      <div class="header-meta"><span>📅 \${dateFormatted}</span> <span>⏱️ \${quarterVal}</span></div>
+    </div>
+    <div class="main-grid">
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <div class="board-container">
+          <svg style="position:absolute; top:0; left:0; width:100%; height:100%;" viewBox="0 0 1100 700" preserveAspectRatio="none">
+            <rect x="0" y="0" width="1100" height="700" fill="none" stroke="#ffffff" stroke-width="4" />
+            <rect x="0" y="270" width="22" height="160" fill="rgba(255,255,255,0.25)" stroke="#ffffff" stroke-width="3" />
+            <rect x="1078" y="270" width="22" height="160" fill="rgba(255,255,255,0.25)" stroke="#ffffff" stroke-width="3" />
+            <line x1="220" y1="0" x2="220" y2="700" stroke="#f59e0b" stroke-width="3" stroke-dasharray="10,8" />
+            <rect x="12" y="12" width="170" height="22" fill="#090d14" rx="4" stroke="#f59e0b" stroke-width="1"/>
+            <text x="18" y="27" fill="#f59e0b" font-size="11" font-weight="bold">\${currentLang === 'en' ? '🛡️ Defending 15m Line' : '🛡️ 15m Verdedigingslijn'}</text>
+            <line x1="880" y1="0" x2="880" y2="700" stroke="#f59e0b" stroke-width="3" stroke-dasharray="10,8" />
+            <rect x="918" y="12" width="170" height="22" fill="#090d14" rx="4" stroke="#f59e0b" stroke-width="1"/>
+            <text x="924" y="27" fill="#f59e0b" font-size="11" font-weight="bold">\${currentLang === 'en' ? '🎯 Scoring Zone (15m)' : '🎯 15m Doelgebied (Scoren)'}</text>
+            <rect x="880" y="0" width="220" height="700" fill="rgba(245,158,11,0.06)" />
+            <line x1="550" y1="0" x2="550" y2="700" stroke="#ffffff" stroke-width="3" />
+            <circle cx="550" cy="350" r="45" fill="none" stroke="#ffffff" stroke-width="2.5" />
+            <circle cx="550" cy="350" r="4" fill="#ffffff" />
+            <path d="M 460 665 L 640 665 M 625 655 L 640 665 L 625 675" fill="none" stroke="#38bdf8" stroke-width="2.5" />
+            <text x="550" y="650" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">\${currentLang === 'en' ? 'Attacking Direction ➔' : 'Aanvalsrichting ➔'}</text>
+          </svg>
+          \${tokensHTML}
+        </div>
+        <div class="legend-bar">
+          <span>🥅 Left: Myra Goal &bull; 🥅 Right: Opponent Goal &bull; 🎯 15m Line: Scoring Zone</span>
+        </div>
+      </div>
+      <div class="side-card">
+        <div class="card-title">Squad Lineup (10 Players)</div>
+        <div style="display:flex; flex-direction:column; gap:4px;">
+          \${rosterRowsHTML}
+        </div>
+        <div class="card-title" style="margin-top:6px;">Coach Match & Rotation Notes</div>
+        <div class="notes-box">\${notes}</div>
+      </div>
+    </div>
+    <div class="side-card" style="margin-top:4px;">
+      <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+        <span>📖 KNHB Under 10 (O10) Match Rules & Guidelines</span>
+        <a href="https://www.knhb.nl/kenniscentrum/competities/competitie-aanbod-veldhockey-jongste-jeugd" target="_blank" style="font-size:0.65rem; color:#38bdf8; text-decoration:none; font-weight:bold;">🇳🇱 KNHB Rules & Downloads ➔</a>
+      </div>
+      <div class="rules-grid">
+        \${rulesHTML}
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    const blob = new Blob([readOnlyHTML], { type: 'text/html;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `HV_Myra_O10_MatchSheet_${datePickerVal}.html`;
+    a.click();
+    showToast('Read-Only Match HTML Downloaded!');
+  }
+
+  function initSituationDragDelegation() {
+    const sitBoard = document.getElementById('sitBoardContainer');
+    if (!sitBoard) return;
+
+    let draggedEl = null;
+    let startX = 0, startY = 0;
+    let origLeftPct = 0, origTopPct = 0;
+
+    sitBoard.addEventListener('pointerdown', e => {
+      const token = e.target.closest('.token');
+      if (!token) return;
+      draggedEl = token;
+      draggedEl.setPointerCapture(e.pointerId);
+      
+      startX = e.clientX;
+      startY = e.clientY;
+      
+      origLeftPct = parseFloat(token.style.left) || 50;
+      origTopPct = parseFloat(token.style.top) || 50;
+    });
+
+    sitBoard.addEventListener('pointermove', e => {
+      if (!draggedEl) return;
+      const rect = sitBoard.getBoundingClientRect();
+      const dxPct = ((e.clientX - startX) / rect.width) * 100;
+      const dyPct = ((e.clientY - startY) / rect.height) * 100;
+      
+      let newLeft = Math.max(2, Math.min(98, origLeftPct + dxPct));
+      let newTop = Math.max(2, Math.min(98, origTopPct + dyPct));
+      
+      draggedEl.style.left = `${newLeft}%`;
+      draggedEl.style.top = `${newTop}%`;
+      
+      const id = draggedEl.id ? draggedEl.id.replace('sit_', '') : (draggedEl.classList.contains('ball') ? 'ball' : null);
+      if (id && activeSituation !== 'standard') {
+        if (!customSituations[currentTeam]) customSituations[currentTeam] = {};
+        if (!customSituations[currentTeam][activeSituation]) customSituations[currentTeam][activeSituation] = { coords: {} };
+        if (!customSituations[currentTeam][activeSituation].coords) customSituations[currentTeam][activeSituation].coords = {};
+        customSituations[currentTeam][activeSituation].coords[id] = [Math.round(newLeft * 10) / 10, Math.round(newTop * 10) / 10];
+      }
+      drawSituationCanvasArrows();
+    });
+
+    sitBoard.addEventListener('pointerup', e => {
+      if (draggedEl) {
+        draggedEl.releasePointerCapture(e.pointerId);
+        draggedEl = null;
+        saveCurrentSituation(true);
+      }
+    });
+  }
+
+  window.onload = () => {
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      if(toast) {
+        toast.innerText = message;
+        toast.classList.add('show');
+        setTimeout(() => { toast.classList.remove('show'); }, 2000);
+      }
+    }
+
+    const selector = document.getElementById('teamSelector');
+    if (selector) selector.value = currentTeam;
+
+    const appTitle = document.getElementById('appTitle');
+    if (appTitle) appTitle.innerText = `HV Myra ${currentTeam} Matchday Board (${currentTeam === 'MO10' ? '8 vs 8' : '11 vs 11'})`;
+
+    const formMO10 = document.getElementById('formationsMO10');
+    const formTrimmers = document.getElementById('formationsTrimmers');
+    if (formMO10) formMO10.style.display = (currentTeam === 'MO10') ? 'flex' : 'none';
+    if (formTrimmers) formTrimmers.style.display = (currentTeam === 'Trimmers') ? 'flex' : 'none';
+
+    loadConfigFromServer().then(() => {
+      // Force clean roster to first names only on load for MO10
+      if (currentTeam === 'MO10' && typeof squadPlayers !== 'undefined') {
+        squadPlayers = squadPlayers.map(p => {
+          if (typeof p === 'string') {
+            return p.split(' ')[0];
+          } else if (p && p.name) {
+            p.name = p.name.split(' ')[0];
+            return p;
+          }
+          return p;
+        });
+      }
+      // Dynamic rendering initialization
+      updatePositionsConfig();
+      initDefaultAssignments();
+      renderPitchSvg();
+      renderTokens();
+      applyFormation(activeFormation);
+      initDragDelegation();
+      initSituationDragDelegation();
+      
+      resizeCanvas();
+      initDropdowns();
+      renderStrategyTips();
+      renderSquadManager();
+      validateWomenQuota();
+      
+      if (typeof syncMatrixFromTactics === 'function') syncMatrixFromTactics();
+      document.getElementById('googleClientIdInput').value = googleClientId;
+      const overlayInput = document.getElementById('googleClientIdInputOverlay');
+      if (overlayInput) {
+        overlayInput.value = googleClientId;
+      }
+      const emailsInput = document.getElementById('coachEmailsInput');
+      if (emailsInput) {
+        emailsInput.value = coachEmails.join(', ');
+      }
+      initGoogleAuth();
+      syncBanner();
+    });
+  };
+</script>
+</body>
+</html>
