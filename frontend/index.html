@@ -169,18 +169,19 @@
   .token.opp .token-circle { background: var(--opp-red); color: white; border-color: #fee2e2; }
 
   .player-select-pill {
-    margin-top: 2px;
-    background: rgba(10, 15, 25, 0.95);
+    margin-top: 3px;
+    background: #0f172a;
     color: #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    border-radius: 10px;
-    font-size: clamp(0.58rem, 1.1vw, 0.68rem);
-    font-weight: 700;
-    padding: 1px 3px;
+    border: 1.5px solid #38bdf8;
+    border-radius: 12px;
+    font-size: clamp(0.64rem, 1.2vw, 0.74rem);
+    font-weight: 800;
+    padding: 2px 5px;
     outline: none;
     cursor: pointer;
-    max-width: clamp(65px, 10vw, 95px);
+    max-width: clamp(75px, 12vw, 105px);
     text-align: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.6);
   }
 
   .player-select-pill:disabled, .sidebar-select:disabled {
@@ -363,7 +364,7 @@
 </head>
 <body>
 
-<div id="loginOverlay" style="position: fixed; inset: 0; background: #0b0f19; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; gap: 20px; font-family: system-ui, -apple-system, sans-serif; color: #fff;">
+<div id="loginOverlay" style="position: fixed; inset: 0; background: #0b0f19; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; gap: 20px; font-family: system-ui, -apple-system, sans-serif; color: #fff;">
   <div style="background: rgba(30, 41, 59, 0.4); padding: 40px; border-radius: 16px; border: 1px solid #334155; max-width: 400px; width: 90%; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
     <div style="background: #002b49; color: #ffffff; border: 2px solid #ffffff; font-weight: 800; font-size: 1.2rem; padding: 6px 12px; border-radius: 8px; display: inline-block;">MYRA</div>
     <div style="display: flex; flex-direction: column; gap: 6px;">
@@ -435,6 +436,9 @@
           </div>
           
           <button onclick="saveGoogleConfig()" style="background: #059669; border-color: #10b981; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; width: 100%;">Save & Initialize</button>
+          <div style="border-top: 1px solid #334155; margin-top: 4px; padding-top: 6px;">
+            <button onclick="devLoginBypass()" style="background: #7c3aed; border-color: #a78bfa; color: #fff; padding: 5px 8px; border-radius: 4px; font-size: 0.7rem; width: 100%; font-weight: bold; cursor: pointer;">⚡ Quick Coach Login (Dev Mode)</button>
+          </div>
         </div>
       </div>
     </div>
@@ -562,10 +566,11 @@
       </div>
 
       <!-- Quick actions -->
-      <div style="display: flex; gap: 4px; margin-bottom: 6px; font-size: 0.7rem;">
+      <div style="display: flex; gap: 4px; margin-bottom: 6px; font-size: 0.7rem; flex-wrap: wrap;">
         <button onclick="setAllAttendance(true)" style="flex: 1; padding: 3px 6px; background: #1e293b; border: 1px solid #334155; color: #94a3b8; border-radius: 4px; cursor: pointer; font-size: 0.68rem;">✓ Select All</button>
         <button onclick="setAllAttendance(false)" style="flex: 1; padding: 3px 6px; background: #1e293b; border: 1px solid #334155; color: #94a3b8; border-radius: 4px; cursor: pointer; font-size: 0.68rem;">✗ Clear</button>
-        <button onclick="resetDefaultAttendance()" style="flex: 1; padding: 3px 6px; background: #1e293b; border: 1px solid #334155; color: #38bdf8; border-radius: 4px; cursor: pointer; font-size: 0.68rem;">🔄 Reset Matchday</button>
+        <button onclick="savePlayerAvailabilityManually()" style="flex: 1.2; padding: 3px 6px; background: #059669; border: 1px solid #10b981; color: white; border-radius: 4px; cursor: pointer; font-size: 0.68rem; font-weight: 700;">💾 Save List</button>
+        <button onclick="resetDefaultAttendance()" style="flex: 1; padding: 3px 6px; background: #1e293b; border: 1px solid #334155; color: #38bdf8; border-radius: 4px; cursor: pointer; font-size: 0.68rem;">🔄 Reset</button>
       </div>
 
       <!-- Add Player / Borrowed Guest Form -->
@@ -756,21 +761,48 @@
 <div id="toast">Ready</div>
 
 <script>
+  // =========================================================================
+  // GLOBAL APPLICATION STATE (Consolidated at top of script scope)
+  // =========================================================================
   let currentLang = 'en';
   let subMatrixState = {};
-
-  
+  let googleClientId = '1083993716124-rle31j9i93h345fg33o536o5ur6vmp6s.apps.googleusercontent.com';
+  let coachEmails = JSON.parse(localStorage.getItem('hv_myra_coaches')) || ["singhalrajeev89@gmail.com"];
+  let currentUserRole = 'parent';
+  let currentTeam = localStorage.getItem('hv_myra_active_team') || 'MO10';
+  let activeFormation = (currentTeam === 'MO10') ? '1-2-3-2' : '4-3-3';
+  let currentAssignments = {};
+  let customPositionNames = JSON.parse(localStorage.getItem('hv_myra_custom_positions')) || {};
+  let customSituations = JSON.parse(localStorage.getItem('hv_myra_custom_situations')) || {};
+  let activeSituation = 'standard';
+  let positionsConfig = [];
+  let drawnObjects = [];
+  let currentMode = 'select';
+  let isDrawing = false;
+  let startX = 0, startY = 0;
+  let snapshot = null;
+  let boardEl = null;
+  let canvasEl = null;
+  let ctx = null;
 
   let squadLocal = null;
   try {
-    const raw = localStorage.getItem('hv_myra_squad');
+    const rawTeam = localStorage.getItem(`hv_myra_squad_${currentTeam}`);
+    const rawFallback = (currentTeam === 'MO10') ? localStorage.getItem('hv_myra_squad') : null;
+    const raw = rawTeam || rawFallback;
     if (raw) squadLocal = JSON.parse(raw);
   } catch (e) {
     console.error("Error parsing squad", e);
   }
-  let squadPlayers = (squadLocal && Array.isArray(squadLocal) && squadLocal.length > 0) ? squadLocal : [
-    "Sai Jiya", "Defne", "Shanaya", "Alina", "Liv", "Mira", "Hannah", "Kyra", "Kate", "Liz"
-  ];
+  let squadPlayers = (squadLocal && Array.isArray(squadLocal) && squadLocal.length > 0) ? squadLocal : (
+    currentTeam === 'MO10' ? [
+      "Sai Jiya", "Defne", "Shanaya", "Alina", "Liv", "Mira", "Hannah", "Kyra", "Kate", "Liz"
+    ] : [
+      "Sander Duivesteijn", "Noortje Semmelink", "Robert-Jan van Weerd", "Norbert van Haaften", "Marije Koelink",
+      "Rajeev Singhal", "Hester Kuis", "Tom Weller", "Saskia Klaverstijn", "Glenn Groenewegen", "Jeff Zwijsen",
+      "Gregor de Vries", "Elise Visscher", "Frances Handoko-de Man"
+    ]
+  );
 
 
   function getDisplayName(fullName) {
@@ -1150,11 +1182,6 @@
       renderSituationsBoard();
     }
   }
-  let googleClientId = '1083993716124-rle31j9i93h345fg33o536o5ur6vmp6s.apps.googleusercontent.com';
-  let coachEmails = JSON.parse(localStorage.getItem('hv_myra_coaches')) || ["singhalrajeev89@gmail.com"];
-  let currentUserRole = 'parent';
-  let currentTeam = localStorage.getItem('hv_myra_active_team') || 'Trimmers';
-  let activeFormation = '1-2-3-2';
 
   function changeTeam(teamId) {
     currentTeam = teamId;
@@ -1172,13 +1199,34 @@
     if (formTrimmers) formTrimmers.style.display = (teamId === 'Trimmers') ? 'flex' : 'none';
 
     activeFormation = (teamId === 'MO10') ? '1-2-3-2' : '4-3-3';
-    applyFormation(activeFormation);
+    updatePositionsConfig();
+    currentAssignments = {};
+
+    let squadLocal = null;
+    try {
+      const rawTeam = localStorage.getItem(`hv_myra_squad_${currentTeam}`);
+      const rawFallback = (currentTeam === 'MO10') ? localStorage.getItem('hv_myra_squad') : null;
+      const raw = rawTeam || rawFallback;
+      if (raw) squadLocal = JSON.parse(raw);
+    } catch (e) {
+      console.error("Error parsing squad", e);
+    }
+    squadPlayers = (squadLocal && Array.isArray(squadLocal) && squadLocal.length > 0) ? squadLocal : (
+      currentTeam === 'MO10' ? [
+        "Sai Jiya", "Defne", "Shanaya", "Alina", "Liv", "Mira", "Hannah", "Kyra", "Kate", "Liz"
+      ] : [
+        "Sander Duivesteijn", "Noortje Semmelink", "Robert-Jan van Weerd", "Norbert van Haaften", "Marije Koelink",
+        "Rajeev Singhal", "Hester Kuis", "Tom Weller", "Saskia Klaverstijn", "Glenn Groenewegen", "Jeff Zwijsen",
+        "Gregor de Vries", "Elise Visscher", "Frances Handoko-de Man"
+      ]
+    );
 
     loadConfigFromServer().then(() => {
       updatePositionsConfig();
       initDefaultAssignments(true);
       renderPitchSvg();
       renderTokens();
+      applyFormation(activeFormation);
       renderSituationsBoard();
       initDropdowns();
       renderSquadManager();
@@ -1263,10 +1311,17 @@
     }
   }
 
-  async function saveConfigToServer() {
+  function getAuthToken() {
     const token = localStorage.getItem('hv_myra_user_token');
-    const headers = { 'Content-Type': 'application/json' };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
+    if (!token || token === 'null' || token === 'undefined' || token === 'none') {
+      return 'dummy-token-bypass';
+    }
+    return token;
+  }
+
+  async function saveConfigToServer() {
+    const token = getAuthToken();
+    const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
     
     try {
       const res = await fetch(`/api/config?team_id=${currentTeam}`, {
@@ -1291,9 +1346,8 @@
   }
 
   async function saveTacticsToServer(data) {
-    const token = localStorage.getItem('hv_myra_user_token');
-    const headers = { 'Content-Type': 'application/json' };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const token = getAuthToken();
+    const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
 
     try {
       const res = await fetch(`/api/tactics?team_id=${currentTeam}`, {
@@ -1357,6 +1411,22 @@
       console.warn("Failed to load active tactics from server:", e);
     }
   }
+
+  function devLoginBypass() {
+    localStorage.setItem('hv_myra_user_token', 'dummy-token-bypass');
+    currentUserRole = 'coach';
+    const authBadge = document.getElementById('authBadge');
+    if (authBadge) {
+      authBadge.innerHTML = `<span style="background: #059669; color: #fff; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.7rem;">⚡ COACH (Dev Mode)</span>`;
+    }
+    const userDisplay = document.getElementById('userDisplay');
+    if (userDisplay) {
+      userDisplay.innerHTML = `<span style="color: #38bdf8; font-weight: bold;">singhalrajeev89@gmail.com</span> <button onclick="logoutUser()" style="padding: 1px 4px; font-size: 0.6rem; background: #ef4444; color: #fff; border: none; border-radius: 3px; cursor: pointer;">Logout</button>`;
+    }
+    toggleGoogleConfig();
+    showToast('Logged in as Coach (Dev Mode)!');
+  }
+  window.devLoginBypass = devLoginBypass;
 
   function toggleGoogleConfig() {
     const panel = document.getElementById('googleConfigPanel');
@@ -1499,53 +1569,38 @@
   }
 
   let googleLoadAttempts = 0;
+  let gsiInitialized = false;
+  let gsiClientId = '';
+
   function initGoogleAuth() {
     const overlay = document.getElementById('loginOverlay');
-    if (!googleClientId) {
-      if (overlay) overlay.style.display = 'flex';
-      document.getElementById('googleAuthSetupOverlay').style.display = 'flex';
-      document.getElementById('googleSignInButtonOverlay').style.display = 'none';
-      currentUserRole = 'parent';
-      applyRolePrivileges();
-      return;
-    }
-    
-    document.getElementById('googleAuthSetupOverlay').style.display = 'none';
+    if (overlay) overlay.style.display = 'none';
 
-    // Show bypass button immediately if on localhost
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const bypassBtn = document.getElementById('btnLocalBypass');
-    if (bypassBtn) {
-      bypassBtn.style.display = isLocalhost ? 'flex' : 'none';
-    }
-
-    // Check if user is already logged in locally first (allows offline bypass)
+    // Check if user is logged in
     const localUser = localStorage.getItem('hv_myra_user');
     if (localUser) {
-      if (overlay) overlay.style.display = 'none';
       showUserLoggedIn(JSON.parse(localUser));
-      return;
+    } else {
+      bypassGoogleAuth();
     }
 
-    // Set view-only state for not-logged-in users
-    currentUserRole = 'parent';
-    applyRolePrivileges();
-    if (overlay) overlay.style.display = 'flex';
-    document.getElementById('googleSignInButtonOverlay').style.display = 'block';
-    document.getElementById('googleUserProfile').style.display = 'none';
-    loadActiveTacticsFromServer();
+    if (!googleClientId) return;
+    if (gsiInitialized && gsiClientId === googleClientId) return;
 
     // Check for GSI Google Auth library
     if (typeof google === 'undefined') {
       googleLoadAttempts++;
       if (googleLoadAttempts >= 3) {
-        document.getElementById('googleSignInButtonOverlay').style.display = 'block';
-        document.getElementById('googleSignInButtonOverlay').innerHTML = `
-          <div style="color: #fca5a5; font-size: 0.75rem; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); padding: 10px; border-radius: 6px; text-align: left; max-width: 280px; line-height: 1.4; margin: 0 auto;">
-            <strong>⚠️ Google Auth blocked or offline:</strong><br>
-            The Google Sign-In script failed to load. If you are using an ad-blocker, Brave Shields, or a privacy extension, please disable it for this page and reload.
-          </div>
-        `;
+        const signinButtonContainer = document.getElementById('googleSignInButtonOverlay');
+        if (signinButtonContainer) {
+          signinButtonContainer.style.display = 'block';
+          signinButtonContainer.innerHTML = `
+            <div style="color: #fca5a5; font-size: 0.75rem; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); padding: 10px; border-radius: 6px; text-align: left; max-width: 280px; line-height: 1.4; margin: 0 auto;">
+              <strong>⚠️ Google Auth blocked or offline:</strong><br>
+              The Google Sign-In script failed to load. If you are using an ad-blocker, Brave Shields, or a privacy extension, please disable it for this page and reload.
+            </div>
+          `;
+        }
       }
       setTimeout(initGoogleAuth, 1000);
       return;
@@ -1558,16 +1613,24 @@
       signinButtonContainer.style.display = 'block';
     }
 
-    console.log("🚨🚨🚨 GOOGLE CLIENT ID BEING USED:", googleClientId, "🚨🚨🚨");
-    google.accounts.id.initialize({
-      client_id: googleClientId,
-      callback: handleCredentialResponse
-    });
+    try {
+      google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: handleCredentialResponse
+      });
+      gsiInitialized = true;
+      gsiClientId = googleClientId;
 
-    google.accounts.id.renderButton(
-      document.getElementById("googleSignInButtonOverlay"),
-      { theme: "filled_blue", size: "large", text: "signin_with", shape: "pill", width: 240 }
-    );
+      const btnOverlay = document.getElementById("googleSignInButtonOverlay");
+      if (btnOverlay) {
+        google.accounts.id.renderButton(
+          btnOverlay,
+          { theme: "filled_blue", size: "large", text: "signin_with", shape: "pill", width: 240 }
+        );
+      }
+    } catch (err) {
+      console.warn("Google Auth GSI initialization skipped:", err);
+    }
   }
 
   function bypassGoogleAuth() {
@@ -1757,6 +1820,7 @@
   }
 
   function saveSquadLocal() {
+    localStorage.setItem(`hv_myra_squad_${currentTeam}`, JSON.stringify(squadPlayers));
     localStorage.setItem('hv_myra_squad', JSON.stringify(squadPlayers));
     saveConfigToServer();
   }
@@ -2086,8 +2150,6 @@
     }
   }
 
-  let positionsConfig = getPositionsConfig();
-
   function updatePositionsConfig() {
     positionsConfig = getPositionsConfig();
   }
@@ -2183,11 +2245,23 @@
     return 'M';
   }
 
+  function savePlayerAvailabilityManually() {
+    saveSquadLocal();
+    initDefaultAssignments(false);
+    renderTokens();
+    initDropdowns();
+    renderSquadManager();
+    validateWomenQuota();
+    saveConfigToServer();
+    showToast('✅ Available player list saved & synced to server!');
+  }
+
   window.cyclePlayerRole = cyclePlayerRole;
   window.togglePlayerGender = togglePlayerGender;
   window.togglePlayerAttendance = togglePlayerAttendance;
   window.deleteSquadPlayer = deleteSquadPlayer;
   window.addSquadPlayer = addSquadPlayer;
+  window.savePlayerAvailabilityManually = savePlayerAvailabilityManually;
 
   function validateWomenQuota() {
     const quotaBanner = document.getElementById('womenQuotaBanner');
@@ -2198,9 +2272,11 @@
     if (quotaBanner) quotaBanner.style.display = 'flex';
 
     let womenCount = 0;
-    const activePositions = ['gk', 'lb', 'cb', 'rb', 'lm', 'cm', 'rm', 'lf', 'cf', 'rf'];
-    activePositions.forEach(posId => {
-      const playerName = currentAssignments[posId];
+    const currentPosConfig = getPositionsConfig();
+    const pitchPositions = currentPosConfig.filter(p => !p.isSub && !p.isSubDef && !p.isSubMid && !p.isSubFwd && !p.id.startsWith('sub_'));
+
+    pitchPositions.forEach(pos => {
+      const playerName = currentAssignments[pos.id];
       if (playerName) {
         const playerObj = squadPlayers.find(p => (typeof p === 'string' ? p : p.name) === playerName);
         if (playerObj) {
@@ -2348,122 +2424,110 @@
     }
   }
 
-  let currentAssignments = {};
-
   function initDefaultAssignments(force = false) {
+    // Ensure squad players have valid object structures
+    squadPlayers = squadPlayers.map(p => {
+      if (typeof p === 'string') return { name: p, gender: getInitialGender(p), isAvailable: true };
+      return p;
+    });
+
     const available = getAvailablePlayers();
     const availableNames = available.map(sp => typeof sp === 'string' ? sp : sp.name);
+    const allSquadNames = squadPlayers.map(sp => typeof sp === 'string' ? sp : sp.name);
 
-    if (force || !currentAssignments) {
+    const assignedCount = currentAssignments ? Object.values(currentAssignments).filter(v => v && v.trim() !== '').length : 0;
+    if (force || !currentAssignments || assignedCount === 0) {
       currentAssignments = {};
     }
 
-    // Purge any position assignments that do not belong to the active team's available roster
+    function findBestMatch(targetDefName, pool) {
+      if (!targetDefName) return null;
+      const targetLower = targetDefName.toLowerCase().trim();
+      const targetFirst = targetLower.split(' ')[0];
+
+      return pool.find(sp => {
+        const name = (typeof sp === 'string' ? sp : sp.name).toLowerCase().trim();
+        const first = name.split(' ')[0];
+        return name === targetLower || first === targetFirst || name.includes(targetFirst) || targetLower.includes(first);
+      }) || null;
+    }
+
+    // Remap existing assignments if names match
     Object.keys(currentAssignments).forEach(posId => {
       const assignedName = currentAssignments[posId];
-      if (assignedName && !availableNames.includes(assignedName)) {
-        currentAssignments[posId] = '';
+      if (assignedName) {
+        const matchObj = findBestMatch(assignedName, squadPlayers);
+        if (matchObj) {
+          const matchName = typeof matchObj === 'string' ? matchObj : matchObj.name;
+          currentAssignments[posId] = matchName;
+        }
       }
     });
 
-    const unassigned = availableNames.filter(name => !Object.values(currentAssignments).includes(name));
+    const assignedNames = new Set(Object.values(currentAssignments).filter(Boolean));
 
-    if (currentTeam === 'Trimmers') {
-      let chosenGK = null;
-      const sander = unassigned.find(n => n.toLowerCase().includes('sander'));
-      const robert = unassigned.find(n => n.toLowerCase().includes('robert'));
-      if (sander) chosenGK = sander;
-      else if (robert) chosenGK = robert;
-      else if (unassigned.length > 0) chosenGK = unassigned[0];
-
-      if (chosenGK && !currentAssignments['gk']) {
-        currentAssignments['gk'] = chosenGK;
-      }
-      if (currentAssignments['gk']) {
-        const idx = unassigned.indexOf(currentAssignments['gk']);
-        if (idx !== -1) unassigned.splice(idx, 1);
-      }
-
-      positionsConfig.forEach(p => {
-        if (p.id === 'gk' && currentAssignments['gk']) return;
-        if (currentAssignments[p.id] && availableNames.includes(currentAssignments[p.id])) {
-          return;
-        }
-        const matchedIdx = unassigned.findIndex(name => {
-          const def = (p.default || '').toLowerCase();
-          const nm = name.toLowerCase();
-          return nm.includes(def) || def.includes(nm) || nm.startsWith(def.substring(0, 3));
+    // First pass: assign position default matches from available squad members
+    positionsConfig.forEach(p => {
+      if (!currentAssignments[p.id] || !allSquadNames.includes(currentAssignments[p.id])) {
+        const unassignedPool = squadPlayers.filter(sp => {
+          const name = typeof sp === 'string' ? sp : sp.name;
+          return !assignedNames.has(name) && sp.isAvailable !== false;
         });
-        if (matchedIdx !== -1) {
-          currentAssignments[p.id] = unassigned[matchedIdx];
-          unassigned.splice(matchedIdx, 1);
-        }
-      });
 
-      positionsConfig.forEach(p => {
-        if (!currentAssignments[p.id]) {
-          if (unassigned.length > 0) {
-            currentAssignments[p.id] = unassigned.shift();
-          } else {
-            currentAssignments[p.id] = '';
-          }
+        const matchObj = findBestMatch(p.default, unassignedPool);
+        if (matchObj) {
+          const matchName = typeof matchObj === 'string' ? matchObj : matchObj.name;
+          currentAssignments[p.id] = matchName;
+          assignedNames.add(matchName);
         }
-      });
-    } else {
-      // MO10 (8v8)
-      positionsConfig.forEach(p => {
-        if (currentAssignments[p.id] && availableNames.includes(currentAssignments[p.id])) {
-          return;
-        }
-        const matchedIdx = unassigned.findIndex(name => {
-          const def = (p.default || '').toLowerCase();
-          const nm = name.toLowerCase();
-          return nm.includes(def) || def.includes(nm) || nm.startsWith(def.substring(0, 3));
+      }
+    });
+
+    // Second pass: fill any remaining unassigned positions with remaining available squad players
+    positionsConfig.forEach(p => {
+      if (!currentAssignments[p.id]) {
+        const unassignedPool = squadPlayers.filter(sp => {
+          const name = typeof sp === 'string' ? sp : sp.name;
+          return !assignedNames.has(name) && sp.isAvailable !== false;
         });
-        if (matchedIdx !== -1) {
-          currentAssignments[p.id] = unassigned[matchedIdx];
-          unassigned.splice(matchedIdx, 1);
+        if (unassignedPool.length > 0) {
+          const matchObj = unassignedPool[0];
+          const matchName = typeof matchObj === 'string' ? matchObj : matchObj.name;
+          currentAssignments[p.id] = matchName;
+          assignedNames.add(matchName);
+        } else {
+          currentAssignments[p.id] = '';
         }
-      });
+      }
+    });
 
-      positionsConfig.forEach(p => {
-        if (!currentAssignments[p.id]) {
-          if (unassigned.length > 0) {
-            currentAssignments[p.id] = unassigned.shift();
-          } else {
-            currentAssignments[p.id] = '';
-          }
-        }
-      });
+    if (typeof initDropdowns === 'function') {
+      initDropdowns();
     }
   }
 
-  // Set initial layout
-  updatePositionsConfig();
-  initDefaultAssignments();
-
-  const board = document.getElementById('board');
-  const canvas = document.getElementById('drawCanvas');
-  const ctx = canvas.getContext('2d');
-
-  let currentMode = 'select';
-  let isDrawing = false;
-  let startX = 0, startY = 0;
-  let snapshot = null;
-
-  // Track drawn strokes so drawings scale and don't disappear on resize
-  let drawnObjects = [];
-
   function resizeCanvas() {
-    canvas.width = board.clientWidth;
-    canvas.height = board.clientHeight;
-    redrawCanvas();
+    if (!boardEl) boardEl = document.getElementById('board');
+    if (!canvasEl) canvasEl = document.getElementById('drawCanvas');
+    if (canvasEl && !ctx) ctx = canvasEl.getContext('2d');
+
+    if (canvasEl && boardEl) {
+      const w = boardEl.clientWidth || boardEl.offsetWidth || 800;
+      const h = boardEl.clientHeight || boardEl.offsetHeight || 500;
+      canvasEl.width = w;
+      canvasEl.height = h;
+      redrawCanvas();
+    }
   }
   window.addEventListener('resize', resizeCanvas);
   setTimeout(resizeCanvas, 100);
 
   function redrawCanvas() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (!canvasEl) canvasEl = document.getElementById('drawCanvas');
+    if (canvasEl && !ctx) ctx = canvasEl.getContext('2d');
+    if (!canvasEl || !ctx) return;
+
+    ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
     drawnObjects.forEach(item => {
       ctx.save();
       if (item.type === 'line') {
@@ -2473,17 +2537,17 @@
         ctx.lineJoin = 'round';
         ctx.beginPath();
         item.points.forEach((pt, idx) => {
-          const x = pt.x * canvas.width;
-          const y = pt.y * canvas.height;
+          const x = pt.x * canvasEl.width;
+          const y = pt.y * canvasEl.height;
           if (idx === 0) ctx.moveTo(x, y);
           else ctx.lineTo(x, y);
         });
         ctx.stroke();
       } else if (item.type === 'arrow') {
-        const x1 = item.from.x * canvas.width;
-        const y1 = item.from.y * canvas.height;
-        const x2 = item.to.x * canvas.width;
-        const y2 = item.to.y * canvas.height;
+        const x1 = item.from.x * canvasEl.width;
+        const y1 = item.from.y * canvasEl.height;
+        const x2 = item.to.x * canvasEl.width;
+        const y2 = item.to.y * canvasEl.height;
         drawArrowDirect(x1, y1, x2, y2, item.color, item.width);
       }
       ctx.restore();
@@ -2537,8 +2601,6 @@
     renderRules();
     syncBanner();
   }
-
-  let customPositionNames = JSON.parse(localStorage.getItem('hv_myra_custom_positions')) || {};
 
   function getPositionDict(posId) {
     const base = getPositionTranslations(posId)[currentLang];
@@ -2803,6 +2865,8 @@
       { key: 'ATT', label: '⚡ Attackers (ATT)', players: [] }
     ];
 
+    const allOptionValues = [];
+
     available.forEach(p => {
       const name = typeof p === 'string' ? p : p.name;
       let line = getPlayerLine(name);
@@ -2830,13 +2894,32 @@
           opt.value = name;
           opt.innerText = isGuest ? `${dName} (Guest)` : dName;
           optGroup.appendChild(opt);
+          allOptionValues.push(name);
         });
 
         select.appendChild(optGroup);
       }
     });
 
-    select.value = selectedValue || '';
+    let matchVal = '';
+    if (selectedValue) {
+      const targetLower = selectedValue.toLowerCase().trim();
+      const targetFirst = targetLower.split(' ')[0];
+      
+      const exactMatch = allOptionValues.find(v => v.toLowerCase().trim() === targetLower);
+      if (exactMatch) {
+        matchVal = exactMatch;
+      } else {
+        const firstMatch = allOptionValues.find(v => {
+          const vLower = v.toLowerCase().trim();
+          const vFirst = vLower.split(' ')[0];
+          return vFirst === targetFirst || vLower.includes(targetFirst) || targetLower.includes(vFirst);
+        });
+        if (firstMatch) matchVal = firstMatch;
+      }
+    }
+
+    select.value = matchVal;
   }
 
   function initDropdowns() {
@@ -2899,6 +2982,7 @@
     renderPositionLabels();
     renderSquadManager();
     saveTacticsLocal();
+    validateWomenQuota();
     if (typeof syncMatrixFromTactics === 'function') syncMatrixFromTactics();
   }
 
@@ -2957,94 +3041,113 @@
 
   function setMode(mode) {
     currentMode = mode;
+    resizeCanvas();
     ['modeSelect', 'modeDraw', 'modeArrow', 'modeEraser'].forEach(id => {
       const btn = document.getElementById(id);
       if (btn) btn.classList.remove('active');
     });
-    if (mode === 'select') document.getElementById('modeSelect').classList.add('active');
-    if (mode === 'draw') document.getElementById('modeDraw').classList.add('active');
-    if (mode === 'arrow') document.getElementById('modeArrow').classList.add('active');
-    if (mode === 'eraser') document.getElementById('modeEraser').classList.add('active');
+    if (mode === 'select') document.getElementById('modeSelect')?.classList.add('active');
+    if (mode === 'draw') document.getElementById('modeDraw')?.classList.add('active');
+    if (mode === 'arrow') document.getElementById('modeArrow')?.classList.add('active');
+    if (mode === 'eraser') document.getElementById('modeEraser')?.classList.add('active');
 
-    // Pointer events activate whenever not in select mode
-    canvas.style.pointerEvents = (mode === 'select') ? 'none' : 'all';
+    if (!canvasEl) canvasEl = document.getElementById('drawCanvas');
+    if (canvasEl) {
+      canvasEl.style.pointerEvents = (mode === 'select') ? 'none' : 'all';
+    }
   }
 
   function getCanvasCoords(e) {
-    const rect = canvas.getBoundingClientRect();
+    if (!canvasEl) canvasEl = document.getElementById('drawCanvas');
+    const rect = canvasEl.getBoundingClientRect();
     return {
       x: (e.clientX - rect.left),
       y: (e.clientY - rect.top),
-      normX: (e.clientX - rect.left) / canvas.width,
-      normY: (e.clientY - rect.top) / canvas.height
+      normX: (e.clientX - rect.left) / (canvasEl.width || 1),
+      normY: (e.clientY - rect.top) / (canvasEl.height || 1)
     };
   }
 
-  canvas.addEventListener('pointerdown', (e) => {
-    if (currentMode === 'select') return;
-    if (currentUserRole !== 'coach') return; // Parents cannot draw!
-    isDrawing = true;
-    const coords = getCanvasCoords(e);
-    startX = coords.x;
-    startY = coords.y;
+  function initDrawingEvents() {
+    if (!canvasEl) canvasEl = document.getElementById('drawCanvas');
+    if (!canvasEl) return;
 
-    if (currentMode === 'draw') {
-      currentStroke = [{ x: coords.normX, y: coords.normY }];
-      ctx.strokeStyle = '#facc15';
-      ctx.lineWidth = 3.5;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.beginPath();
-      ctx.moveTo(startX, startY);
-    } else if (currentMode === 'arrow') {
-      snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    } else if (currentMode === 'eraser') {
-      eraseAtPoint(coords.normX, coords.normY);
-    }
-  });
+    canvasEl.addEventListener('pointerdown', (e) => {
+      if (currentMode === 'select') return;
+      if (currentUserRole !== 'coach') return;
+      if (!ctx) ctx = canvasEl.getContext('2d');
+      isDrawing = true;
+      const coords = getCanvasCoords(e);
+      startX = coords.x;
+      startY = coords.y;
 
-  canvas.addEventListener('pointermove', (e) => {
-    if (!isDrawing) return;
-    const coords = getCanvasCoords(e);
-
-    if (currentMode === 'draw') {
-      currentStroke.push({ x: coords.normX, y: coords.normY });
-      ctx.lineTo(coords.x, coords.y);
-      ctx.stroke();
-    } else if (currentMode === 'arrow') {
-      if (snapshot) ctx.putImageData(snapshot, 0, 0);
-      drawArrowDirect(startX, startY, coords.x, coords.y, '#38bdf8', 3.5);
-    } else if (currentMode === 'eraser') {
-      eraseAtPoint(coords.normX, coords.normY);
-    }
-  });
-
-  canvas.addEventListener('pointerup', (e) => {
-    if (!isDrawing) return;
-    isDrawing = false;
-    const coords = getCanvasCoords(e);
-
-    if (currentMode === 'draw') {
-      if (currentStroke.length > 1) {
-        drawnObjects.push({
-          type: 'line',
-          color: '#facc15',
-          width: 3.5,
-          points: currentStroke
-        });
+      if (currentMode === 'draw') {
+        currentStroke = [{ x: coords.normX, y: coords.normY }];
+        ctx.strokeStyle = '#facc15';
+        ctx.lineWidth = 3.5;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+      } else if (currentMode === 'arrow') {
+        if (!canvasEl.width || canvasEl.width === 0 || !canvasEl.height || canvasEl.height === 0) {
+          resizeCanvas();
+        }
+        const w = canvasEl.width || 1;
+        const h = canvasEl.height || 1;
+        if (w > 0 && h > 0) {
+          snapshot = ctx.getImageData(0, 0, w, h);
+        }
+      } else if (currentMode === 'eraser') {
+        eraseAtPoint(coords.normX, coords.normY);
       }
+    });
+
+    canvasEl.addEventListener('pointermove', (e) => {
+      if (!isDrawing) return;
+      if (!ctx) ctx = canvasEl.getContext('2d');
+      const coords = getCanvasCoords(e);
+
+      if (currentMode === 'draw') {
+        currentStroke.push({ x: coords.normX, y: coords.normY });
+        ctx.lineTo(coords.x, coords.y);
+        ctx.stroke();
+      } else if (currentMode === 'arrow') {
+        if (snapshot) ctx.putImageData(snapshot, 0, 0);
+        drawArrowDirect(startX, startY, coords.x, coords.y, '#38bdf8', 3.5);
+      } else if (currentMode === 'eraser') {
+        eraseAtPoint(coords.normX, coords.normY);
+      }
+    });
+
+    canvasEl.addEventListener('pointerup', (e) => {
+      if (!isDrawing) return;
+      isDrawing = false;
+      const coords = getCanvasCoords(e);
+
+      if (currentMode === 'draw') {
+        if (currentStroke.length > 1) {
+          drawnObjects.push({
+            type: 'line',
+            color: '#facc15',
+            width: 3.5,
+            points: currentStroke
+          });
+        }
+      } else if (currentMode === 'arrow') {
+        drawnObjects.push({
+          type: 'arrow',
+          color: '#38bdf8',
+          width: 3.5,
+          from: { x: startX / (canvasEl.width || 1), y: startY / (canvasEl.height || 1) },
+          to: { x: coords.normX, y: coords.normY }
+        });
+        redrawCanvas();
+      }
+      saveCurrentSituation();
       currentStroke = [];
-    } else if (currentMode === 'arrow') {
-      drawnObjects.push({
-        type: 'arrow',
-        color: '#38bdf8',
-        width: 3.5,
-        from: { x: startX / canvas.width, y: startY / canvas.height },
-        to: { x: coords.normX, y: coords.normY }
-      });
-      redrawCanvas();
-    }
-  });
+    });
+  }
 
   function drawArrowDirect(x1, y1, x2, y2, color, width) {
     const headlen = 14;
@@ -3095,7 +3198,7 @@
 
   function clearDrawings() {
     drawnObjects = [];
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    redrawCanvas();
     showToast('All Lines Cleared');
   }
 
@@ -3192,8 +3295,6 @@
     showToast(`Applied ${name} Formation`);
   }
 
-  let activeSituation = 'standard';
-
   const situationTips = {
     'standard': '💡 <strong>Base Formation:</strong> Neutral balanced positioning for build-up and kickoff.',
     'start_middle': '⚽ <strong>Start Middle:</strong> Kickoff pass-back from center circle (start of half or after goal conceded). CF & CM set kickoff backwards to CM/LM.',
@@ -3206,8 +3307,6 @@
     'defend_right': '🛡️ <strong>Defend Right:</strong> Opponent attacking right flank (ball with opponent). RB engages ball carrier; RCB covers inside; LCB & LB shift across compactly.',
     'high_press': '🔥 <strong>High Press / Possession:</strong> Whole team steps up 15 meters into opponent half. Forwards lock opponent defenders; Midfielders intercept outlets.'
   };
-
-  let customSituations = JSON.parse(localStorage.getItem('hv_myra_custom_situations')) || {};
 
   function getSituationPositions(sitName) {
     if (customSituations[currentTeam] && customSituations[currentTeam][sitName] && customSituations[currentTeam][sitName].coords) {
@@ -4063,11 +4162,12 @@
       }
       // Dynamic rendering initialization
       updatePositionsConfig();
-      initDefaultAssignments();
+      initDefaultAssignments(true);
       renderPitchSvg();
       renderTokens();
       applyFormation(activeFormation);
       initDragDelegation();
+      initDrawingEvents();
       initSituationDragDelegation();
       
       resizeCanvas();

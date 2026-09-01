@@ -9,7 +9,8 @@ TEST_DB_PATH = tempfile.mktemp(suffix=".db")
 os.environ["DATABASE_FILE"] = TEST_DB_PATH
 
 from backend.app.database import init_db
-from backend.app.main import app, get_current_coach_email
+from backend.app.main import app
+from backend.app.routers.auth import get_current_coach_email
 
 @pytest.fixture(scope="function", autouse=True)
 def setup_test_db():

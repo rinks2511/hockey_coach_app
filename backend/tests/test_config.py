@@ -1,4 +1,5 @@
-from backend.app.main import get_current_coach_email, app
+from backend.app.main import app
+from backend.app.routers.auth import get_current_coach_email
 
 def test_get_config(client):
     response = client.get("/api/config?team_id=MO10")

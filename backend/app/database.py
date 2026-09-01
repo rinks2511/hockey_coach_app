@@ -9,15 +9,14 @@ def get_db():
 
 def init_db():
     with get_db() as conn:
-        # Check if legacy settings table exists and lacks team_id column
+        # Non-destructive migration checks
         cur = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='settings'")
         if cur.fetchone():
             cur_info = conn.execute("PRAGMA table_info(settings)")
             cols = [row["name"] for row in cur_info.fetchall()]
             if "team_id" not in cols:
-                # Dropping legacy tables to recreate with multi-team structure
-                conn.execute("DROP TABLE settings")
-                conn.execute("DROP TABLE tactics")
+                # Add team_id column non-destructively if needed
+                conn.execute("ALTER TABLE settings ADD COLUMN team_id TEXT DEFAULT 'MO10'")
 
         conn.execute("""
             CREATE TABLE IF NOT EXISTS settings (
@@ -38,15 +37,17 @@ def init_db():
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
-        # Create an index for unique matching per team
         conn.execute("""
             CREATE UNIQUE INDEX IF NOT EXISTS idx_tactics_period_team 
             ON tactics(team_id, match_date, opponent, quarter)
         """)
         
-        # Seed both teams: MO10 and Trimmers
-        teams = ["MO10", "Trimmers"]
-        for team in teams:
+        # Seed initial teams dynamically if database is empty
+        cur_teams = conn.execute("SELECT DISTINCT team_id FROM settings").fetchall()
+        existing_teams = [r["team_id"] for r in cur_teams]
+
+        initial_teams = ["MO10", "Trimmers"]
+        for team in initial_teams:
             # Seed coach emails
             cur = conn.execute("SELECT 1 FROM settings WHERE team_id = ? AND key = 'coach_emails'", (team,))
             if not cur.fetchone():
@@ -72,37 +73,18 @@ def init_db():
                 )
 
         # Seed squad players specifically
-        # MO10
-        cur = conn.execute("SELECT 1 FROM settings WHERE team_id = 'MO10' AND key = 'squad_players'")
-        if not cur.fetchone():
+        cur_mo10 = conn.execute("SELECT 1 FROM settings WHERE team_id = 'MO10' AND key = 'squad_players'")
+        if not cur_mo10.fetchone():
             conn.execute(
                 "INSERT INTO settings (team_id, key, value) VALUES (?, ?, ?)",
                 ("MO10", "squad_players", json.dumps(settings.DEFAULT_SQUAD_PLAYERS))
             )
-        else:
-            conn.execute(
-                "UPDATE settings SET value = ? WHERE team_id = 'MO10' AND key = 'squad_players'",
-                (json.dumps(settings.DEFAULT_SQUAD_PLAYERS),)
-            )
             
-        # Trimmers (Adult roster)
-        cur = conn.execute("SELECT 1 FROM settings WHERE team_id = 'Trimmers' AND key = 'squad_players'")
-        if not cur.fetchone():
+        cur_trimmers = conn.execute("SELECT 1 FROM settings WHERE team_id = 'Trimmers' AND key = 'squad_players'")
+        if not cur_trimmers.fetchone():
             conn.execute(
                 "INSERT INTO settings (team_id, key, value) VALUES (?, ?, ?)",
                 ("Trimmers", "squad_players", json.dumps(settings.DEFAULT_TRIMMERS_SQUAD_PLAYERS))
             )
-        else:
-            conn.execute(
-                "UPDATE settings SET value = ? WHERE team_id = 'Trimmers' AND key = 'squad_players'",
-                (json.dumps(settings.DEFAULT_TRIMMERS_SQUAD_PLAYERS),)
-            )
 
-        # Ensure coach_emails contains singhalrajeev89@gmail.com for both teams
-        for team in teams:
-            conn.execute(
-                "UPDATE settings SET value = ? WHERE team_id = ? AND key = 'coach_emails'",
-                (json.dumps(settings.DEFAULT_COACH_EMAILS), team)
-            )
-            
         conn.commit()
