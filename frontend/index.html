@@ -942,6 +942,7 @@
         <tr>
           <th style="min-width: 130px; text-align: left; padding-left: 10px;">Player</th>
           ${intervals.map(it => `<th style="padding: 4px 2px;"><div style="font-size:0.75rem; font-weight:bold;">${it.label}</div><div style="font-size:0.58rem; opacity:0.75; font-weight:normal;">${it.time}</div></th>`).join('')}
+          <th style="min-width: 95px; text-align: center; padding: 4px 6px;">Play Share</th>
         </tr>
       `;
     }
@@ -1027,11 +1028,28 @@
           if (i === 0) cb.disabled = true; // Managed by tactics
           cb.onchange = (e) => {
             subMatrixState[player][i] = e.target.checked;
-            validateSubstitutionMatrix();
+            renderSubstitutionMatrix();
           };
           td.appendChild(cb);
           tr.appendChild(td);
         }
+
+        const activeCount = subMatrixState[player] ? subMatrixState[player].filter(Boolean).length : 0;
+        const pct = Math.round((activeCount / numIntervals) * 100);
+        const tdShare = document.createElement('td');
+        tdShare.style.textAlign = 'center';
+        tdShare.style.fontSize = '0.68rem';
+        tdShare.style.fontWeight = 'bold';
+
+        let shareBadge = `<span style="background: #10b98122; color: #34d399; border: 1px solid #10b98155; padding: 2px 6px; border-radius: 4px;">${activeCount}/${numIntervals} (${pct}%)</span>`;
+        if (pct < 50) {
+          shareBadge = `<span style="background: #ef444422; color: #f87171; border: 1px solid #ef444455; padding: 2px 6px; border-radius: 4px;">${activeCount}/${numIntervals} (${pct}%) ⚠️</span>`;
+        } else if (pct === 100 && item.label === 'GK') {
+          shareBadge = `<span style="background: #3b82f622; color: #60a5fa; border: 1px solid #3b82f655; padding: 2px 6px; border-radius: 4px;">${activeCount}/${numIntervals} (100% GK)</span>`;
+        }
+        tdShare.innerHTML = shareBadge;
+        tr.appendChild(tdShare);
+
         tbody.appendChild(tr);
       }
     });
