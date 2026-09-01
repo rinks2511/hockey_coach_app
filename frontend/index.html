@@ -3731,12 +3731,19 @@
     saveTacticsToServer(data);
   }
 
-  function loadTacticsLocal() {
+  function loadTacticsLocal(showAlert = false) {
     const raw = localStorage.getItem('hv_myra_clean_pdf_board');
-    if (!raw) { alert('No saved setup found.'); return; }
-    const data = JSON.parse(raw);
-    applyTacticsData(data);
-    showToast('Setup Loaded!');
+    if (!raw) {
+      if (showAlert) alert('No saved setup found.');
+      return;
+    }
+    try {
+      const data = JSON.parse(raw);
+      applyTacticsData(data);
+      if (showAlert) showToast('Setup Loaded!');
+    } catch (e) {
+      if (showAlert) alert('Error reading saved setup.');
+    }
   }
 
   function applyTacticsData(data) {
