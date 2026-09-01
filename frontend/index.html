@@ -2343,6 +2343,9 @@
       board.appendChild(token);
     });
     updateOpponentsVisibility();
+    if (typeof applyFormation === 'function' && activeFormation) {
+      applyFormation(activeFormation);
+    }
   }
 
   let currentAssignments = {};
