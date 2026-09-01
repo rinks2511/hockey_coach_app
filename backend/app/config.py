@@ -2,7 +2,9 @@ import os
 from typing import List
 
 class Settings:
-    # Resolve DB file location relative to this configuration module
+    # Database configuration (Defaults to local SQLite if DATABASE_URL is not set)
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "")
+
     DATABASE_FILE: str = os.path.abspath(
         os.getenv(
             "DATABASE_FILE", 

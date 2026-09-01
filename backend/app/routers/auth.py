@@ -1,8 +1,10 @@
 import json
 import urllib.request
 from typing import Optional
-from fastapi import Header, HTTPException, status
+from fastapi import APIRouter, Header, HTTPException, status
 from ..database import get_db
+
+router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 def get_current_user_email(authorization: Optional[str] = Header(None)) -> str:
     if not authorization or not authorization.startswith("Bearer "):
@@ -58,3 +60,12 @@ def get_current_coach_email(team_id: str = "MO10", authorization: Optional[str] 
         pass
 
     return default_email
+
+@router.get("/me")
+def get_me(team_id: str = "MO10", authorization: Optional[str] = Header(None)):
+    email = get_current_coach_email(team_id, authorization)
+    return {
+        "user": {"email": email},
+        "is_coach": True,
+        "team_id": team_id
+    }

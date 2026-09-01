@@ -3,7 +3,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from .database import init_db
-from .routers import config, tactics, teams
+from .routers import auth, config, tactics, teams
 
 app = FastAPI(title="HV Myra Matchday Board Backend")
 
@@ -11,6 +11,7 @@ app = FastAPI(title="HV Myra Matchday Board Backend")
 init_db()
 
 # Register API Routers
+app.include_router(auth.router)
 app.include_router(config.router)
 app.include_router(tactics.router)
 app.include_router(teams.router)
