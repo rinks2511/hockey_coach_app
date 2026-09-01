@@ -1923,30 +1923,6 @@
       });
     });
 
-  function cyclePlayerRole(index) {
-    if (!squadPlayers[index]) return;
-    const p = squadPlayers[index];
-    const pName = typeof p === 'string' ? p : p.name;
-    const roles = ['DEF', 'MID', 'ATT', 'GK'];
-    let current = (typeof p === 'object' && p.role) ? p.role.toUpperCase() : getPlayerLine(pName);
-    if (current === 'FWD') current = 'ATT';
-    const nextIdx = (roles.indexOf(current) + 1) % roles.length;
-    const newRole = roles[nextIdx];
-
-    if (typeof p === 'string') {
-      squadPlayers[index] = { name: p, gender: getInitialGender(p), role: newRole, isAvailable: true };
-    } else {
-      p.role = newRole;
-    }
-
-    saveSquadLocal();
-    renderSquadManager();
-    initDropdowns();
-    renderPositionLabels();
-    if (typeof renderSubstitutionMatrix === 'function') renderSubstitutionMatrix();
-    showToast(`${getDisplayName(pName)} position set to ${newRole}`);
-  }
-
     ['attendanceSummaryBadge', 'attendanceSummaryBadgeTactics'].forEach(badgeId => {
       const badge = document.getElementById(badgeId);
       if (badge) {
@@ -2185,12 +2161,40 @@
   function togglePlayerGender(index) {
     if (squadPlayers[index]) {
       const p = squadPlayers[index];
-      p.gender = p.gender === 'F' ? 'M' : 'F';
+      if (typeof p === 'string') {
+        squadPlayers[index] = { name: p, gender: getInitialGender(p) === 'F' ? 'M' : 'F', isAvailable: true };
+      } else {
+        p.gender = p.gender === 'F' ? 'M' : 'F';
+      }
       saveSquadLocal();
       renderSquadManager();
       validateWomenQuota();
       if (typeof renderSubstitutionMatrix === 'function') renderSubstitutionMatrix();
     }
+  }
+
+  function cyclePlayerRole(index) {
+    if (squadPlayers[index] === undefined) return;
+    const p = squadPlayers[index];
+    const pName = typeof p === 'string' ? p : p.name;
+    const roles = ['DEF', 'MID', 'ATT', 'GK'];
+    let current = (typeof p === 'object' && p.role) ? p.role.toUpperCase() : getPlayerLine(pName);
+    if (current === 'FWD') current = 'ATT';
+    const nextIdx = (roles.indexOf(current) + 1) % roles.length;
+    const newRole = roles[nextIdx];
+
+    if (typeof p === 'string') {
+      squadPlayers[index] = { name: p, gender: getInitialGender(p), role: newRole, isAvailable: true };
+    } else {
+      p.role = newRole;
+    }
+
+    saveSquadLocal();
+    renderSquadManager();
+    initDropdowns();
+    renderPositionLabels();
+    if (typeof renderSubstitutionMatrix === 'function') renderSubstitutionMatrix();
+    showToast(`${getDisplayName(pName)} position set to ${newRole}`);
   }
 
   function validateWomenQuota() {
