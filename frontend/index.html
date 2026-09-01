@@ -1882,7 +1882,9 @@
       container.innerHTML = '';
 
       sortedSquad.forEach(({ player: p, origIndex }) => {
-        const isAvail = p.isAvailable;
+        const isAvail = typeof p === 'string' ? true : p.isAvailable !== false;
+        const pName = typeof p === 'string' ? p : p.name;
+        const pGender = typeof p === 'string' ? getInitialGender(p) : (p.gender || 'M');
         const row = document.createElement('div');
         row.className = 'squad-player-row';
         row.style.cssText = `
@@ -1898,25 +1900,27 @@
           opacity: ${isAvail ? '1' : '0.55'};
         `;
 
-        const genderColor = p.gender === 'F' ? '#ec4899' : '#3b82f6';
-        const guestBadge = p.isGuest ? `<span style="background: #b45309; color: #fef3c7; border-radius: 3px; padding: 1px 4px; font-size: 0.55rem; font-weight: 700; margin-left: 4px;">GUEST</span>` : '';
-        const displayName = getDisplayName(p.name);
+        const genderColor = pGender === 'F' ? '#ec4899' : '#3b82f6';
+        const guestBadge = (typeof p === 'object' && p.isGuest) ? `<span style="background: #b45309; color: #fef3c7; border-radius: 3px; padding: 1px 4px; font-size: 0.55rem; font-weight: 700; margin-left: 4px;">GUEST</span>` : '';
+        const displayName = getDisplayName(pName);
 
-        const currentRole = (p.role || getPlayerLine(p.name)).toUpperCase();
+        const currentRole = (typeof p === 'object' && p.role) ? p.role.toUpperCase() : getPlayerLine(pName).toUpperCase();
         let roleDisplay = currentRole === 'FWD' ? 'ATT' : currentRole;
         const roleColors = { 'GK': '#3b82f6', 'DEF': '#10b981', 'MID': '#6366f1', 'ATT': '#ec4899', 'FWD': '#ec4899' };
         const roleColor = roleColors[roleDisplay] || '#64748b';
 
+        const safeName = pName.replace(/'/g, "\\'");
+
         row.innerHTML = `
           <div style="display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0;">
             <input type="checkbox" ${isAvail ? 'checked' : ''} onchange="togglePlayerAttendance(${origIndex})" style="cursor: pointer; accent-color: #10b981; transform: scale(1.15);" title="Toggle gameweek attendance">
-            <span style="font-weight: ${isAvail ? '700' : '400'}; color: ${isAvail ? '#fff' : '#64748b'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${p.name}">${displayName}</span>
+            <span style="font-weight: ${isAvail ? '700' : '400'}; color: ${isAvail ? '#fff' : '#64748b'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${pName}">${displayName}</span>
             ${guestBadge}
           </div>
           <div style="display: flex; align-items: center; gap: 4px;">
-            <span onclick="cyclePlayerRole(${origIndex})" style="background: ${roleColor}; color: white; border-radius: 3px; padding: 1px 5px; font-size: 0.58rem; font-weight: 800; cursor: pointer; user-select: none;" title="Click to cycle position role (GK/DEF/MID/ATT)">${roleDisplay}</span>
-            <span onclick="togglePlayerGender(${origIndex})" style="background: ${genderColor}; color: white; border-radius: 3px; padding: 1px 5px; font-size: 0.58rem; font-weight: 800; cursor: pointer; user-select: none;" title="Click to toggle gender (F/M)">${p.gender || 'M'}</span>
-            <span onclick="deleteSquadPlayer('${p.name.replace(/'/g, "\\'")}')" style="color: #ef4444; cursor: pointer; font-weight: bold; font-size: 0.9rem; padding: 0 4px;" title="Remove player">&times;</span>
+            <span onclick="cyclePlayerRole('${safeName}')" style="background: ${roleColor}; color: white; border-radius: 3px; padding: 1px 5px; font-size: 0.58rem; font-weight: 800; cursor: pointer; user-select: none;" title="Click to cycle position role (GK/DEF/MID/ATT)">${roleDisplay}</span>
+            <span onclick="togglePlayerGender('${safeName}')" style="background: ${genderColor}; color: white; border-radius: 3px; padding: 1px 5px; font-size: 0.58rem; font-weight: 800; cursor: pointer; user-select: none;" title="Click to toggle gender (F/M)">${pGender}</span>
+            <span onclick="deleteSquadPlayer('${safeName}')" style="color: #ef4444; cursor: pointer; font-weight: bold; font-size: 0.9rem; padding: 0 4px;" title="Remove player">&times;</span>
           </div>
         `;
         container.appendChild(row);
@@ -2158,11 +2162,18 @@
     return 'M';
   }
 
-  function togglePlayerGender(index) {
-    if (squadPlayers[index]) {
-      const p = squadPlayers[index];
+  function findSquadPlayerIndex(target) {
+    if (typeof target === 'number') return target;
+    return squadPlayers.findIndex(sp => (typeof sp === 'string' ? sp : sp.name) === target);
+  }
+
+  function togglePlayerGender(target) {
+    const idx = findSquadPlayerIndex(target);
+    if (idx !== -1 && squadPlayers[idx]) {
+      let p = squadPlayers[idx];
       if (typeof p === 'string') {
-        squadPlayers[index] = { name: p, gender: getInitialGender(p) === 'F' ? 'M' : 'F', isAvailable: true };
+        p = { name: p, gender: getInitialGender(p) === 'F' ? 'M' : 'F', isAvailable: true };
+        squadPlayers[idx] = p;
       } else {
         p.gender = p.gender === 'F' ? 'M' : 'F';
       }
@@ -2173,21 +2184,22 @@
     }
   }
 
-  function cyclePlayerRole(index) {
-    if (squadPlayers[index] === undefined) return;
-    const p = squadPlayers[index];
+  function cyclePlayerRole(target) {
+    const idx = findSquadPlayerIndex(target);
+    if (idx === -1 || squadPlayers[idx] === undefined) return;
+    let p = squadPlayers[idx];
     const pName = typeof p === 'string' ? p : p.name;
+    if (typeof p === 'string') {
+      p = { name: p, gender: getInitialGender(p), isAvailable: true };
+      squadPlayers[idx] = p;
+    }
     const roles = ['DEF', 'MID', 'ATT', 'GK'];
-    let current = (typeof p === 'object' && p.role) ? p.role.toUpperCase() : getPlayerLine(pName);
+    let current = p.role ? p.role.toUpperCase() : getPlayerLine(pName);
     if (current === 'FWD') current = 'ATT';
     const nextIdx = (roles.indexOf(current) + 1) % roles.length;
     const newRole = roles[nextIdx];
 
-    if (typeof p === 'string') {
-      squadPlayers[index] = { name: p, gender: getInitialGender(p), role: newRole, isAvailable: true };
-    } else {
-      p.role = newRole;
-    }
+    p.role = newRole;
 
     saveSquadLocal();
     renderSquadManager();
