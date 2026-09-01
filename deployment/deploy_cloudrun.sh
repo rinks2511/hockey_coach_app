@@ -15,14 +15,10 @@ echo "GCP Project: ${PROJECT_ID}"
 echo "GCP Region:  ${REGION}"
 echo "--------------------------------------------------------"
 
-# 1. Build and Submit the container image to Google Artifact Registry / Container Registry
-echo "🚀 Building and pushing container image with Cloud Build..."
-gcloud builds submit --tag "gcr.io/${PROJECT_ID}/${SERVICE_NAME}:latest" --project "${PROJECT_ID}" ..
-
-# 2. Deploy to Cloud Run
-echo "🌟 Deploying container to Cloud Run service..."
+# 1. Build and Deploy container to Cloud Run
+echo "🚀 Building and deploying directly to Cloud Run..."
 gcloud run deploy "${SERVICE_NAME}" \
-  --image "gcr.io/${PROJECT_ID}/${SERVICE_NAME}:latest" \
+  --source . \
   --region "${REGION}" \
   --platform managed \
   --allow-unauthenticated \
