@@ -776,6 +776,56 @@
     return parts[0];
   }
 
+  function findSquadPlayerIndex(target) {
+    if (typeof target === 'number') return target;
+    return squadPlayers.findIndex(sp => (typeof sp === 'string' ? sp : sp.name) === target);
+  }
+
+  function togglePlayerGender(target) {
+    const idx = findSquadPlayerIndex(target);
+    if (idx !== -1 && squadPlayers[idx]) {
+      let p = squadPlayers[idx];
+      if (typeof p === 'string') {
+        p = { name: p, gender: getInitialGender(p) === 'F' ? 'M' : 'F', isAvailable: true };
+        squadPlayers[idx] = p;
+      } else {
+        p.gender = p.gender === 'F' ? 'M' : 'F';
+      }
+      saveSquadLocal();
+      renderSquadManager();
+      validateWomenQuota();
+      if (typeof renderSubstitutionMatrix === 'function') renderSubstitutionMatrix();
+    }
+  }
+
+  function cyclePlayerRole(target) {
+    const idx = findSquadPlayerIndex(target);
+    if (idx === -1 || squadPlayers[idx] === undefined) return;
+    let p = squadPlayers[idx];
+    const pName = typeof p === 'string' ? p : p.name;
+    if (typeof p === 'string') {
+      p = { name: p, gender: getInitialGender(p), isAvailable: true };
+      squadPlayers[idx] = p;
+    }
+    const roles = ['DEF', 'MID', 'ATT', 'GK'];
+    let current = p.role ? p.role.toUpperCase() : getPlayerLine(pName);
+    if (current === 'FWD') current = 'ATT';
+    const nextIdx = (roles.indexOf(current) + 1) % roles.length;
+    const newRole = roles[nextIdx];
+
+    p.role = newRole;
+
+    saveSquadLocal();
+    renderSquadManager();
+    initDropdowns();
+    renderPositionLabels();
+    if (typeof renderSubstitutionMatrix === 'function') renderSubstitutionMatrix();
+    showToast(`${getDisplayName(pName)} position set to ${newRole}`);
+  }
+
+  window.cyclePlayerRole = cyclePlayerRole;
+  window.togglePlayerGender = togglePlayerGender;
+
   function getPlayerLine(playerName) {
     if (!playerName) return 'MID';
     const nameStr = typeof playerName === 'string' ? playerName : playerName.name || '';
@@ -2160,53 +2210,6 @@
       if (n.includes(f) || f.includes(n)) return 'F';
     }
     return 'M';
-  }
-
-  function findSquadPlayerIndex(target) {
-    if (typeof target === 'number') return target;
-    return squadPlayers.findIndex(sp => (typeof sp === 'string' ? sp : sp.name) === target);
-  }
-
-  function togglePlayerGender(target) {
-    const idx = findSquadPlayerIndex(target);
-    if (idx !== -1 && squadPlayers[idx]) {
-      let p = squadPlayers[idx];
-      if (typeof p === 'string') {
-        p = { name: p, gender: getInitialGender(p) === 'F' ? 'M' : 'F', isAvailable: true };
-        squadPlayers[idx] = p;
-      } else {
-        p.gender = p.gender === 'F' ? 'M' : 'F';
-      }
-      saveSquadLocal();
-      renderSquadManager();
-      validateWomenQuota();
-      if (typeof renderSubstitutionMatrix === 'function') renderSubstitutionMatrix();
-    }
-  }
-
-  function cyclePlayerRole(target) {
-    const idx = findSquadPlayerIndex(target);
-    if (idx === -1 || squadPlayers[idx] === undefined) return;
-    let p = squadPlayers[idx];
-    const pName = typeof p === 'string' ? p : p.name;
-    if (typeof p === 'string') {
-      p = { name: p, gender: getInitialGender(p), isAvailable: true };
-      squadPlayers[idx] = p;
-    }
-    const roles = ['DEF', 'MID', 'ATT', 'GK'];
-    let current = p.role ? p.role.toUpperCase() : getPlayerLine(pName);
-    if (current === 'FWD') current = 'ATT';
-    const nextIdx = (roles.indexOf(current) + 1) % roles.length;
-    const newRole = roles[nextIdx];
-
-    p.role = newRole;
-
-    saveSquadLocal();
-    renderSquadManager();
-    initDropdowns();
-    renderPositionLabels();
-    if (typeof renderSubstitutionMatrix === 'function') renderSubstitutionMatrix();
-    showToast(`${getDisplayName(pName)} position set to ${newRole}`);
   }
 
   window.cyclePlayerRole = cyclePlayerRole;
