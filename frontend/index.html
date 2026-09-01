@@ -1691,132 +1691,68 @@
     const available = getAvailablePlayers();
     const availNames = available.map(p => typeof p === 'string' ? p : p.name);
 
-    if (currentTeam === 'MO10') {
-      const gkPlayer = currentAssignments['gk'];
-      const mo10MatchdayPlayers = Object.values(currentAssignments).filter(Boolean);
+    if (availNames.length === 0) return;
 
-      // Default all squad players to false across all blocks
-      availNames.forEach(name => {
-        subMatrixState[name] = new Array(5).fill(false);
+    // Reset subMatrixState for all available players to true
+    availNames.forEach(name => {
+      subMatrixState[name] = new Array(numIntervals).fill(true);
+    });
+
+    const targetPitchCount = currentTeam === 'MO10' ? 8 : 11;
+    const targetFieldCount = targetPitchCount - 1;
+
+    const gkPlayer = currentAssignments['gk'];
+    
+    // Separate GK from field players
+    const fieldAvailableNames = availNames.filter(n => n !== gkPlayer);
+    const numFieldAvailable = fieldAvailableNames.length;
+
+    if (numFieldAvailable > targetFieldCount) {
+      // Group field players into positional pools: DEF, MID, FWD
+      const defPool = [];
+      const midPool = [];
+      const fwdPool = [];
+
+      fieldAvailableNames.forEach(name => {
+        const line = getPlayerLine(name);
+        if (line === 'DEF') defPool.push(name);
+        else if (line === 'MID') midPool.push(name);
+        else fwdPool.push(name);
       });
 
-      // Set active MO10 matchday players (8 pitch + 2 dugout subs) to true
-      mo10MatchdayPlayers.forEach(name => {
-        if (subMatrixState[name]) {
-          subMatrixState[name].fill(true);
-        }
-      });
-
-      // Block 0: subs rest
-      const subDef = currentAssignments['cb'] || currentAssignments['sub_def'];
-      const subMid = currentAssignments['sub_mid'];
-      if (subDef && subMatrixState[subDef]) subMatrixState[subDef][0] = false;
-      if (subMid && subMatrixState[subMid]) subMatrixState[subMid][0] = false;
-
-      const lb = currentAssignments['lb'];
-      const rb = currentAssignments['rb'];
-      const lm = currentAssignments['lm'];
-      const cm = currentAssignments['cm'];
-      const rm = currentAssignments['rm'];
-      const lf = currentAssignments['lf'];
-      const rf = currentAssignments['rf'];
-
-      // Block 1 (6-12m): Rest LB and LM
-      if (lb && subMatrixState[lb]) subMatrixState[lb][1] = false;
-      if (lm && subMatrixState[lm]) subMatrixState[lm][1] = false;
-
-      // Block 2 (12-18m): Rest RB and CM
-      if (rb && subMatrixState[rb]) subMatrixState[rb][2] = false;
-      if (cm && subMatrixState[cm]) subMatrixState[cm][2] = false;
-
-      // Block 3 (18-24m): Rest LF and RM
-      if (lf && subMatrixState[lf]) subMatrixState[lf][3] = false;
-      if (rm && subMatrixState[rm]) subMatrixState[rm][3] = false;
-
-      // Block 4 (24-30m): Rest RF and sub_mid
-      if (rf && subMatrixState[rf]) subMatrixState[rf][4] = false;
-      if (subMid && subMatrixState[subMid]) subMatrixState[subMid][4] = false;
-
-      // Goalkeeper plays all 5 blocks
-      if (gkPlayer && subMatrixState[gkPlayer]) {
-        for (let i = 0; i < 5; i++) subMatrixState[gkPlayer][i] = true;
-      }
-    } else {
-      // Trimmers (4 Quarters x 17.5m = 8 Intervals, 11 on pitch + 3 dugout subs)
-      const gkPlayer = currentAssignments['gk'];
-      const matchdayPlayers = Object.values(currentAssignments).filter(Boolean);
-
-      // Default ALL squad players to false across all 8 blocks
-      availNames.forEach(name => {
-        subMatrixState[name] = new Array(8).fill(false);
-      });
-
-      // Set matchday players (11 pitch + 3 dugout subs) to true
-      matchdayPlayers.forEach(name => {
-        if (subMatrixState[name]) {
-          subMatrixState[name].fill(true);
-        }
-      });
-
-      // Block 0: 3 dugout subs rest
-      const subDef0 = currentAssignments['sub_def'] || currentAssignments['sub_field_3'];
-      const subMid0 = currentAssignments['sub_mid'] || currentAssignments['sub_field_2'];
-      const subFwd0 = currentAssignments['sub_fwd'] || currentAssignments['sub_field_1'];
-      if (subDef0 && subMatrixState[subDef0]) subMatrixState[subDef0][0] = false;
-      if (subMid0 && subMatrixState[subMid0]) subMatrixState[subMid0][0] = false;
-      if (subFwd0 && subMatrixState[subFwd0]) subMatrixState[subFwd0][0] = false;
-
-      // 1. DEFENDERS POOL (Starting defenders + sub_def)
-      const defPositions = ['lb', 'lcb', 'cb', 'rcb', 'rb'];
-      const defPlayers = defPositions.map(id => currentAssignments[id]).filter(Boolean);
-      const subDef = currentAssignments['sub_def'] || currentAssignments['sub_field_3'];
-      const defPool = [...defPlayers];
-      if (subDef && !defPool.includes(subDef)) defPool.push(subDef);
-
-      // 2. MIDFIELDERS POOL (Starting midfielders + sub_mid)
-      const midPositions = ['cdm', 'lm', 'cm', 'lcm', 'rcm', 'rm'];
-      const midPlayers = midPositions.map(id => currentAssignments[id]).filter(Boolean);
-      const subMid = currentAssignments['sub_mid'] || currentAssignments['sub_field_2'];
-      const midPool = [...midPlayers];
-      if (subMid && !midPool.includes(subMid)) midPool.push(subMid);
-
-      // 3. FORWARDS POOL (Starting forwards + sub_fwd)
-      const fwdPositions = ['lf', 'cf', 'st', 'rf'];
-      const fwdPlayers = fwdPositions.map(id => currentAssignments[id]).filter(Boolean);
-      const subFwd = currentAssignments['sub_fwd'] || currentAssignments['sub_field_1'];
-      const fwdPool = [...fwdPlayers];
-      if (subFwd && !fwdPool.includes(subFwd)) fwdPool.push(subFwd);
-
-      // Spread substitutions evenly: 1 Defender, 1 Midfielder, 1 Forward rest at each interval (1..7)
-      for (let i = 1; i < 8; i++) {
-        if (defPool.length > 0) {
-          const restDefIdx = (i - 1) % defPool.length;
-          const restDef = defPool[restDefIdx];
-          if (restDef && subMatrixState[restDef]) subMatrixState[restDef][i] = false;
-        }
-
-        if (midPool.length > 0) {
-          const restMidIdx = (i - 1) % midPool.length;
-          const restMid = midPool[restMidIdx];
-          if (restMid && subMatrixState[restMid]) subMatrixState[restMid][i] = false;
-        }
-
-        if (fwdPool.length > 0) {
-          const restFwdIdx = (i - 1) % fwdPool.length;
-          const restFwd = fwdPool[restFwdIdx];
-          if (restFwd && subMatrixState[restFwd]) subMatrixState[restFwd][i] = false;
-        }
+      // Combine pools in balanced sequence (DEF -> MID -> FWD)
+      const balancedFieldQueue = [];
+      const maxLen = Math.max(defPool.length, midPool.length, fwdPool.length);
+      for (let i = 0; i < maxLen; i++) {
+        if (i < defPool.length) balancedFieldQueue.push(defPool[i]);
+        if (i < midPool.length) balancedFieldQueue.push(midPool[i]);
+        if (i < fwdPool.length) balancedFieldQueue.push(fwdPool[i]);
       }
 
-      // Goalkeeper plays all 8 blocks
-      if (gkPlayer && subMatrixState[gkPlayer]) {
-        for (let i = 0; i < 8; i++) subMatrixState[gkPlayer][i] = true;
+      // Number of field rests needed in each interval to hit targetFieldCount
+      const numRestsPerInterval = numFieldAvailable - targetFieldCount;
+
+      let queueIdx = 0;
+      for (let interval = 0; interval < numIntervals; interval++) {
+        for (let r = 0; r < numRestsPerInterval; r++) {
+          const restPlayer = balancedFieldQueue[queueIdx % balancedFieldQueue.length];
+          if (restPlayer && subMatrixState[restPlayer]) {
+            subMatrixState[restPlayer][interval] = false;
+          }
+          queueIdx++;
+        }
       }
+    }
+
+    // Goalkeeper plays all intervals
+    if (gkPlayer && subMatrixState[gkPlayer]) {
+      subMatrixState[gkPlayer].fill(true);
     }
 
     renderSubstitutionMatrix();
     if (!silent) {
-      showToast(currentTeam === 'MO10' ? 'MO10 Rotation Auto-Filled (8 on pitch)!' : 'Trimmers Rotation Auto-Filled (11 on pitch)!');
+      const msg = `${currentTeam} rotation auto-balanced for ${availNames.length} available players (${targetPitchCount} on pitch)!`;
+      showToast(msg);
     }
   }
 
