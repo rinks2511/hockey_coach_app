@@ -23,11 +23,16 @@ Follow **Conventional Commits**:
 
 ---
 
-## 3. Pull Request Guidelines
+## 3. Mandatory Pull Request (PR) Policy
 
-1. **Local Verification Required**:
+> [!IMPORTANT]
+> **Direct pushes to the `main` branch are strictly prohibited.**
+> All code changes, bug fixes, and documentation updates must be submitted via Pull Requests (PR) from feature branches.
+
+1. **Create Feature Branch**: Never work directly on `main`. Create a feature branch (e.g. `feat/add-teams` or `fix/auth-leak`).
+2. **Local Verification Required**:
    ```bash
    PYTHONPATH=. pytest backend/tests/
    ```
-2. Open Pull Request using the repository [PR Template](.github/PULL_REQUEST_TEMPLATE.md).
-3. Ensure all CI automated tests pass before requesting review.
+3. **Submit PR**: Open a Pull Request targeting `main` using the repository [PR Template](.github/PULL_REQUEST_TEMPLATE.md).
+4. **CI Checks**: Ensure all automated GitHub Actions checks pass before merging.
