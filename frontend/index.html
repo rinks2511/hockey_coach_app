@@ -2209,6 +2209,12 @@
     showToast(`${getDisplayName(pName)} position set to ${newRole}`);
   }
 
+  window.cyclePlayerRole = cyclePlayerRole;
+  window.togglePlayerGender = togglePlayerGender;
+  window.togglePlayerAttendance = togglePlayerAttendance;
+  window.deleteSquadPlayer = deleteSquadPlayer;
+  window.addSquadPlayer = addSquadPlayer;
+
   function validateWomenQuota() {
     const quotaBanner = document.getElementById('womenQuotaBanner');
     if (currentTeam !== 'Trimmers') {
