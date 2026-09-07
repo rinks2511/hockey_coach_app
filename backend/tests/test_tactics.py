@@ -89,3 +89,43 @@ def test_get_tactics_history_and_isolation(client, mock_coach):
         assert "Match MO10" not in opponents_trimmers
     finally:
         app.dependency_overrides.clear()
+
+def test_custom_title_by_id_and_delete(client, mock_coach):
+    app.dependency_overrides[get_current_coach_email] = mock_coach
+    try:
+        payload = {
+            "match_date": "2026-09-07",
+            "opponent": "HV Abcoude",
+            "quarter": "Q1",
+            "title": "2026-09-07 - HV Abcoude Derby",
+            "data": {"notes": "Custom title test"}
+        }
+        res = client.post("/api/tactics?team_id=MO10", json=payload, headers={"Authorization": "Bearer dummy"})
+        assert res.status_code == 200
+
+        # Get history to find ID
+        history = client.get("/api/tactics/history?team_id=MO10").json()
+        saved = [item for item in history if item.get("title") == "2026-09-07 - HV Abcoude Derby"]
+        assert len(saved) > 0
+        tactic_id = saved[0]["id"]
+
+        # Fetch by ID
+        by_id_res = client.get(f"/api/tactics/by-id?id={tactic_id}")
+        assert by_id_res.status_code == 200
+        data = by_id_res.json()
+        assert data["title"] == "2026-09-07 - HV Abcoude Derby"
+        assert data["data"]["notes"] == "Custom title test"
+
+        # Delete by ID
+        del_res = client.delete(f"/api/tactics?id={tactic_id}&team_id=MO10", headers={"Authorization": "Bearer dummy"})
+        assert del_res.status_code == 200
+
+
+
+
+
+        # Verify 404 after delete
+        assert client.get(f"/api/tactics/by-id?id={tactic_id}").status_code == 404
+    finally:
+        app.dependency_overrides.clear()
+

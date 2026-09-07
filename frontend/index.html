@@ -372,7 +372,29 @@
       <p style="font-size: 0.85rem; color: #94a3b8; margin: 0; line-height: 1.4;">Sign in with your Google Account to access the tactics board.</p>
     </div>
     
-    <!-- Sign-in Button -->
+    <!-- Auth Mode Segmented Control (Sign In vs Sign Up) -->
+    <div style="display: flex; background: #0f172a; border-radius: 20px; padding: 3px; border: 1px solid #334155; width: 100%; max-width: 280px; margin-bottom: -6px;">
+      <button id="authTabSignIn" onclick="setAuthMode('signin')" style="flex: 1; padding: 6px 12px; border: none; border-radius: 16px; font-size: 0.75rem; font-weight: 700; cursor: pointer; background: #38bdf8; color: #0b0f19;">🔑 Sign In</button>
+      <button id="authTabSignUp" onclick="setAuthMode('signup')" style="flex: 1; padding: 6px 12px; border: none; border-radius: 16px; font-size: 0.75rem; font-weight: 700; cursor: pointer; background: transparent; color: #94a3b8;">🚀 Sign Up</button>
+    </div>
+
+    <!-- Sign Up Role Selector (visible in Sign Up mode) -->
+    <div id="signUpRoleContainer" style="display: none; flex-direction: column; gap: 8px; width: 100%; background: #0f172a; padding: 10px; border-radius: 8px; border: 1px solid #334155; text-align: left;">
+      <label style="font-size: 0.65rem; color: #38bdf8; font-weight: bold;">SELECT SIGN-UP ROLE:</label>
+      <div style="display: flex; gap: 12px;">
+        <label style="font-size: 0.72rem; display: flex; align-items: center; gap: 4px; cursor: pointer; color: #fff; font-weight: 600;">
+          <input type="radio" name="signUpRole" value="coach" checked onchange="setSignUpRole('coach')"> 🏃 Coach / Manager
+        </label>
+        <label style="font-size: 0.72rem; display: flex; align-items: center; gap: 4px; cursor: pointer; color: #fff; font-weight: 600;">
+          <input type="radio" name="signUpRole" value="parent" onchange="setSignUpRole('parent')"> 👪 Parent
+        </label>
+      </div>
+      <div style="font-size: 0.62rem; color: #94a3b8; line-height: 1.3;" id="signUpRoleDesc">
+        🏃 <strong>Coach:</strong> Registers your Google Account for full line-up editing & tactic saving.
+      </div>
+    </div>
+
+    <!-- Sign-in / Sign-up Button -->
     <div id="googleSignInButtonOverlay"></div>
     
     <!-- Local & Cloud Run Coach Bypass Button -->
@@ -397,7 +419,44 @@
   </div>
 </div>
 
+<div id="loadSetupModal" style="position: fixed; inset: 0; background: rgba(11, 15, 25, 0.85); display: none; align-items: center; justify-content: center; z-index: 9000; font-family: system-ui, -apple-system, sans-serif; color: #fff;">
+  <div style="background: var(--panel-bg, #0f172a); padding: 20px; border-radius: 12px; border: 1px solid #334155; width: 92%; max-width: 580px; max-height: 80vh; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 10px 25px rgba(0,0,0,0.6);">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px;">
+      <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 8px;">📂 Saved Match Setups</h3>
+      <button onclick="closeLoadSetupModal()" style="background: transparent; border: none; color: #94a3b8; font-size: 1.2rem; cursor: pointer; font-weight: bold;">✕</button>
+    </div>
+    <div id="loadSetupFileList" style="overflow-y: auto; max-height: 55vh; display: flex; flex-direction: column; gap: 8px; padding-right: 4px;">
+      <!-- Populated dynamically -->
+    </div>
+    <div style="display: flex; justify-content: flex-end; border-top: 1px solid #334155; padding-top: 10px;">
+      <button onclick="closeLoadSetupModal()" style="background: #334155; color: #fff; border: none; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.8rem;">Close</button>
+    </div>
+  </div>
+</div>
+
+<div id="saveSetupModal" style="position: fixed; inset: 0; background: rgba(11, 15, 25, 0.85); display: none; align-items: center; justify-content: center; z-index: 9050; font-family: system-ui, -apple-system, sans-serif; color: #fff;">
+  <div style="background: var(--panel-bg, #0f172a); padding: 22px; border-radius: 12px; border: 1px solid #334155; width: 92%; max-width: 440px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.6);">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px;">
+      <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 8px;">💾 Save Match Setup</h3>
+      <button onclick="closeSaveSetupModal()" style="background: transparent; border: none; color: #94a3b8; font-size: 1.2rem; cursor: pointer; font-weight: bold;">✕</button>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <label style="font-size: 0.8rem; font-weight: 700; color: #cbd5e1;">File / Setup Title:</label>
+      <input type="text" id="saveSetupTitleInput" style="background: #090c12; border: 1.5px solid #38bdf8; color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 0.9rem; font-weight: bold; width: 100%; outline: none;" placeholder="e.g. 2026-09-07 - HV Abcoude">
+      <div style="font-size: 0.72rem; color: #94a3b8; line-height: 1.3;">
+        This will save your <strong>Available Players List</strong>, <strong>Tactics Board Lineup</strong>, and <strong>Substitution Planner Matrix</strong> together.
+      </div>
+    </div>
+    <div style="display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #334155; padding-top: 12px;">
+      <button onclick="closeSaveSetupModal()" style="background: #334155; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.8rem;">Cancel</button>
+      <button onclick="confirmSaveSetupModal()" style="background: #0284c7; color: #fff; border: none; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.8rem;">💾 Save & Sync</button>
+    </div>
+  </div>
+</div>
+
 <div class="app-container">
+
+
   
   <header style="display: flex; flex-direction: column; gap: 12px; padding: 12px 14px;">
     <!-- Top Row (Brand & Google Login/Auth) -->
@@ -451,14 +510,19 @@
           <input type="date" id="matchDatePicker" value="2026-08-29" onchange="onDateSelected(this.value)">
         </div>
         <div class="match-input-group">
-          <label id="lblMatchOpponent">⚔️ Match / Opponent</label>
-          <input type="text" id="matchOpponent" value="HV Myra O10 vs Pinoké O10" oninput="syncBanner()">
+          <label id="lblFileName">📝 Setup Name / File</label>
+          <input type="text" id="matchFileName" placeholder="e.g. 2026-09-07 - HV Abcoude" oninput="syncBanner()">
+        </div>
+        <div class="match-input-group">
+          <label id="lblMatchOpponent">⚔️ Opponent</label>
+          <input type="text" id="matchOpponent" value="Pinoké O10" oninput="syncBanner()">
         </div>
         <div class="match-input-group">
           <label id="lblMatchQuarter">⏱️ Period / Quarter</label>
           <input type="text" id="matchQuarter" value="H1 lineup" oninput="syncBanner()">
         </div>
       </div>
+
     </div>
   </header>
 
@@ -506,9 +570,10 @@
       <span class="tool-label" id="lblActions">Share & Save:</span>
       <button class="purple" onclick="downloadReadOnlyHTML()">📤 Download Read-Only HTML (For Team)</button>
       <button class="primary" onclick="window.print()">🖨️ Print / Save PDF</button>
-      <button onclick="saveTacticsLocal()" id="btnSave">Save (Coach)</button>
-      <button onclick="loadTacticsFromServer()" id="btnLoad">Load</button>
+      <button onclick="openLoadSetupModal()" class="secondary" id="btnLoadModal">📂 Load Setup</button>
+      <button onclick="saveTacticsLocal()" id="btnSave">💾 Save (Coach)</button>
     </div>
+
   </div>
 
   <div class="export-match-banner">
@@ -621,6 +686,15 @@
           ✅ Check the box when a player is PLAYING on the pitch. Each block must have the required on-field players.
         </div>
 
+        <!-- Quarter Referees Card (Trimmers) -->
+        <div id="quarterRefereesPanel" style="display: none; background: #0f172a; border: 1px solid #1e293b; border-radius: 8px; padding: 10px; margin-bottom: 12px;">
+          <div style="font-size: 0.78rem; font-weight: 700; color: #f59e0b; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
+            <span>🏁 Quarter Referees (HV Myra Trimmers)</span>
+            <span style="font-size: 0.65rem; font-weight: normal; color: #94a3b8;">Excluded from play in assigned quarters</span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;" id="quarterRefereesGrid"></div>
+        </div>
+
         <div class="substitution-matrix" id="substitutionMatrixContainer">
           <table class="sub-matrix-table" id="subMatrixTable">
             <thead id="subMatrixHead"></thead>
@@ -640,8 +714,9 @@
 
       <!-- Right Column: Lineup Dropdowns & Squad Management -->
       <div class="side-panel" style="width: 100%;">
-        <div class="panel-title">
+        <div class="panel-title" style="display: flex; justify-content: space-between; align-items: center;">
           <span id="txtSideTitle">🏃 Starting Lineup</span>
+          <button onclick="autoFillStartingLineup()" style="padding: 4px 10px; background: #3b82f6; border-color: #2563eb; color: white; border-radius: 4px; font-size: 0.75rem; cursor: pointer;">⚡ Auto-Fill Lineup</button>
         </div>
 
         <div class="roster-instruction" id="txtSideInstruction">
@@ -766,6 +841,17 @@
   // =========================================================================
   let currentLang = 'en';
   let subMatrixState = {};
+  let quarterReferees = { Q1: '', Q2: '', Q3: '', Q4: '' };
+  window.quarterReferees = quarterReferees;
+
+  function getQuarterForInterval(i) {
+    if (currentTeam !== 'Trimmers') return null;
+    if (i === 0 || i === 1) return 'Q1';
+    if (i === 2 || i === 3) return 'Q2';
+    if (i === 4 || i === 5) return 'Q3';
+    if (i === 6 || i === 7) return 'Q4';
+    return null;
+  }
   let googleClientId = '1083993716124-rle31j9i93h345fg33o536o5ur6vmp6s.apps.googleusercontent.com';
   let coachEmails = JSON.parse(localStorage.getItem('hv_myra_coaches')) || ["singhalrajeev89@gmail.com"];
   let currentUserRole = 'parent';
@@ -961,7 +1047,82 @@
     }
   }
 
+  function renderQuarterRefereesUI() {
+    const panel = document.getElementById('quarterRefereesPanel');
+    const grid = document.getElementById('quarterRefereesGrid');
+    if (!panel || !grid) return;
+
+    if (currentTeam !== 'Trimmers') {
+      panel.style.display = 'none';
+      return;
+    }
+
+    panel.style.display = 'block';
+    grid.innerHTML = '';
+
+    const available = getAvailablePlayers();
+    const quarters = [
+      { key: 'Q1', label: 'Q1 (0-17.5m)' },
+      { key: 'Q2', label: 'Q2 (17.5-35m)' },
+      { key: 'Q3', label: 'Q3 (35-52.5m)' },
+      { key: 'Q4', label: 'Q4 (52.5-70m)' }
+    ];
+
+    quarters.forEach(q => {
+      const wrapper = document.createElement('div');
+      wrapper.style.display = 'flex';
+      wrapper.style.flexDirection = 'column';
+      wrapper.style.gap = '2px';
+
+      const label = document.createElement('label');
+      label.style.fontSize = '0.68rem';
+      label.style.color = '#cbd5e1';
+      label.style.fontWeight = 'bold';
+      label.innerText = q.label;
+      wrapper.appendChild(label);
+
+      const select = document.createElement('select');
+      select.style.fontSize = '0.72rem';
+      select.style.padding = '4px';
+      select.style.background = '#1e293b';
+      select.style.color = '#f8fafc';
+      select.style.border = '1px solid #334155';
+      select.style.borderRadius = '4px';
+
+      let optionsHTML = `<option value="">-- No Referee --</option>`;
+      available.forEach(p => {
+        const name = typeof p === 'string' ? p : p.name;
+        const isSelected = quarterReferees[q.key] === name;
+        optionsHTML += `<option value="${name}" ${isSelected ? 'selected' : ''}>${getDisplayName(name)}</option>`;
+      });
+
+      select.innerHTML = optionsHTML;
+      select.onchange = (e) => {
+        quarterReferees[q.key] = e.target.value;
+        if (q.key === 'Q1' && quarterReferees.Q1) {
+          const refName = quarterReferees.Q1;
+          for (const [posId, assigned] of Object.entries(currentAssignments)) {
+            if (assigned === refName && !posId.includes('sub')) {
+              currentAssignments[posId] = '';
+            }
+          }
+          if (typeof renderTokens === 'function') renderTokens();
+          if (typeof initDropdowns === 'function') initDropdowns();
+        }
+        syncMatrixFromTactics();
+        renderSubstitutionMatrix();
+        validateWomenQuota();
+        if (typeof saveTacticsLocal === 'function' && currentUserRole === 'coach') saveTacticsLocal();
+      };
+
+      wrapper.appendChild(select);
+      grid.appendChild(wrapper);
+    });
+  }
+
   function renderSubstitutionMatrix() {
+    renderQuarterRefereesUI();
+
     const thead = document.getElementById('subMatrixHead');
     const tbody = document.getElementById('subMatrixBody');
     if (!tbody) return;
@@ -1053,16 +1214,32 @@
 
         for (let i = 0; i < numIntervals; i++) {
           const td = document.createElement('td');
-          const cb = document.createElement('input');
-          cb.type = 'checkbox';
-          cb.className = 'sub-matrix-checkbox';
-          cb.checked = subMatrixState[player][i];
-          if (i === 0) cb.disabled = true; // Managed by tactics
-          cb.onchange = (e) => {
-            subMatrixState[player][i] = e.target.checked;
-            renderSubstitutionMatrix();
-          };
-          td.appendChild(cb);
+          const qKey = getQuarterForInterval(i);
+          const isRef = qKey && quarterReferees[qKey] === player;
+
+          if (isRef) {
+            subMatrixState[player][i] = false;
+            td.innerHTML = `<span style="background: #78350f; color: #fef08a; border: 1px solid #b45309; padding: 2px 4px; border-radius: 3px; font-size: 0.6rem; font-weight: bold; display: inline-block;">🟨 REF</span>`;
+            td.title = `${displayName} is Refereeing in ${qKey}`;
+            td.style.backgroundColor = 'rgba(180, 83, 9, 0.2)';
+            td.style.textAlign = 'center';
+          } else {
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.className = 'sub-matrix-checkbox';
+            cb.checked = subMatrixState[player][i];
+            
+            // Q1 starting lineup is managed by tactics board (index 0)
+            if (i === 0) {
+              cb.disabled = true;
+              cb.title = 'Managed by Tactics Board (Q1 starting lineup)';
+            }
+            cb.onchange = (e) => {
+              subMatrixState[player][i] = e.target.checked;
+              renderSubstitutionMatrix();
+            };
+            td.appendChild(cb);
+          }
           tr.appendChild(td);
         }
 
@@ -1073,11 +1250,14 @@
         tdShare.style.fontSize = '0.68rem';
         tdShare.style.fontWeight = 'bold';
 
-        let shareBadge = `<span style="background: #10b98122; color: #34d399; border: 1px solid #10b98155; padding: 2px 6px; border-radius: 4px;">${activeCount}/${numIntervals} (${pct}%)</span>`;
-        if (pct < 50) {
-          shareBadge = `<span style="background: #ef444422; color: #f87171; border: 1px solid #ef444455; padding: 2px 6px; border-radius: 4px;">${activeCount}/${numIntervals} (${pct}%) ⚠️</span>`;
+        const refQuarters = ['Q1', 'Q2', 'Q3', 'Q4'].filter(q => quarterReferees[q] === player);
+        const refNote = refQuarters.length > 0 ? ` <span style="color:#f59e0b; font-size:0.58rem;">(REF ${refQuarters.join(',')})</span>` : '';
+
+        let shareBadge = `<span style="background: #10b98122; color: #34d399; border: 1px solid #10b98155; padding: 2px 6px; border-radius: 4px;">${activeCount}/${numIntervals} (${pct}%)</span>${refNote}`;
+        if (pct < 50 && refQuarters.length === 0) {
+          shareBadge = `<span style="background: #ef444422; color: #f87171; border: 1px solid #ef444455; padding: 2px 6px; border-radius: 4px;">${activeCount}/${numIntervals} (${pct}%) ⚠️</span>${refNote}`;
         } else if (pct === 100 && item.label === 'GK') {
-          shareBadge = `<span style="background: #3b82f622; color: #60a5fa; border: 1px solid #3b82f655; padding: 2px 6px; border-radius: 4px;">${activeCount}/${numIntervals} (100% GK)</span>`;
+          shareBadge = `<span style="background: #3b82f622; color: #60a5fa; border: 1px solid #3b82f655; padding: 2px 6px; border-radius: 4px;">${activeCount}/${numIntervals} (100% GK)</span>${refNote}`;
         }
         tdShare.innerHTML = shareBadge;
         tr.appendChild(tdShare);
@@ -1089,6 +1269,57 @@
     validateSubstitutionMatrix();
   }
 
+  function adjustWomenQuota() {
+    if (currentTeam !== 'Trimmers') return;
+    const intervals = getSubIntervals();
+    const numIntervals = intervals.length;
+    const available = getAvailablePlayers();
+    const availNames = available.map(p => typeof p === 'string' ? p : p.name);
+
+    let adjustedCount = 0;
+
+    for (let i = 0; i < numIntervals; i++) {
+      const qKey = getQuarterForInterval(i);
+      const refName = quarterReferees ? quarterReferees[qKey] : null;
+
+      let activeWomen = [];
+      let restingWomen = [];
+      let activeMen = [];
+
+      availNames.forEach(name => {
+        if (name === refName) return; // referee is not available
+        const pObj = squadPlayers.find(sp => (typeof sp === 'string' ? sp : sp.name) === name);
+        const gender = pObj ? (typeof pObj === 'string' ? getInitialGender(pObj) : (pObj.gender || 'M')) : getInitialGender(name);
+        const isPlaying = subMatrixState[name] && subMatrixState[name][i];
+        
+        if (gender === 'F') {
+          if (isPlaying) activeWomen.push(name);
+          else restingWomen.push(name);
+        } else {
+          if (isPlaying) activeMen.push(name);
+        }
+      });
+
+      const targetWomen = Math.min(4, activeWomen.length + restingWomen.length);
+
+      while (activeWomen.length < targetWomen && restingWomen.length > 0 && activeMen.length > 0) {
+        const womanToPlay = restingWomen.shift();
+        const manToRest = activeMen.pop();
+
+        subMatrixState[womanToPlay][i] = true;
+        subMatrixState[manToRest][i] = false;
+        activeWomen.push(womanToPlay);
+        adjustedCount++;
+      }
+    }
+
+    renderSubstitutionMatrix();
+    validateWomenQuota();
+    showToast(`✅ Adjusted Women Quota (≥4) across blocks! (${adjustedCount} swap${adjustedCount !== 1 ? 's' : ''})`);
+  }
+
+  window.adjustWomenQuota = adjustWomenQuota;
+
   function validateSubstitutionMatrix() {
     const tbody = document.getElementById('subMatrixBody');
     const valMsg = document.getElementById('subMatrixValidation');
@@ -1099,6 +1330,7 @@
     const rows = tbody.querySelectorAll('tr');
     let isValid = true;
     let errors = [];
+    let hasWomenQuotaError = false;
 
     const expectedColCount = currentTeam === 'MO10' ? 8 : 11;
 
@@ -1136,6 +1368,7 @@
       }
       if (!isWomenValid) {
         isValid = false;
+        hasWomenQuotaError = true;
         errors.push(`Block ${i+1} (${intervals[i].label}): needs ≥4 women (has ${colWomenCounts[i]}).`);
       }
     }
@@ -1161,7 +1394,11 @@
           : `✅ <strong>Valid Rotation:</strong> Exactly 8 players active in all blocks!`;
       } else {
         valMsg.style.color = '#ef4444';
-        valMsg.innerHTML = `⚠️ <strong>Rotation Alerts:</strong> ` + errors.slice(0, 3).join(' • ');
+        let alertHTML = `⚠️ <strong>Rotation Alerts:</strong> ` + errors.slice(0, 3).join(' • ');
+        if (hasWomenQuotaError) {
+          alertHTML += ` <button onclick="adjustWomenQuota()" style="margin-left: 8px; padding: 2px 8px; background: #ea580c; border: 1px solid #c2410c; color: white; border-radius: 4px; font-size: 0.68rem; font-weight: bold; cursor: pointer;">⚡ Auto-Adjust Women Quota (≥4)</button>`;
+        }
+        valMsg.innerHTML = alertHTML;
       }
     }
   }
@@ -1349,6 +1586,8 @@
     const token = getAuthToken();
     const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
 
+    const titleVal = data.matchFileName || document.getElementById('matchFileName')?.value || `${data.matchDate} - ${data.matchOpponent || 'Match'}`;
+
     try {
       const res = await fetch(`/api/tactics?team_id=${currentTeam}`, {
         method: 'POST',
@@ -1357,6 +1596,7 @@
           match_date: data.matchDate,
           opponent: data.matchOpponent,
           quarter: data.matchQuarter,
+          title: titleVal,
           data: data
         })
       });
@@ -1371,27 +1611,101 @@
     }
   }
 
-  async function loadTacticsFromServer() {
-    const date = document.getElementById('matchDatePicker').value;
-    const opponent = document.getElementById('matchOpponent').value;
-    const quarter = document.getElementById('matchQuarter').value;
+  async function openLoadSetupModal() {
+    const modal = document.getElementById('loadSetupModal');
+    if (modal) modal.style.display = 'flex';
+    await loadTacticsFileHistory();
+  }
+
+  function closeLoadSetupModal() {
+    const modal = document.getElementById('loadSetupModal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  async function loadTacticsFileHistory() {
+    const container = document.getElementById('loadSetupFileList');
+    if (!container) return;
+    container.innerHTML = '<div style="color: #94a3b8; font-size: 0.8rem; padding: 10px; text-align: center;">Loading saved setups...</div>';
 
     try {
-      const url = `/api/tactics?team_id=${currentTeam}&match_date=${encodeURIComponent(date)}&opponent=${encodeURIComponent(opponent)}&quarter=${encodeURIComponent(quarter)}`;
-      const res = await fetch(url);
+      const res = await fetch(`/api/tactics/history?team_id=${currentTeam}`);
+      if (!res.ok) throw new Error('Failed to fetch setups');
+      const files = await res.json();
+
+      if (!files || files.length === 0) {
+        container.innerHTML = '<div style="color: #94a3b8; font-size: 0.8rem; padding: 15px; text-align: center;">No saved setups found for this team.</div>';
+        return;
+      }
+
+      container.innerHTML = files.map(file => `
+        <div style="background: rgba(30, 41, 59, 0.6); border: 1px solid #334155; border-radius: 8px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <div style="font-weight: 700; font-size: 0.88rem; color: #38bdf8;">${escapeHtml(file.title || `${file.match_date} - ${file.opponent || 'Match'}`)}</div>
+            <div style="font-size: 0.72rem; color: #94a3b8;">📅 Date: ${escapeHtml(file.match_date)} | Opponent: ${escapeHtml(file.opponent || 'N/A')} | Updated: ${file.updated_at ? new Date(file.updated_at).toLocaleString() : 'N/A'}</div>
+          </div>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <button onclick="loadTacticsFileById(${file.id})" style="background: #0284c7; color: #fff; border: none; padding: 5px 10px; border-radius: 5px; font-size: 0.75rem; font-weight: bold; cursor: pointer;">📂 Load</button>
+            ${currentUserRole === 'coach' ? `<button onclick="deleteTacticsFile(${file.id})" style="background: #dc2626; color: #fff; border: none; padding: 5px 8px; border-radius: 5px; font-size: 0.75rem; font-weight: bold; cursor: pointer;">🗑️</button>` : ''}
+          </div>
+        </div>
+      `).join('');
+    } catch (e) {
+      console.error("Error loading file history:", e);
+      container.innerHTML = '<div style="color: #ef4444; font-size: 0.8rem; padding: 10px; text-align: center;">Failed to load saved setups.</div>';
+    }
+  }
+
+  async function loadTacticsFileById(id) {
+    try {
+      const res = await fetch(`/api/tactics/by-id?id=${id}`);
       if (res.ok) {
-        const tactics = await res.json();
-        if (tactics && tactics.data) {
-          applyTacticsData(tactics.data);
-          showToast('Setup Loaded from Server!');
+        const item = await res.json();
+        if (item && item.data) {
+          applyTacticsData(item.data);
+          if (item.title) {
+            const fileNameInput = document.getElementById('matchFileName');
+            if (fileNameInput) fileNameInput.value = item.title;
+          }
+          closeLoadSetupModal();
+          showToast('Loaded saved match setup!');
           return;
         }
       }
     } catch (e) {
-      console.warn("Failed to load from server, checking local fallback:", e);
+      console.error("Error loading file by id:", e);
+      showToast("Error loading selected setup.");
     }
-    loadTacticsLocal();
   }
+
+  async function deleteTacticsFile(id) {
+    if (!confirm("Are you sure you want to delete this saved match setup?")) return;
+    const token = getAuthToken();
+    try {
+      const res = await fetch(`/api/tactics?id=${id}&team_id=${currentTeam}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        showToast('Saved setup deleted');
+        await loadTacticsFileHistory();
+      } else {
+        const err = await res.json();
+        showToast(`Delete failed: ${err.detail || res.statusText}`);
+      }
+    } catch (e) {
+      console.error("Error deleting setup:", e);
+      showToast("Error deleting setup");
+    }
+  }
+
+  function escapeHtml(str) {
+    return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  async function loadTacticsFromServer() {
+    openLoadSetupModal();
+  }
+
 
   async function loadActiveTacticsFromServer() {
     try {
@@ -1574,15 +1888,21 @@
 
   function initGoogleAuth() {
     const overlay = document.getElementById('loginOverlay');
-    if (overlay) overlay.style.display = 'none';
 
     // Check if user is logged in
     const localUser = localStorage.getItem('hv_myra_user');
     if (localUser) {
-      showUserLoggedIn(JSON.parse(localUser));
+      if (overlay) overlay.style.display = 'none';
+      try {
+        showUserLoggedIn(JSON.parse(localUser));
+      } catch (e) {
+        localStorage.removeItem('hv_myra_user');
+        if (overlay) overlay.style.display = 'flex';
+      }
     } else {
-      bypassGoogleAuth();
+      if (overlay) overlay.style.display = 'flex';
     }
+
 
     if (!googleClientId) return;
     if (gsiInitialized && gsiClientId === googleClientId) return;
@@ -1646,12 +1966,73 @@
     showToast("Logged in as Coach (Local Bypass)");
   }
 
-  function handleCredentialResponse(response) {
+  let authOverlayMode = 'signin';
+  let selectedSignUpRole = 'coach';
+
+  function setAuthMode(mode) {
+    authOverlayMode = mode;
+    const tabSignIn = document.getElementById('authTabSignIn');
+    const tabSignUp = document.getElementById('authTabSignUp');
+    const roleContainer = document.getElementById('signUpRoleContainer');
+
+    if (mode === 'signup') {
+      if (tabSignIn) { tabSignIn.style.background = 'transparent'; tabSignIn.style.color = '#94a3b8'; }
+      if (tabSignUp) { tabSignUp.style.background = '#38bdf8'; tabSignUp.style.color = '#0b0f19'; }
+      if (roleContainer) roleContainer.style.display = 'flex';
+    } else {
+      if (tabSignIn) { tabSignIn.style.background = '#38bdf8'; tabSignIn.style.color = '#0b0f19'; }
+      if (tabSignUp) { tabSignUp.style.background = 'transparent'; tabSignUp.style.color = '#94a3b8'; }
+      if (roleContainer) roleContainer.style.display = 'none';
+    }
+  }
+
+  function setSignUpRole(role) {
+    selectedSignUpRole = role;
+    const desc = document.getElementById('signUpRoleDesc');
+    if (desc) {
+      desc.innerHTML = role === 'coach'
+        ? '🏃 <strong>Coach:</strong> Registers your Google Account for full line-up editing & tactic saving.'
+        : '👪 <strong>Parent:</strong> Grants view-only access to live pitch tactics and rotation matrix.';
+    }
+  }
+
+  async function registerCoachOnServer(email) {
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`/api/auth/register-coach`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ team_id: currentTeam, email: email })
+      });
+      if (res.ok) {
+        if (!coachEmails.includes(email.toLowerCase())) {
+          coachEmails.push(email.toLowerCase());
+          localStorage.setItem('hv_myra_coaches', JSON.stringify(coachEmails));
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to register coach on server:", e);
+    }
+  }
+
+  async function handleCredentialResponse(response) {
     const payload = decodeJwtResponse(response.credential);
     localStorage.setItem('hv_myra_user', JSON.stringify(payload));
     localStorage.setItem('hv_myra_user_token', response.credential);
-    showUserLoggedIn(payload);
-    showToast(`Welcome, ${payload.name}!`);
+
+    if (authOverlayMode === 'signup' && selectedSignUpRole === 'coach') {
+      await registerCoachOnServer(payload.email);
+      currentUserRole = 'coach';
+      showUserLoggedIn(payload);
+      showToast(`🎉 Signed up as Coach for ${currentTeam}!`);
+    } else if (authOverlayMode === 'signup' && selectedSignUpRole === 'parent') {
+      currentUserRole = 'parent';
+      showUserLoggedIn(payload);
+      showToast(`Welcome, ${payload.name}! Signed up as Parent.`);
+    } else {
+      showUserLoggedIn(payload);
+      showToast(`Welcome, ${payload.name}!`);
+    }
   }
 
   function decodeJwtResponse(token) {
@@ -1675,20 +2056,30 @@
   }
 
   function logoutGoogle() {
+    try {
+      if (window.google && window.google.accounts && window.google.accounts.id) {
+        window.google.accounts.id.disableAutoSelect();
+      }
+    } catch (e) {
+      console.warn("Could not disable Google auto-select:", e);
+    }
     localStorage.removeItem('hv_myra_user');
     localStorage.removeItem('hv_myra_user_token');
-    document.getElementById('googleUserProfile').style.display = 'none';
+    
+    const userProfile = document.getElementById('googleUserProfile');
+    if (userProfile) userProfile.style.display = 'none';
+    
     currentUserRole = 'parent';
     applyRolePrivileges();
     
     const overlay = document.getElementById('loginOverlay');
     if (overlay) overlay.style.display = 'flex';
     
-    initGoogleAuth();
     showToast('Logged out');
   }
+  window.logoutUser = logoutGoogle;
+  window.logoutGoogle = logoutGoogle;
 
-  
 
   function syncMatrixFromTactics() {
     if (typeof subMatrixState === 'undefined') return;
@@ -1706,20 +2097,36 @@
       });
     }
 
-    // First, clear block 0 for everyone
+    // Only Q1.1 (index 0) is synced directly from Tactic Board starting pitch assignments
     Object.keys(subMatrixState).forEach(name => {
       if (subMatrixState[name] && subMatrixState[name].length === numIntervals) {
         subMatrixState[name][0] = false;
       }
     });
     
-    // Then, set block 0 for everyone on the pitch (excluding subs)
     const gkPlayer = currentAssignments['gk'];
     for (const [posId, name] of Object.entries(currentAssignments)) {
       if (posId === 'sub_def_att' || posId === 'sub_mid' || posId.includes('sub')) continue;
       if (name && subMatrixState[name] && subMatrixState[name].length === numIntervals) {
-        subMatrixState[name][0] = true;
+        if (currentTeam === 'Trimmers' && quarterReferees && quarterReferees.Q1 === name) {
+          subMatrixState[name][0] = false;
+        } else {
+          subMatrixState[name][0] = true;
+        }
       }
+    }
+
+    // Enforce referee exclusions across all quarters
+    if (currentTeam === 'Trimmers' && quarterReferees) {
+      ['Q1', 'Q2', 'Q3', 'Q4'].forEach(qKey => {
+        const refName = quarterReferees[qKey];
+        if (refName && subMatrixState[refName]) {
+          const targetIndices = qKey === 'Q1' ? [0,1] : qKey === 'Q2' ? [2,3] : qKey === 'Q3' ? [4,5] : [6,7];
+          targetIndices.forEach(idx => {
+            if (idx < numIntervals) subMatrixState[refName][idx] = false;
+          });
+        }
+      });
     }
     
     // Lock GK for the whole match
@@ -1756,7 +2163,7 @@
 
     if (availNames.length === 0) return;
 
-    // Reset subMatrixState for all available players to true
+    // Reset subMatrixState for all available players to true (initially)
     availNames.forEach(name => {
       subMatrixState[name] = new Array(numIntervals).fill(true);
     });
@@ -1765,51 +2172,127 @@
     const targetFieldCount = targetPitchCount - 1;
 
     const gkPlayer = currentAssignments['gk'];
-    
-    // Separate GK from field players
     const fieldAvailableNames = availNames.filter(n => n !== gkPlayer);
     const numFieldAvailable = fieldAvailableNames.length;
-
-    if (numFieldAvailable > targetFieldCount) {
-      // Group field players into positional pools: DEF, MID, FWD
-      const defPool = [];
-      const midPool = [];
-      const fwdPool = [];
-
-      fieldAvailableNames.forEach(name => {
-        const line = getPlayerLine(name);
-        if (line === 'DEF') defPool.push(name);
-        else if (line === 'MID') midPool.push(name);
-        else fwdPool.push(name);
-      });
-
-      // Combine pools in balanced sequence (DEF -> MID -> FWD)
-      const balancedFieldQueue = [];
-      const maxLen = Math.max(defPool.length, midPool.length, fwdPool.length);
-      for (let i = 0; i < maxLen; i++) {
-        if (i < defPool.length) balancedFieldQueue.push(defPool[i]);
-        if (i < midPool.length) balancedFieldQueue.push(midPool[i]);
-        if (i < fwdPool.length) balancedFieldQueue.push(fwdPool[i]);
-      }
-
-      // Number of field rests needed in each interval to hit targetFieldCount
-      const numRestsPerInterval = numFieldAvailable - targetFieldCount;
-
-      let queueIdx = 0;
-      for (let interval = 0; interval < numIntervals; interval++) {
-        for (let r = 0; r < numRestsPerInterval; r++) {
-          const restPlayer = balancedFieldQueue[queueIdx % balancedFieldQueue.length];
-          if (restPlayer && subMatrixState[restPlayer]) {
-            subMatrixState[restPlayer][interval] = false;
-          }
-          queueIdx++;
-        }
-      }
-    }
 
     // Goalkeeper plays all intervals
     if (gkPlayer && subMatrixState[gkPlayer]) {
       subMatrixState[gkPlayer].fill(true);
+    }
+
+    // Enforce referee exclusions
+    if (currentTeam === 'Trimmers' && quarterReferees) {
+      ['Q1', 'Q2', 'Q3', 'Q4'].forEach(qKey => {
+        const refName = quarterReferees[qKey];
+        if (refName && subMatrixState[refName]) {
+          const targetIndices = qKey === 'Q1' ? [0,1] : qKey === 'Q2' ? [2,3] : qKey === 'Q3' ? [4,5] : [6,7];
+          targetIndices.forEach(idx => {
+            if (idx < numIntervals) subMatrixState[refName][idx] = false;
+          });
+        }
+      });
+    }
+
+    // Q1.1 (interval 0) comes directly from starting lineup on pitch
+    const pitchNames = Object.entries(currentAssignments)
+      .filter(([pos, p]) => p && pos !== 'gk' && !pos.includes('sub'))
+      .map(([pos, p]) => p);
+
+    const q1Ref = (currentTeam === 'Trimmers' && quarterReferees) ? quarterReferees.Q1 : null;
+    fieldAvailableNames.forEach(name => {
+      if (q1Ref === name) {
+        subMatrixState[name][0] = false;
+      } else if (pitchNames.includes(name)) {
+        subMatrixState[name][0] = true;
+      } else {
+        subMatrixState[name][0] = false;
+      }
+    });
+
+    if (numFieldAvailable > targetFieldCount) {
+      const numRestsPerInterval = numFieldAvailable - targetFieldCount;
+
+      for (let interval = 1; interval < numIntervals; interval++) {
+        const qKey = getQuarterForInterval(interval);
+        const currentRef = (currentTeam === 'Trimmers' && qKey) ? quarterReferees[qKey] : null;
+
+        // Calculate cumulative play count for a player up to previous interval
+        const getPlayCount = (name) => {
+          let cnt = 0;
+          for (let k = 0; k < interval; k++) {
+            if (subMatrixState[name] && subMatrixState[name][k]) cnt++;
+          }
+          return cnt;
+        };
+
+        // Determine current rests (e.g. referee)
+        let currentRests = fieldAvailableNames.filter(n => currentRef === n || subMatrixState[n][interval] === false);
+        currentRests.forEach(n => subMatrixState[n][interval] = false);
+
+        let restsNeeded = Math.max(0, numRestsPerInterval - currentRests.length);
+
+        // Candidates who can rest (not referee, currently active)
+        let candidates = fieldAvailableNames.filter(n => n !== currentRef && subMatrixState[n][interval] !== false);
+
+        // Sort candidates by play count DESCENDING so players who played most blocks rest first
+        candidates.sort((a, b) => getPlayCount(b) - getPlayCount(a));
+
+        for (let r = 0; r < restsNeeded; r++) {
+          let chosenRestPlayer = null;
+
+          for (let cIdx = 0; cIdx < candidates.length; cIdx++) {
+            const cand = candidates[cIdx];
+            if (subMatrixState[cand][interval] !== false) {
+              if (currentTeam === 'Trimmers') {
+                const pObj = squadPlayers.find(sp => (typeof sp === 'string' ? sp : sp.name) === cand);
+                const gender = pObj ? (typeof pObj === 'string' ? getInitialGender(pObj) : (pObj.gender || 'M')) : getInitialGender(cand);
+
+                if (gender === 'F') {
+                  // Count active women if candidate rests
+                  let activeWomenIfRest = 0;
+                  fieldAvailableNames.forEach(fn => {
+                    if (fn !== cand && fn !== currentRef && subMatrixState[fn][interval] !== false) {
+                      const fnObj = squadPlayers.find(sp => (typeof sp === 'string' ? sp : sp.name) === fn);
+                      const g = fnObj ? (typeof fnObj === 'string' ? getInitialGender(fnObj) : (fnObj.gender || 'M')) : getInitialGender(fn);
+                      if (g === 'F') activeWomenIfRest++;
+                    }
+                  });
+
+                  const totalAvailWomen = fieldAvailableNames.filter(fn => {
+                    if (fn === currentRef) return false;
+                    const fnObj = squadPlayers.find(sp => (typeof sp === 'string' ? sp : sp.name) === fn);
+                    const g = fnObj ? (typeof fnObj === 'string' ? getInitialGender(fnObj) : (fnObj.gender || 'M')) : getInitialGender(fn);
+                    return g === 'F';
+                  }).length;
+
+                  const minRequired = Math.min(4, totalAvailWomen);
+
+                  if (activeWomenIfRest >= minRequired) {
+                    chosenRestPlayer = cand;
+                    break;
+                  }
+                } else {
+                  chosenRestPlayer = cand;
+                  break;
+                }
+              } else {
+                chosenRestPlayer = cand;
+                break;
+              }
+            }
+          }
+
+          // Fallback if women quota constraint skipped candidates
+          if (!chosenRestPlayer) {
+            chosenRestPlayer = candidates.find(n => subMatrixState[n][interval] !== false);
+          }
+
+          if (chosenRestPlayer) {
+            subMatrixState[chosenRestPlayer][interval] = false;
+            candidates = candidates.filter(n => n !== chosenRestPlayer);
+          }
+        }
+      }
     }
 
     renderSubstitutionMatrix();
@@ -2101,8 +2584,10 @@
       rf: { en: { code: 'RF', label: 'RF' }, nl: { code: 'RA', label: 'Rechtsaanvaller' } },
       st: { en: { code: 'ST', label: 'ST' }, nl: { code: 'SP', label: 'Spits' } },
       cf: { en: { code: 'CF', label: 'CF' }, nl: { code: 'SP', label: 'Spits' } },
-      sub_def: { en: { code: 'SUB-DEF', label: 'SUB-DEF' }, nl: { code: 'WISSEL-VER', label: 'WISSEL-VER' } },
-      sub_mid: { en: { code: 'SUB-MID', label: 'SUB-MID' }, nl: { code: 'WISSEL-MID', label: 'WISSEL-MID' } },
+      sub_def: { en: { code: 'SUB-DEF1', label: 'SUB-DEF 1' }, nl: { code: 'WISSEL-VER1', label: 'WISSEL-VER 1' } },
+      sub_def_2: { en: { code: 'SUB-DEF2', label: 'SUB-DEF 2' }, nl: { code: 'WISSEL-VER2', label: 'WISSEL-VER 2' } },
+      sub_mid: { en: { code: 'SUB-MID1', label: 'SUB-MID 1' }, nl: { code: 'WISSEL-MID1', label: 'WISSEL-MID 1' } },
+      sub_mid_2: { en: { code: 'SUB-MID2', label: 'SUB-MID 2' }, nl: { code: 'WISSEL-MID2', label: 'WISSEL-MID 2' } },
       sub_fwd: { en: { code: 'SUB-FWD', label: 'SUB-FWD' }, nl: { code: 'WISSEL-AAN', label: 'WISSEL-AAN' } },
       sub_def_att: { en: { code: 'SUB-DEF', label: 'SUB-DEF' }, nl: { code: 'WISSEL-VER', label: 'WISSEL-VER' } },
       sub_field_1: { en: { code: 'SUB-FWD', label: 'SUB-FWD' }, nl: { code: 'WISSEL-AAN', label: 'WISSEL-AAN' } },
@@ -2115,6 +2600,30 @@
     };
   }
 
+  let customSubRoles = JSON.parse(localStorage.getItem('hv_myra_custom_sub_roles')) || {};
+
+  function getSubRole(posId) {
+    if (customSubRoles[posId]) return customSubRoles[posId];
+    if (['sub_def', 'sub_def_2', 'sub_def_att', 'sub_field_3', 'cb'].includes(posId)) return 'DEF';
+    if (['sub_mid', 'sub_mid_2', 'sub_field_2'].includes(posId)) return 'MID';
+    if (['sub_fwd', 'sub_fwd_2', 'sub_att', 'sub_field_1', 'rf'].includes(posId)) return 'FWD';
+    return 'DEF';
+  }
+
+  function cycleSubRole(posId) {
+    const roles = ['DEF', 'MID', 'FWD'];
+    const current = getSubRole(posId);
+    const nextRole = roles[(roles.indexOf(current) + 1) % roles.length];
+    customSubRoles[posId] = nextRole;
+    localStorage.setItem('hv_myra_custom_sub_roles', JSON.stringify(customSubRoles));
+    updatePositionsConfig();
+    renderPositionLabels();
+    renderTokens();
+    initDropdowns();
+    if (typeof renderSubstitutionMatrix === 'function') renderSubstitutionMatrix();
+    showToast(`Substitute position ${posId.toUpperCase()} role switched to ${nextRole}`);
+    saveConfigToServer();
+  }
 
   function getPositionsConfig() {
     if (currentTeam === 'MO10') {
@@ -2122,13 +2631,13 @@
         { id: 'gk', default: 'Liz', label: 'GK', x: '6%', y: '50%' },
         { id: 'lb', default: 'Liv', label: 'LB', x: '23%', y: '32%' },
         { id: 'rb', default: 'Defne', label: 'RB', x: '23%', y: '68%' },
-        { id: 'cb', default: 'Hannah', label: 'CB', x: '25%', y: '93%', isSubDef: true },
+        { id: 'cb', default: 'Hannah', label: 'CB', x: '25%', y: '93%', isSubDef: (getSubRole('cb')==='DEF'), isSubMid: (getSubRole('cb')==='MID'), isSubFwd: (getSubRole('cb')==='FWD') },
         { id: 'lm', default: 'Kyra', label: 'LM', x: '47%', y: '26%' },
         { id: 'cm', default: 'Mira', label: 'CM', x: '45%', y: '50%' },
         { id: 'rm', default: 'Alina', label: 'RM', x: '47%', y: '74%' },
         { id: 'lf', default: 'Kate', label: 'LF', x: '70%', y: '35%' },
         { id: 'rf', default: 'Sai Jiya', label: 'RF', x: '70%', y: '65%' },
-        { id: 'sub_mid', default: 'Shanaya', label: 'SUB-MID', x: '55%', y: '93%', isSubMid: true }
+        { id: 'sub_mid', default: 'Shanaya', label: 'SUB-MID', x: '55%', y: '93%', isSubDef: (getSubRole('sub_mid')==='DEF'), isSubMid: (getSubRole('sub_mid')==='MID'), isSubFwd: (getSubRole('sub_mid')==='FWD') }
       ];
     } else {
       return [
@@ -2143,9 +2652,11 @@
         { id: 'lf', default: 'Saskia Klaverstijn', label: 'LF', x: '74%', y: '14%' },
         { id: 'cf', default: 'Glenn Groenewegen', label: 'CF', x: '76%', y: '43.5%' },
         { id: 'rf', default: 'Jeff Zwijsen', label: 'RF', x: '74%', y: '73%' },
-        { id: 'sub_def', default: 'Gregor de Vries', label: 'SUB-DEF', x: '18%', y: '93%', isSubDef: true, isSub: true },
-        { id: 'sub_mid', default: 'Elise Visscher', label: 'SUB-MID', x: '46%', y: '93%', isSubMid: true, isSub: true },
-        { id: 'sub_fwd', default: 'Frances Handoko-de Man', label: 'SUB-FWD', x: '74%', y: '93%', isSubFwd: true, isSub: true }
+        { id: 'sub_def', default: 'Gregor de Vries', label: 'SUB-DEF 1', x: '10%', y: '93%', isSubDef: (getSubRole('sub_def')==='DEF'), isSubMid: (getSubRole('sub_def')==='MID'), isSubFwd: (getSubRole('sub_def')==='FWD'), isSub: true },
+        { id: 'sub_def_2', default: 'Marnix Langstraat', label: 'SUB-DEF 2', x: '30%', y: '93%', isSubDef: (getSubRole('sub_def_2')==='DEF'), isSubMid: (getSubRole('sub_def_2')==='MID'), isSubFwd: (getSubRole('sub_def_2')==='FWD'), isSub: true },
+        { id: 'sub_mid', default: 'Elise Visscher', label: 'SUB-MID 1', x: '50%', y: '93%', isSubDef: (getSubRole('sub_mid')==='DEF'), isSubMid: (getSubRole('sub_mid')==='MID'), isSubFwd: (getSubRole('sub_mid')==='FWD'), isSub: true },
+        { id: 'sub_mid_2', default: 'André van der Sterre', label: 'SUB-MID 2', x: '70%', y: '93%', isSubDef: (getSubRole('sub_mid_2')==='DEF'), isSubMid: (getSubRole('sub_mid_2')==='MID'), isSubFwd: (getSubRole('sub_mid_2')==='FWD'), isSub: true },
+        { id: 'sub_fwd', default: 'Frances Handoko-de Man', label: 'SUB-FWD', x: '90%', y: '93%', isSubDef: (getSubRole('sub_fwd')==='DEF'), isSubMid: (getSubRole('sub_fwd')==='MID'), isSubFwd: (getSubRole('sub_fwd')==='FWD'), isSub: true }
       ];
     }
   }
@@ -2424,6 +2935,60 @@
     }
   }
 
+  function autoFillStartingLineup(silent = false) {
+    const available = getAvailablePlayers();
+    if (available.length === 0) {
+      if (!silent) showToast('No available players to assign!');
+      return;
+    }
+
+    const availableNames = available.map(sp => typeof sp === 'string' ? sp : sp.name);
+    const assignedNames = new Set();
+    currentAssignments = {};
+
+    const q1Ref = (currentTeam === 'Trimmers' && quarterReferees) ? quarterReferees.Q1 : null;
+    const pool = availableNames.filter(name => name !== q1Ref);
+
+    // Group available players by positional lines
+    const gkPool = pool.filter(n => getPlayerLine(n) === 'GK');
+    const defPool = pool.filter(n => getPlayerLine(n) === 'DEF');
+    const midPool = pool.filter(n => getPlayerLine(n) === 'MID');
+    const fwdPool = pool.filter(n => getPlayerLine(n) === 'FWD');
+
+    // Fill positions by matching role pools
+    positionsConfig.forEach(pos => {
+      let candidate = null;
+
+      if (pos.id === 'gk') {
+        candidate = gkPool.find(n => !assignedNames.has(n)) || pool.find(n => !assignedNames.has(n));
+      } else if (pos.id.includes('lb') || pos.id.includes('cb') || pos.id.includes('rb') || pos.id.includes('def')) {
+        candidate = defPool.find(n => !assignedNames.has(n)) || pool.find(n => !assignedNames.has(n));
+      } else if (pos.id.includes('lm') || pos.id.includes('cm') || pos.id.includes('rm') || pos.id.includes('mid')) {
+        candidate = midPool.find(n => !assignedNames.has(n)) || pool.find(n => !assignedNames.has(n));
+      } else {
+        candidate = fwdPool.find(n => !assignedNames.has(n)) || pool.find(n => !assignedNames.has(n));
+      }
+
+      if (candidate) {
+        currentAssignments[pos.id] = candidate;
+        assignedNames.add(candidate);
+      } else {
+        currentAssignments[pos.id] = '';
+      }
+    });
+
+    if (typeof renderTokens === 'function') renderTokens();
+    if (typeof initDropdowns === 'function') initDropdowns();
+    if (typeof validateWomenQuota === 'function') validateWomenQuota();
+    if (typeof syncMatrixFromTactics === 'function') syncMatrixFromTactics();
+
+    if (!silent) {
+      showToast(`⚡ Starting lineup auto-assigned from ${availableNames.length} available players!`);
+    }
+  }
+
+  window.autoFillStartingLineup = autoFillStartingLineup;
+
   function initDefaultAssignments(force = false) {
     // Ensure squad players have valid object structures
     squadPlayers = squadPlayers.map(p => {
@@ -2431,14 +2996,13 @@
       return p;
     });
 
-    const available = getAvailablePlayers();
-    const availableNames = available.map(sp => typeof sp === 'string' ? sp : sp.name);
-    const allSquadNames = squadPlayers.map(sp => typeof sp === 'string' ? sp : sp.name);
-
     const assignedCount = currentAssignments ? Object.values(currentAssignments).filter(v => v && v.trim() !== '').length : 0;
     if (force || !currentAssignments || assignedCount === 0) {
-      currentAssignments = {};
+      autoFillStartingLineup(true);
+      return;
     }
+
+    const allSquadNames = squadPlayers.map(sp => typeof sp === 'string' ? sp : sp.name);
 
     function findBestMatch(targetDefName, pool) {
       if (!targetDefName) return null;
@@ -2466,7 +3030,7 @@
 
     const assignedNames = new Set(Object.values(currentAssignments).filter(Boolean));
 
-    // First pass: assign position default matches from available squad members
+    // Fill unassigned positions from available pool
     positionsConfig.forEach(p => {
       if (!currentAssignments[p.id] || !allSquadNames.includes(currentAssignments[p.id])) {
         const unassignedPool = squadPlayers.filter(sp => {
@@ -2474,24 +3038,8 @@
           return !assignedNames.has(name) && sp.isAvailable !== false;
         });
 
-        const matchObj = findBestMatch(p.default, unassignedPool);
+        const matchObj = findBestMatch(p.default, unassignedPool) || (unassignedPool.length > 0 ? unassignedPool[0] : null);
         if (matchObj) {
-          const matchName = typeof matchObj === 'string' ? matchObj : matchObj.name;
-          currentAssignments[p.id] = matchName;
-          assignedNames.add(matchName);
-        }
-      }
-    });
-
-    // Second pass: fill any remaining unassigned positions with remaining available squad players
-    positionsConfig.forEach(p => {
-      if (!currentAssignments[p.id]) {
-        const unassignedPool = squadPlayers.filter(sp => {
-          const name = typeof sp === 'string' ? sp : sp.name;
-          return !assignedNames.has(name) && sp.isAvailable !== false;
-        });
-        if (unassignedPool.length > 0) {
-          const matchObj = unassignedPool[0];
           const matchName = typeof matchObj === 'string' ? matchObj : matchObj.name;
           currentAssignments[p.id] = matchName;
           assignedNames.add(matchName);
@@ -3227,8 +3775,7 @@
       'pos_lb': [22, 12], 'pos_lcb': [16, 34], 'pos_rcb': [16, 53], 'pos_rb': [22, 75],
       'pos_lm': [48, 18], 'pos_cm': [44, 43.5], 'pos_rm': [48, 69],
       'pos_lf': [74, 14], 'pos_cf': [76, 43.5], 'pos_rf': [74, 73],
-      'pos_sub_def': [18, 93], 'pos_sub_mid': [46, 93], 'pos_sub_fwd': [74, 93],
-      'pos_sub_field_1': [74, 93], 'pos_sub_field_2': [46, 93], 'pos_sub_field_3': [18, 93],
+      'pos_sub_def': [10, 93], 'pos_sub_def_2': [30, 93], 'pos_sub_mid': [50, 93], 'pos_sub_mid_2': [70, 93], 'pos_sub_fwd': [90, 93],
       'ball': [50, 43.5],
       'opp_0': [95, 43.5],
       'opp_1': [82, 12], 'opp_2': [82, 34], 'opp_3': [82, 53], 'opp_4': [82, 75],
@@ -3240,8 +3787,7 @@
       'pos_lb': [22, 12], 'pos_lcb': [16, 34], 'pos_rcb': [16, 53], 'pos_rb': [22, 75],
       'pos_lm': [48, 14], 'pos_cm': [44, 33], 'pos_cf': [44, 54], 'pos_rm': [48, 73],
       'pos_lf': [74, 32], 'pos_rf': [74, 55],
-      'pos_sub_def': [18, 93], 'pos_sub_mid': [46, 93], 'pos_sub_fwd': [74, 93],
-      'pos_sub_field_1': [74, 93], 'pos_sub_field_2': [46, 93], 'pos_sub_field_3': [18, 93],
+      'pos_sub_def': [10, 93], 'pos_sub_def_2': [30, 93], 'pos_sub_mid': [50, 93], 'pos_sub_mid_2': [70, 93], 'pos_sub_fwd': [90, 93],
       'ball': [50, 43.5],
       'opp_0': [95, 43.5],
       'opp_1': [82, 12], 'opp_2': [82, 34], 'opp_3': [82, 53], 'opp_4': [82, 75],
@@ -3254,8 +3800,7 @@
       'pos_rcb': [30, 43.5],
       'pos_lm': [50, 18], 'pos_cm': [48, 43.5], 'pos_rm': [50, 69],
       'pos_lf': [74, 14], 'pos_cf': [76, 43.5], 'pos_rf': [74, 73],
-      'pos_sub_def': [18, 93], 'pos_sub_mid': [46, 93], 'pos_sub_fwd': [74, 93],
-      'pos_sub_field_1': [74, 93], 'pos_sub_field_2': [46, 93], 'pos_sub_field_3': [18, 93],
+      'pos_sub_def': [10, 93], 'pos_sub_def_2': [30, 93], 'pos_sub_mid': [50, 93], 'pos_sub_mid_2': [70, 93], 'pos_sub_fwd': [90, 93],
       'ball': [50, 43.5],
       'opp_0': [95, 43.5],
       'opp_1': [82, 18], 'opp_2': [86, 43.5], 'opp_3': [82, 69],
@@ -3813,21 +4358,75 @@
     showToast(`Situation: ${sitName.replace('custom_', '').replace('_', ' ').toUpperCase()}`);
   }
 
-  function saveTacticsLocal() {
+  function promptSaveSetup() {
+    const fileNameInput = document.getElementById('matchFileName');
+    const dateVal = document.getElementById('matchDatePicker')?.value || '';
+    const opponentVal = document.getElementById('matchOpponent')?.value || 'Match';
+    
+    let defaultTitle = fileNameInput?.value?.trim();
+    if (!defaultTitle) {
+      defaultTitle = `${dateVal} - ${opponentVal}`;
+    }
+    
+    const saveTitleInput = document.getElementById('saveSetupTitleInput');
+    if (saveTitleInput) saveTitleInput.value = defaultTitle;
+    
+    const modal = document.getElementById('saveSetupModal');
+    if (modal) {
+      modal.style.display = 'flex';
+      setTimeout(() => saveTitleInput?.focus(), 100);
+    } else {
+      confirmSaveSetupModal(defaultTitle);
+    }
+  }
+
+  function closeSaveSetupModal() {
+    const modal = document.getElementById('saveSetupModal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  function confirmSaveSetupModal(overrideTitle = null) {
+    let titleVal = overrideTitle;
+    if (!titleVal) {
+      const saveTitleInput = document.getElementById('saveSetupTitleInput');
+      titleVal = saveTitleInput?.value?.trim();
+    }
+    
+    const dateVal = document.getElementById('matchDatePicker')?.value || '';
+    const opponentVal = document.getElementById('matchOpponent')?.value || 'Match';
+    if (!titleVal) {
+      titleVal = `${dateVal} - ${opponentVal}`;
+    }
+    
+    const fileNameInput = document.getElementById('matchFileName');
+    if (fileNameInput) fileNameInput.value = titleVal;
+    
+    closeSaveSetupModal();
+    saveTacticsLocalData(titleVal);
+  }
+
+  function saveTacticsLocalData(titleVal) {
     const data = {
       assignments: currentAssignments,
       matchDate: document.getElementById('matchDatePicker').value,
+      matchFileName: titleVal,
       matchOpponent: document.getElementById('matchOpponent').value,
       matchQuarter: document.getElementById('matchQuarter').value,
       notes: document.getElementById('coachNotes').value,
       drawings: drawnObjects,
       activeFormation: activeFormation,
       activeSituation: activeSituation,
-      subMatrixState: subMatrixState
+      subMatrixState: subMatrixState,
+      quarterReferees: quarterReferees,
+      squadPlayers: squadPlayers
     };
     localStorage.setItem('hv_myra_clean_pdf_board', JSON.stringify(data));
     showToast('Setup Saved Locally!');
     saveTacticsToServer(data);
+  }
+
+  function saveTacticsLocal() {
+    promptSaveSetup();
   }
 
   function loadTacticsLocal(showAlert = false) {
@@ -3846,6 +4445,15 @@
   }
 
   function applyTacticsData(data) {
+    // 1. Restore Squad Attendance / Available Player List if present in setup file
+    if (data.squadPlayers && Array.isArray(data.squadPlayers) && data.squadPlayers.length > 0) {
+      squadPlayers = data.squadPlayers;
+      localStorage.setItem(`hv_myra_squad_${currentTeam}`, JSON.stringify(squadPlayers));
+      localStorage.setItem('hv_myra_squad', JSON.stringify(squadPlayers));
+      if (typeof renderRosterUI === 'function') renderRosterUI();
+    }
+
+    // 2. Restore Tactics Board Assignments & Lineups
     if (data.assignments) {
       let a = data.assignments;
       if (a.ld && !a.lb) a.lb = a.ld;
@@ -3857,10 +4465,12 @@
       currentAssignments = a;
     }
     if (data.matchDate) document.getElementById('matchDatePicker').value = data.matchDate;
+    if (data.matchFileName) document.getElementById('matchFileName').value = data.matchFileName;
+    else if (data.title) document.getElementById('matchFileName').value = data.title;
     if (data.matchOpponent) document.getElementById('matchOpponent').value = data.matchOpponent;
     if (data.matchQuarter) document.getElementById('matchQuarter').value = data.matchQuarter;
     if (data.notes) document.getElementById('coachNotes').value = data.notes;
-    
+
     if (data.activeFormation) {
       activeFormation = data.activeFormation;
     } else {
@@ -3882,14 +4492,23 @@
       redrawCanvas();
     }
 
+    // 3. Restore Substitution Matrix Planner State
     if (data.subMatrixState) {
       subMatrixState = data.subMatrixState;
     }
+    if (data.quarterReferees) {
+      quarterReferees = data.quarterReferees;
+    } else {
+      quarterReferees = { Q1: '', Q2: '', Q3: '', Q4: '' };
+    }
+
     initDropdowns();
     syncBanner();
     validateWomenQuota();
+    if (typeof renderSubMatrixTable === 'function') renderSubMatrixTable();
     if (typeof syncMatrixFromTactics === 'function') syncMatrixFromTactics();
   }
+
 
   /* READ-ONLY HTML EXPORT: Clean, static, non-editable match sheet */
   function downloadReadOnlyHTML() {

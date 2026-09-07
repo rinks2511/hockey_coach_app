@@ -26,6 +26,13 @@ def init_db():
                 PRIMARY KEY (team_id, key)
             )
         """)
+        cur_tactics = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='tactics'")
+        if cur_tactics.fetchone():
+            cur_info = conn.execute("PRAGMA table_info(tactics)")
+            cols = [row["name"] for row in cur_info.fetchall()]
+            if "title" not in cols:
+                conn.execute("ALTER TABLE tactics ADD COLUMN title TEXT DEFAULT ''")
+
         conn.execute("""
             CREATE TABLE IF NOT EXISTS tactics (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -33,6 +40,7 @@ def init_db():
                 match_date TEXT,
                 opponent TEXT,
                 quarter TEXT,
+                title TEXT,
                 data TEXT,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
