@@ -12,7 +12,8 @@ The **HV Myra Matchday Board** application is deployed to **Google Cloud Run** i
 - **GCP Project ID**: `hockey-507014`
 - **GCP Region**: `europe-west4` (Eemshaven / Netherlands)
 - **Cloud Run Service Name**: `hockey-coach-app`
-- **Service URL**: `https://hockey-coach-app-1083993716124.europe-west4.run.app`
+- **Service URL**: `https://hockey-coach-app-1083993716124.europe-west4.run.app` (or legacy `https://hockey-coach-app-belxoh76za-ez.a.run.app`)
+- **Persistent Data Volume**: GCS Bucket `hockey-507014-db-storage` mounted to `/app/data`
 
 ### 2.2 Container Build Specification (`Dockerfile`)
 ```dockerfile

@@ -16,13 +16,26 @@ echo "GCP Region:  ${REGION}"
 echo "--------------------------------------------------------"
 
 # 1. Build and Deploy container to Cloud Run
-echo "🚀 Building and deploying directly to Cloud Run..."
+echo "🚀 Building and deploying directly to Cloud Run with persistent storage..."
+BUCKET_NAME="hockey-507014-db-storage"
+ENV_VARS_FLAG="--set-env-vars DATABASE_FILE=/app/data/hockey_coach.db"
+
+if [ -n "${DATABASE_URL:-}" ]; then
+  ENV_VARS_FLAG="--set-env-vars DATABASE_URL=${DATABASE_URL}"
+fi
+
 gcloud run deploy "${SERVICE_NAME}" \
   --source . \
   --region "${REGION}" \
   --platform managed \
   --allow-unauthenticated \
   --port 8080 \
-  --project "${PROJECT_ID}"
+  --project "${PROJECT_ID}" \
+  --add-volume "name=db-vol,type=cloud-storage,bucket=${BUCKET_NAME}" \
+  --add-volume-mount "volume=db-vol,mount-path=/app/data" \
+  ${ENV_VARS_FLAG}
+
 
 echo "✅ Deployment finished successfully!"
+
+

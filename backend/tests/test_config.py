@@ -46,3 +46,27 @@ def test_post_config_authorized(client, mock_coach):
         assert "Player A" in data["squad_players"]
     finally:
         app.dependency_overrides.clear()
+
+def test_trimmers_config_squad_sanitization(client, mock_coach):
+    """Verify that get_config for Trimmers cleans out any cross-team MO10 player names."""
+    app.dependency_overrides[get_current_coach_email] = mock_coach
+    try:
+        # Save a config for Trimmers containing MO10 names
+        bad_payload = {
+            "google_client_id": "test-id",
+            "coach_emails": ["singhalrajeev89@gmail.com"],
+            "squad_players": ["Sai Jiya", "Defne", "Shanaya", "Sander Duivesteijn"],
+            "custom_positions": {}
+        }
+        client.post("/api/config?team_id=Trimmers", json=bad_payload, headers={"Authorization": "Bearer dummy-token"})
+
+        # Get config for Trimmers; should automatically sanitize and return default Trimmers players
+        get_res = client.get("/api/config?team_id=Trimmers")
+        assert get_res.status_code == 200
+        players = get_res.json()["squad_players"]
+        assert "Sander Duivesteijn" in players
+        assert "Sai Jiya" not in players
+        assert "Defne" not in players
+    finally:
+        app.dependency_overrides.clear()
+

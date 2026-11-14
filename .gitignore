@@ -32,3 +32,8 @@ venv/
 ENV/
 *.db
 
+# Temporary scratch
+scratch/
+*scratch*
+
+
