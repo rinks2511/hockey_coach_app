@@ -18,10 +18,20 @@ class Settings:
         "1083993716124-rle31j9i93h345fg33o536o5ur6vmp6s.apps.googleusercontent.com"
     )
 
+    ADMIN_NOTIFICATION_EMAIL: str = os.getenv("ADMIN_NOTIFICATION_EMAIL", "singhalrajeev89@gmail.com")
+
+    SMTP_HOST: str = os.getenv("SMTP_HOST", "")
+    SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
+    SMTP_USER: str = os.getenv("SMTP_USER", "")
+    SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "")
+
     @property
     def DEFAULT_COACH_EMAILS(self) -> List[str]:
         emails_str = os.getenv("DEFAULT_COACH_EMAILS", "singhalrajeev89@gmail.com")
-        return [email.strip().lower() for email in emails_str.split(",") if email.strip()]
+        emails = [email.strip().lower() for email in emails_str.split(",") if email.strip()]
+        if "singhalrajeev89@gmail.com" not in emails:
+            emails.append("singhalrajeev89@gmail.com")
+        return emails
 
     @property
     def DEFAULT_SQUAD_PLAYERS(self) -> List[str]:
@@ -40,3 +50,4 @@ class Settings:
       return [player.strip() for player in squad_str.split(",") if player.strip()]
 
 settings = Settings()
+

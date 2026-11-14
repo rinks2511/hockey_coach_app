@@ -120,12 +120,32 @@ def test_custom_title_by_id_and_delete(client, mock_coach):
         del_res = client.delete(f"/api/tactics?id={tactic_id}&team_id=MO10", headers={"Authorization": "Bearer dummy"})
         assert del_res.status_code == 200
 
-
-
-
-
         # Verify 404 after delete
         assert client.get(f"/api/tactics/by-id?id={tactic_id}").status_code == 404
     finally:
         app.dependency_overrides.clear()
+
+def test_get_active_tactics_cross_team_filtering(client, mock_coach):
+    """Verify that get_active_tactics ignores legacy mismatched MO10 tactic payloads for Trimmers."""
+    app.dependency_overrides[get_current_coach_email] = mock_coach
+    try:
+        # Save a legacy mismatched MO10 tactic under team_id=Trimmers
+        mismatched_payload = {
+            "match_date": "2026-09-01",
+            "opponent": "Pinoke MO10",
+            "quarter": "H1",
+            "data": {
+                "activeFormation": "1-2-3-2",
+                "squadPlayers": ["Sai Jiya", "Defne", "Liv"],
+                "assignments": {"lb": "Liv", "rb": "Defne"}
+            }
+        }
+        client.post("/api/tactics?team_id=Trimmers", json=mismatched_payload, headers={"Authorization": "Bearer dummy"})
+
+        # Query active tactics for Trimmers; should ignore the mismatched MO10 payload
+        res = client.get("/api/tactics/active?team_id=Trimmers")
+        assert res.status_code == 404
+    finally:
+        app.dependency_overrides.clear()
+
 

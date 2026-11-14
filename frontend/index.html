@@ -351,14 +351,23 @@
   .nav-tab { background: transparent; color: #94a3b8; border: none; font-size: 0.85rem; font-weight: 700; padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
   .nav-tab:hover { background: rgba(255,255,255,0.05); color: white; }
   .nav-tab.active { background: #38bdf8; color: #0b0f19; }
-  .sub-matrix-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; color: white; background: #0c1017; border: 1px solid #232c3d; }
+  .sub-matrix-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; color: white; background: #0c1017; border: 1px solid #232c3d; min-width: 720px; table-layout: fixed; }
   .sub-matrix-table th, .sub-matrix-table td { border: 1px solid #232c3d; padding: 4px; text-align: center; }
   .sub-matrix-table th { background: #1e293b; color: #94a3b8; font-weight: 600; }
-  .sub-matrix-table td:first-child { text-align: left; font-weight: bold; color: #38bdf8; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .sub-matrix-checkbox { cursor: pointer; width: 14px; height: 14px; }
+  .sub-matrix-table td:first-child { text-align: left; font-weight: bold; color: #38bdf8; width: 140px; min-width: 140px; position: sticky; left: 0; background: #0c1017; z-index: 2; border-right: 2px solid #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 8px; }
+  .sub-matrix-table th:first-child { position: sticky; left: 0; background: #1e293b; z-index: 3; border-right: 2px solid #334155; width: 140px; min-width: 140px; }
+  .sub-matrix-checkbox { cursor: pointer; width: 16px; height: 16px; }
+  .substitution-matrix { width: 100%; max-width: 100vw; overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; touch-action: pan-x pan-y !important; border-radius: 6px; border: 1px solid #232c3d; margin-bottom: 8px; position: relative; }
   .invalid-col { background: rgba(239, 68, 68, 0.2); }
   .invalid-row { background: rgba(239, 68, 68, 0.2); }
 
+  @media (max-width: 960px) {
+    #view-subs { padding: 4px !important; width: 100% !important; max-width: 100vw !important; overflow-x: hidden; }
+    .subs-grid-container { grid-template-columns: 1fr !important; width: 100% !important; }
+    .side-panel { width: 100% !important; max-width: 100vw !important; box-sizing: border-box; }
+    .panel-title { flex-direction: column; align-items: flex-start !important; gap: 8px; }
+    #quarterRefereesGrid { grid-template-columns: repeat(2, 1fr) !important; }
+  }
 </style>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
@@ -386,35 +395,19 @@
           <input type="radio" name="signUpRole" value="coach" checked onchange="setSignUpRole('coach')"> 🏃 Coach / Manager
         </label>
         <label style="font-size: 0.72rem; display: flex; align-items: center; gap: 4px; cursor: pointer; color: #fff; font-weight: 600;">
-          <input type="radio" name="signUpRole" value="parent" onchange="setSignUpRole('parent')"> 👪 Parent
+          <input type="radio" name="signUpRole" value="parent_player" onchange="setSignUpRole('parent_player')"> 👪 Parent / Player
         </label>
       </div>
       <div style="font-size: 0.62rem; color: #94a3b8; line-height: 1.3;" id="signUpRoleDesc">
-        🏃 <strong>Coach:</strong> Registers your Google Account for full line-up editing & tactic saving.
+        🏃 <strong>Coach:</strong> Requests full line-up editing & tactic saving (requires admin approval).
       </div>
     </div>
 
     <!-- Sign-in / Sign-up Button -->
     <div id="googleSignInButtonOverlay"></div>
-    
-    <!-- Local & Cloud Run Coach Bypass Button -->
-    <button id="btnLocalBypass" onclick="bypassGoogleAuth()" style="background: #1e293b; border: 1px solid #38bdf8; color: #38bdf8; padding: 10px 18px; border-radius: 20px; font-size: 0.78rem; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: 260px; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
-      🔓 Enter as Coach (Bypass Google Sign-In)
-    </button>
-    
-    <!-- Setup Overlay & Cloud Run Origin Notice -->
-    <div id="googleAuthSetupOverlay" style="display: flex; flex-direction: column; gap: 8px; width: 100%; text-align: left; background: rgba(15, 23, 42, 0.6); padding: 12px; border-radius: 8px; border: 1px solid #334155;">
-      <label style="font-size: 0.65rem; color: #38bdf8; font-weight: bold;">⚙️ GOOGLE OAUTH DOMAIN AUTHORIZATION</label>
-      <div style="font-size: 0.62rem; color: #94a3b8; line-height: 1.3;">
-        For Google Sign-In on Cloud Run, add this domain to <strong>Authorized JavaScript origins</strong> in Google Cloud Console Credentials:<br>
-        <code style="color: #38bdf8; background: #0c1017; padding: 2px 4px; border-radius: 3px; font-size: 0.6rem; word-break: break-all; display: block; margin-top: 4px;">https://hockey-coach-app-1083993716124.europe-west4.run.app</code>
-      </div>
-      <input type="text" id="googleClientIdInputOverlay" placeholder="Paste Google Client ID here" style="background: #090c12; border: 1px solid #334155; color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.72rem; width: 100%;">
-      <button onclick="saveGoogleConfigOverlay()" style="background: #059669; border: none; color: #fff; padding: 6px 12px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; cursor: pointer; text-align: center; width: 100%;">Save & Initialize</button>
-    </div>
 
     <div style="font-size: 0.72rem; color: #64748b;">
-      Coaches will have full editing rights.<br>Parents will have view-only privileges.
+      Coaches will have full editing rights upon admin approval.<br>Parents / Players have instant view-only privileges.
     </div>
   </div>
 </div>
@@ -450,6 +443,26 @@
     <div style="display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #334155; padding-top: 12px;">
       <button onclick="closeSaveSetupModal()" style="background: #334155; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.8rem;">Cancel</button>
       <button onclick="confirmSaveSetupModal()" style="background: #0284c7; color: #fff; border: none; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.8rem;">💾 Save & Sync</button>
+    </div>
+  </div>
+</div>
+
+<div id="renamePosModal" style="position: fixed; inset: 0; background: rgba(11, 15, 25, 0.85); display: none; align-items: center; justify-content: center; z-index: 9100; font-family: system-ui, -apple-system, sans-serif; color: #fff;">
+  <div style="background: var(--panel-bg, #0f172a); padding: 22px; border-radius: 12px; border: 1px solid #334155; width: 92%; max-width: 380px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.6);">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px;">
+      <h3 id="renamePosTitle" style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 8px;">✏️ Rename Position</h3>
+      <button onclick="closeRenamePosModal()" style="background: transparent; border: none; color: #94a3b8; font-size: 1.2rem; cursor: pointer; font-weight: bold;">✕</button>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <label style="font-size: 0.8rem; font-weight: 700; color: #cbd5e1;">Position Abbreviation (max 5 chars):</label>
+      <input type="text" id="renamePosInput" style="background: #090c12; border: 1.5px solid #38bdf8; color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 1rem; font-weight: bold; width: 100%; outline: none;" placeholder="e.g. CDM, RCM, LWB" onkeydown="if(event.key==='Enter') confirmRenamePosModal()">
+      <div style="font-size: 0.72rem; color: #94a3b8; line-height: 1.3;">
+        Enter custom position label (e.g. <strong>CDM</strong> instead of <strong>CM</strong>).
+      </div>
+    </div>
+    <div style="display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #334155; padding-top: 12px;">
+      <button onclick="closeRenamePosModal()" style="background: #334155; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.8rem;">Cancel</button>
+      <button onclick="confirmRenamePosModal()" style="background: #0284c7; color: #fff; border: none; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.8rem;">✏️ Update Position</button>
     </div>
   </div>
 </div>
@@ -495,8 +508,12 @@
           </div>
           
           <button onclick="saveGoogleConfig()" style="background: #059669; border-color: #10b981; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; width: 100%;">Save & Initialize</button>
-          <div style="border-top: 1px solid #334155; margin-top: 4px; padding-top: 6px;">
-            <button onclick="devLoginBypass()" style="background: #7c3aed; border-color: #a78bfa; color: #fff; padding: 5px 8px; border-radius: 4px; font-size: 0.7rem; width: 100%; font-weight: bold; cursor: pointer;">⚡ Quick Coach Login (Dev Mode)</button>
+          
+          <div id="accessRequestsGroup" style="display: none; flex-direction: column; gap: 4px; border-top: 1px solid #334155; margin-top: 4px; padding-top: 6px;">
+            <label style="font-size: 0.65rem; color: #f59e0b; font-weight: bold;">🔔 PENDING ACCESS REQUESTS</label>
+            <div id="accessRequestsList" style="display: flex; flex-direction: column; gap: 4px; max-height: 120px; overflow-y: auto;">
+              <div style="font-size: 0.65rem; color: #94a3b8; text-align: center; padding: 4px;">Loading...</div>
+            </div>
           </div>
         </div>
       </div>
@@ -518,8 +535,11 @@
           <input type="text" id="matchOpponent" value="Pinoké O10" oninput="syncBanner()">
         </div>
         <div class="match-input-group">
-          <label id="lblMatchQuarter">⏱️ Period / Quarter</label>
-          <input type="text" id="matchQuarter" value="H1 lineup" oninput="syncBanner()">
+          <label id="lblMatchQuarter">⏱️ Period / Half</label>
+          <select id="matchQuarter" onchange="onPeriodChanged(this.value)" style="background: #1e293b; color: white; border: 1px solid #334155; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; outline: none;">
+            <option value="H1 lineup">1st Half (H1: 0-30m)</option>
+            <option value="H2 lineup">2nd Half (H2: 30-60m)</option>
+          </select>
         </div>
       </div>
 
@@ -552,19 +572,24 @@
       <span id="formationsMO10" style="display: flex; gap: 4px;">
         <button onclick="applyFormation('1-2-3-2')" id="btnForm1" class="active">1-2-3-2 (Standard)</button>
         <button onclick="applyFormation('1-3-3-1')" id="btnForm2">1-3-3-1 (Defensive)</button>
+        <button onclick="applyFormation('custom')" id="btnFormCustomMO10">✏️ Custom</button>
       </span>
       <!-- Trimmers Formations (11v11) -->
       <span id="formationsTrimmers" style="display: none; gap: 4px;">
         <button onclick="applyFormation('4-3-3')" id="btnFormTrimmers433" class="active">4-3-3 (Standard)</button>
         <button onclick="applyFormation('4-4-2')" id="btnFormTrimmers442">4-4-2 (Midfield Control)</button>
         <button onclick="applyFormation('3-1-3-3')" id="btnFormTrimmers3133">3-1-3-3 (CDM / Diamond)</button>
+        <button onclick="applyFormation('custom')" id="btnFormCustomTrimmers">✏️ Custom</button>
       </span>
+
     </div>
 
     <div class="tool-group">
-      <span class="tool-label">Opponents:</span>
+      <span class="tool-label">View Toggles:</span>
       <button id="btnToggleOpponents" onclick="toggleOpponentsVisibility()" class="active">👁️ Opponents: On</button>
+      <button id="btnTogglePlayerNames" onclick="togglePlayerNamesVisibility()" class="active">🏷️ Names: On</button>
     </div>
+
 
     <div class="tool-group">
       <span class="tool-label" id="lblActions">Share & Save:</span>
@@ -673,13 +698,16 @@
   </div> <!-- end view-tactics -->
 
   <div id="view-subs" style="display: none; max-width: 1200px; margin: 0 auto; padding: 10px;">
-    <div style="display: grid; grid-template-columns: 1fr 340px; gap: 15px; align-items: start;">
+    <div class="subs-grid-container" style="display: grid; grid-template-columns: 1fr 340px; gap: 15px; align-items: start;">
       
       <!-- Left Column: Substitution Matrix -->
       <div class="side-panel" style="width: 100%;">
         <div class="panel-title" style="display: flex; justify-content: space-between; align-items: center;">
           <span id="txtSubPlannerTitle">⏱️ Substitution Planner</span>
-          <button onclick="autoFillRotation()" style="padding: 4px 10px; background: #3b82f6; border-color: #2563eb; color: white; border-radius: 4px; font-size: 0.75rem; cursor: pointer;">⚡ Auto-Fill Rotation</button>
+          <div style="display: flex; gap: 8px;">
+            <button onclick="autoFillRotation()" style="padding: 4px 10px; background: #3b82f6; border: 1px solid #2563eb; color: white; border-radius: 4px; font-size: 0.75rem; font-weight: bold; cursor: pointer;">⚡ Auto-Fill Rotation</button>
+            <button onclick="saveSubstitutionPlannerExplicit()" style="padding: 4px 10px; background: #22c55e; border: 1px solid #16a34a; color: white; border-radius: 4px; font-size: 0.75rem; font-weight: bold; cursor: pointer;">💾 Save Substitution Plan</button>
+          </div>
         </div>
 
         <div class="roster-instruction" id="txtSubInstruction">
@@ -775,12 +803,24 @@
       </div>
 
       <div class="tool-group" style="display: flex; gap: 4px; align-items: center;">
+        <span class="tool-label">Drawing Tools:</span>
+        <button id="sitModeSelect" onclick="setSitMode('select')" class="active">👆 Select</button>
+        <button id="sitModeDraw" onclick="setSitMode('draw')">✏️ Draw Line</button>
+        <button id="sitModeArrow" onclick="setSitMode('arrow')">🏹 Draw Arrow</button>
+        <button id="sitModeEraser" onclick="setSitMode('eraser')">🧹 Eraser</button>
+        <button id="btnSitClearLines" onclick="clearSitDrawings()">🗑️ Clear All Lines</button>
+      </div>
+
+      <div class="tool-group" style="display: flex; gap: 4px; align-items: center;">
         <button id="btnToggleSitOpponents" onclick="toggleOpponentsVisibility()" class="active">👁️ Opponents: On</button>
+        <button id="btnToggleSitPlayerNames" onclick="togglePlayerNamesVisibility()" class="active">🏷️ Names: On</button>
         <button onclick="saveCurrentSituation()" class="primary">💾 Save Situation</button>
         <button onclick="addNewCustomSituation()" class="purple">➕ Add Custom Play</button>
         <button onclick="resetCurrentSituation()" style="background: #1e293b; color: #94a3b8; border: 1px solid #334155;">🔄 Reset Setup</button>
       </div>
+
     </div>
+
 
     <div class="main-layout">
       <!-- Pitch Area for Situations -->
@@ -871,24 +911,52 @@
   let canvasEl = null;
   let ctx = null;
 
+  function getDefaultSquadForTeam(teamId) {
+    if (teamId === 'MO10') {
+      return [
+        "Sai Jiya", "Defne", "Shanaya", "Alina", "Liv", "Mira", "Hannah", "Kyra", "Kate", "Liz"
+      ];
+    } else {
+      return [
+        "Sander Duivesteijn", "Noortje Semmelink", "Robert-Jan van Weerd", "Norbert van Haaften", "Marije Koelink",
+        "Rajeev Singhal", "Hester Kuis", "Tom Weller", "Saskia Klaverstijn", "Glenn Groenewegen", "Jeff Zwijsen",
+        "Gregor de Vries", "Elise Visscher", "Frances Handoko-de Man"
+      ];
+    }
+  }
+
+  function validateAndSanitizeSquad(teamId, squad) {
+    if (!Array.isArray(squad) || squad.length === 0) {
+      return getDefaultSquadForTeam(teamId);
+    }
+    const filtered = squad.filter(p => {
+      const name = (typeof p === 'string' ? p : (p && p.name ? p.name : '')).toLowerCase();
+      if (!name) return false;
+      if (teamId === 'MO10') {
+        if (name.includes('sander') || name.includes('rajeev') || name.includes('noortje') || name.includes('norbert') || name.includes('marije') || name.includes('duivesteijn') || name.includes('semmelink')) {
+          return false;
+        }
+      } else if (teamId === 'Trimmers') {
+        if (name.includes('sai jiya') || name.includes('defne') || name.includes('shanaya') || name.includes('alina') || name.includes('mira') || name.includes('kyra') || name.includes('kate') || name.includes('liz')) {
+          return false;
+        }
+      }
+      return true;
+    });
+    if (filtered.length === 0) {
+      return getDefaultSquadForTeam(teamId);
+    }
+    return filtered;
+  }
+
   let squadLocal = null;
   try {
     const rawTeam = localStorage.getItem(`hv_myra_squad_${currentTeam}`);
-    const rawFallback = (currentTeam === 'MO10') ? localStorage.getItem('hv_myra_squad') : null;
-    const raw = rawTeam || rawFallback;
-    if (raw) squadLocal = JSON.parse(raw);
+    if (rawTeam) squadLocal = JSON.parse(rawTeam);
   } catch (e) {
     console.error("Error parsing squad", e);
   }
-  let squadPlayers = (squadLocal && Array.isArray(squadLocal) && squadLocal.length > 0) ? squadLocal : (
-    currentTeam === 'MO10' ? [
-      "Sai Jiya", "Defne", "Shanaya", "Alina", "Liv", "Mira", "Hannah", "Kyra", "Kate", "Liz"
-    ] : [
-      "Sander Duivesteijn", "Noortje Semmelink", "Robert-Jan van Weerd", "Norbert van Haaften", "Marije Koelink",
-      "Rajeev Singhal", "Hester Kuis", "Tom Weller", "Saskia Klaverstijn", "Glenn Groenewegen", "Jeff Zwijsen",
-      "Gregor de Vries", "Elise Visscher", "Frances Handoko-de Man"
-    ]
-  );
+  let squadPlayers = validateAndSanitizeSquad(currentTeam, squadLocal);
 
 
   function getDisplayName(fullName) {
@@ -988,11 +1056,11 @@
     if (trimmersMID.some(n => nameLower.includes(n))) return 'MID';
     if (trimmersFWD.some(n => nameLower.includes(n))) return 'FWD';
 
-    // 3. Primary line for known MO10 squad members
-    const mo10GK = ['liz'];
-    const mo10DEF = ['liv', 'defne', 'hannah'];
-    const mo10MID = ['kyra', 'mira', 'alina', 'shanaya'];
-    const mo10FWD = ['kate', 'sai'];
+    // 3. Primary line for known MO10 squad members (Matching 1-2-3-2 Pitch Positions: GK, LB/RB, LM/CM/RM, LF/RF)
+    const mo10GK = ['mira', 'liz'];
+    const mo10DEF = ['alina', 'shanaya', 'hannah'];
+    const mo10MID = ['defne', 'kate', 'sai', 'kyra'];
+    const mo10FWD = ['liv', 'kate'];
 
     if (mo10GK.some(n => nameLower.includes(n))) return 'GK';
     if (mo10DEF.some(n => nameLower.includes(n))) return 'DEF';
@@ -1037,13 +1105,33 @@
         { label: 'Q4.2', time: '61-70m' }
       ];
     } else {
-      return [
-        { label: '0-6m', time: '0-6m' },
-        { label: '6-12m', time: '6-12m' },
-        { label: '12-18m', time: '12-18m' },
-        { label: '18-24m', time: '18-24m' },
-        { label: '24-30m', time: '24-30m' }
-      ];
+      const selectedPeriod = document.getElementById('matchQuarter')?.value || 'H1 lineup';
+      if (selectedPeriod.includes('H2')) {
+        return [
+          { label: '30-36m', time: 'Q3.1 (30-36m)' },
+          { label: '36-42m', time: 'Q3.2 (36-42m)' },
+          { label: '42-48m', time: 'Q4.1 (42-48m)' },
+          { label: '48-54m', time: 'Q4.2 (48-54m)' },
+          { label: '54-60m', time: 'Q4.3 (54-60m)' }
+        ];
+      } else {
+        return [
+          { label: '0-6m', time: 'Q1.1 (0-6m)' },
+          { label: '6-12m', time: 'Q1.2 (6-12m)' },
+          { label: '12-18m', time: 'Q2.1 (12-18m)' },
+          { label: '18-24m', time: 'Q2.2 (18-24m)' },
+          { label: '24-30m', time: 'Q2.3 (24-30m)' }
+        ];
+      }
+    }
+  }
+
+  function onPeriodChanged(val) {
+    syncBanner();
+    syncMatrixFromTactics();
+    renderSubstitutionMatrix();
+    if (typeof saveTacticsLocalData === 'function' && currentUserRole === 'coach') {
+      saveTacticsLocalData(document.getElementById('matchFileName')?.value || '', true);
     }
   }
 
@@ -1111,8 +1199,9 @@
         }
         syncMatrixFromTactics();
         renderSubstitutionMatrix();
-        validateWomenQuota();
-        if (typeof saveTacticsLocal === 'function' && currentUserRole === 'coach') saveTacticsLocal();
+        if (currentUserRole === 'coach') {
+          saveTacticsLocalData(document.getElementById('matchFileName')?.value || '', true);
+        }
       };
 
       wrapper.appendChild(select);
@@ -1133,9 +1222,9 @@
     if (thead) {
       thead.innerHTML = `
         <tr>
-          <th style="min-width: 130px; text-align: left; padding-left: 10px;">Player</th>
+          <th style="width: 140px; min-width: 140px; text-align: left; padding-left: 10px;">Player</th>
           ${intervals.map(it => `<th style="padding: 4px 2px;"><div style="font-size:0.75rem; font-weight:bold;">${it.label}</div><div style="font-size:0.58rem; opacity:0.75; font-weight:normal;">${it.time}</div></th>`).join('')}
-          <th style="min-width: 95px; text-align: center; padding: 4px 6px;">Play Share</th>
+          <th style="min-width: 70px; width: 70px; text-align: center; padding: 4px 6px;">Play Share</th>
         </tr>
       `;
     }
@@ -1164,23 +1253,26 @@
 
     const names = available.map(p => typeof p === 'string' ? p : p.name);
 
-    // Group players into 4 distinct positional lines: GK, DEF, MID, FWD
-    const gkGroup = [];
-    const defGroup = [];
-    const midGroup = [];
-    const fwdGroup = [];
+    // Order players by their exact starting position on the Tactics Board pitch, followed by dugout subs
+    const positionOrder = ['gk', 'lb', 'lcb', 'cb', 'rcb', 'rb', 'cdm', 'lm', 'cm', 'lcm', 'rcm', 'rm', 'lf', 'cf', 'st', 'rf', 'sub_def', 'sub_def_2', 'sub_mid', 'sub_mid_2', 'sub_fwd', 'sub_def_att', 'sub_field_3', 'sub_field_2', 'sub_field_1'];
 
-    names.forEach(playerName => {
-      const line = getPlayerLine(playerName);
-      if (line === 'GK') gkGroup.push({ player: playerName, label: 'GK' });
-      else if (line === 'DEF') defGroup.push({ player: playerName, label: 'DEF' });
-      else if (line === 'MID') midGroup.push({ player: playerName, label: 'MID' });
-      else fwdGroup.push({ player: playerName, label: 'FWD' });
-    });
+    const getTacticsPositionIndex = (playerName) => {
+      for (let i = 0; i < positionOrder.length; i++) {
+        const posId = positionOrder[i];
+        if (currentAssignments[posId] === playerName) {
+          return i;
+        }
+      }
+      return 999;
+    };
 
-    const groupedPlayers = [...gkGroup, ...defGroup, ...midGroup, ...fwdGroup];
+    const sortedPlayers = names.map(playerName => ({
+      player: playerName,
+      label: getPlayerLine(playerName),
+      posIdx: getTacticsPositionIndex(playerName)
+    })).sort((a, b) => a.posIdx - b.posIdx);
 
-    groupedPlayers.forEach(item => {
+    sortedPlayers.forEach(item => {
       const player = item.player;
       if (subMatrixState[player]) {
         const tr = document.createElement('tr');
@@ -1237,6 +1329,9 @@
             cb.onchange = (e) => {
               subMatrixState[player][i] = e.target.checked;
               renderSubstitutionMatrix();
+              if (currentUserRole === 'coach') {
+                saveTacticsLocalData(document.getElementById('matchFileName')?.value || 'Custom Setup', true);
+              }
             };
             td.appendChild(cb);
           }
@@ -1253,11 +1348,11 @@
         const refQuarters = ['Q1', 'Q2', 'Q3', 'Q4'].filter(q => quarterReferees[q] === player);
         const refNote = refQuarters.length > 0 ? ` <span style="color:#f59e0b; font-size:0.58rem;">(REF ${refQuarters.join(',')})</span>` : '';
 
-        let shareBadge = `<span style="background: #10b98122; color: #34d399; border: 1px solid #10b98155; padding: 2px 6px; border-radius: 4px;">${activeCount}/${numIntervals} (${pct}%)</span>${refNote}`;
+        let shareBadge = `<span style="background: #10b98122; color: #34d399; border: 1px solid #10b98155; padding: 2px 8px; border-radius: 4px; white-space: nowrap;">${activeCount}/${numIntervals}</span>`;
         if (pct < 50 && refQuarters.length === 0) {
-          shareBadge = `<span style="background: #ef444422; color: #f87171; border: 1px solid #ef444455; padding: 2px 6px; border-radius: 4px;">${activeCount}/${numIntervals} (${pct}%) ⚠️</span>${refNote}`;
+          shareBadge = `<span style="background: #ef444422; color: #f87171; border: 1px solid #ef444455; padding: 2px 8px; border-radius: 4px; white-space: nowrap;">${activeCount}/${numIntervals} ⚠️</span>`;
         } else if (pct === 100 && item.label === 'GK') {
-          shareBadge = `<span style="background: #3b82f622; color: #60a5fa; border: 1px solid #3b82f655; padding: 2px 6px; border-radius: 4px;">${activeCount}/${numIntervals} (100% GK)</span>${refNote}`;
+          shareBadge = `<span style="background: #3b82f622; color: #60a5fa; border: 1px solid #3b82f655; padding: 2px 8px; border-radius: 4px; white-space: nowrap;">${activeCount}/${numIntervals}</span>`;
         }
         tdShare.innerHTML = shareBadge;
         tr.appendChild(tdShare);
@@ -1414,11 +1509,21 @@
     document.getElementById('tab-subs').className = tab === 'subs' ? 'nav-tab active' : 'nav-tab';
     document.getElementById('tab-rules').className = tab === 'rules' ? 'nav-tab active' : 'nav-tab';
 
+    if (tab === 'tactics') {
+      setTimeout(() => {
+        resizeCanvas();
+      }, 50);
+    }
+
     if (tab === 'situations') {
       renderPitchSvg();
       renderSituationsBoard();
+      setTimeout(() => {
+        resizeSitCanvas();
+      }, 50);
     }
   }
+
 
   function changeTeam(teamId) {
     currentTeam = teamId;
@@ -1438,25 +1543,27 @@
     activeFormation = (teamId === 'MO10') ? '1-2-3-2' : '4-3-3';
     updatePositionsConfig();
     currentAssignments = {};
+    drawnObjects = [];
+    if (typeof clearCanvas === 'function') clearCanvas();
+
+    const elOpponent = document.getElementById('matchOpponent');
+    if (elOpponent) elOpponent.value = (teamId === 'MO10') ? 'Pinoké MO10' : 'AMHC Fit';
+    
+    const elFileName = document.getElementById('matchFileName');
+    if (elFileName) elFileName.value = '';
+    
+    const elQuarter = document.getElementById('matchQuarter');
+    if (elQuarter) elQuarter.value = 'H1 lineup';
 
     let squadLocal = null;
     try {
       const rawTeam = localStorage.getItem(`hv_myra_squad_${currentTeam}`);
-      const rawFallback = (currentTeam === 'MO10') ? localStorage.getItem('hv_myra_squad') : null;
-      const raw = rawTeam || rawFallback;
-      if (raw) squadLocal = JSON.parse(raw);
+      if (rawTeam) squadLocal = JSON.parse(rawTeam);
     } catch (e) {
       console.error("Error parsing squad", e);
     }
-    squadPlayers = (squadLocal && Array.isArray(squadLocal) && squadLocal.length > 0) ? squadLocal : (
-      currentTeam === 'MO10' ? [
-        "Sai Jiya", "Defne", "Shanaya", "Alina", "Liv", "Mira", "Hannah", "Kyra", "Kate", "Liz"
-      ] : [
-        "Sander Duivesteijn", "Noortje Semmelink", "Robert-Jan van Weerd", "Norbert van Haaften", "Marije Koelink",
-        "Rajeev Singhal", "Hester Kuis", "Tom Weller", "Saskia Klaverstijn", "Glenn Groenewegen", "Jeff Zwijsen",
-        "Gregor de Vries", "Elise Visscher", "Frances Handoko-de Man"
-      ]
-    );
+    squadPlayers = validateAndSanitizeSquad(currentTeam, squadLocal);
+    localStorage.setItem(`hv_myra_squad_${currentTeam}`, JSON.stringify(squadPlayers));
 
     loadConfigFromServer().then(() => {
       updatePositionsConfig();
@@ -1485,11 +1592,11 @@
       
       initGoogleAuth();
       
-      if (currentUserRole === 'coach') {
-        loadTacticsLocal();
-      } else {
-        loadActiveTacticsFromServer();
-      }
+      loadActiveTacticsFromServer().then(loaded => {
+        if (!loaded && currentUserRole === 'coach') {
+          loadTacticsLocal();
+        }
+      });
       
       syncBanner();
     });
@@ -1504,7 +1611,7 @@
         if (config.google_client_id) googleClientId = config.google_client_id;
         if (config.coach_emails) coachEmails = config.coach_emails;
         if (config.squad_players) {
-          squadPlayers = config.squad_players.map(p => {
+          const mapped = config.squad_players.map(p => {
             if (typeof p === 'string') {
               const pName = currentTeam === 'MO10' ? p.split(' ')[0] : p;
               const isInactive = currentTeam === 'Trimmers' && (
@@ -1532,12 +1639,18 @@
             }
             return p;
           });
+          squadPlayers = validateAndSanitizeSquad(currentTeam, mapped);
         }
         if (config.custom_positions) customPositionNames = config.custom_positions;
+        if (config.custom_situations) {
+          customSituations[currentTeam] = config.custom_situations;
+          localStorage.setItem('hv_myra_custom_situations', JSON.stringify(customSituations));
+          if (typeof renderSituationButtons === 'function') renderSituationButtons();
+        }
 
         localStorage.setItem('hv_myra_google_client_id', googleClientId);
         localStorage.setItem('hv_myra_coaches', JSON.stringify(coachEmails));
-        localStorage.setItem('hv_myra_squad', JSON.stringify(squadPlayers));
+        localStorage.setItem(`hv_myra_squad_${currentTeam}`, JSON.stringify(squadPlayers));
         localStorage.setItem('hv_myra_custom_positions', JSON.stringify(customPositionNames));
         
         // Initialize default assignments with the loaded squad players
@@ -1568,7 +1681,9 @@
           google_client_id: googleClientId,
           coach_emails: coachEmails,
           squad_players: squadPlayers,
-          custom_positions: customPositionNames
+          custom_positions: customPositionNames,
+          custom_situations: customSituations[currentTeam] || {},
+          custom_sub_roles: customSubRoles[currentTeam] || {}
         })
       });
       if (res.ok) {
@@ -1581,6 +1696,7 @@
       console.error("Failed to save config to server:", e);
     }
   }
+
 
   async function saveTacticsToServer(data) {
     const token = getAuthToken();
@@ -1715,37 +1831,103 @@
         if (active && active.data) {
           applyTacticsData(active.data);
           showToast('Loaded latest active matchday board!');
+          return true;
         }
       } else if (res.status === 404) {
+        drawnObjects = [];
+        if (typeof clearCanvas === 'function') clearCanvas();
         if (typeof initDefaultAssignments === 'function') initDefaultAssignments();
         initDropdowns();
         if (typeof syncMatrixFromTactics === 'function') syncMatrixFromTactics();
+        syncBanner();
       }
     } catch (e) {
       console.warn("Failed to load active tactics from server:", e);
     }
+    return false;
   }
 
-  function devLoginBypass() {
-    localStorage.setItem('hv_myra_user_token', 'dummy-token-bypass');
-    currentUserRole = 'coach';
-    const authBadge = document.getElementById('authBadge');
-    if (authBadge) {
-      authBadge.innerHTML = `<span style="background: #059669; color: #fff; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.7rem;">⚡ COACH (Dev Mode)</span>`;
-    }
-    const userDisplay = document.getElementById('userDisplay');
-    if (userDisplay) {
-      userDisplay.innerHTML = `<span style="color: #38bdf8; font-weight: bold;">singhalrajeev89@gmail.com</span> <button onclick="logoutUser()" style="padding: 1px 4px; font-size: 0.6rem; background: #ef4444; color: #fff; border: none; border-radius: 3px; cursor: pointer;">Logout</button>`;
-    }
-    toggleGoogleConfig();
-    showToast('Logged in as Coach (Dev Mode)!');
-  }
-  window.devLoginBypass = devLoginBypass;
+
 
   function toggleGoogleConfig() {
     const panel = document.getElementById('googleConfigPanel');
     if (panel) {
-      panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+      const isShowing = panel.style.display === 'flex';
+      panel.style.display = isShowing ? 'none' : 'flex';
+      if (!isShowing && currentUserRole === 'coach') {
+        const arGroup = document.getElementById('accessRequestsGroup');
+        if (arGroup) arGroup.style.display = 'flex';
+        loadPendingAccessRequests();
+      }
+    }
+  }
+
+  async function loadPendingAccessRequests() {
+    const container = document.getElementById('accessRequestsList');
+    if (!container) return;
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`/api/auth/access-requests?team_id=${currentTeam}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) return;
+      const requests = await res.json();
+      const pending = requests.filter(r => r.status === 'pending');
+
+      if (pending.length === 0) {
+        container.innerHTML = '<div style="font-size: 0.65rem; color: #94a3b8; text-align: center; padding: 4px;">No pending access requests</div>';
+        return;
+      }
+
+      container.innerHTML = pending.map(req => `
+        <div style="background: #0f172a; border: 1px solid #334155; border-radius: 4px; padding: 6px; font-size: 0.65rem; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-weight: bold; color: #38bdf8;">${escapeHtml(req.user_name || req.user_email)}</div>
+            <div style="color: #94a3b8;">${escapeHtml(req.user_email)} | Role: <strong style="color:#f59e0b;">${escapeHtml(req.requested_role)}</strong></div>
+          </div>
+          <div style="display: flex; gap: 4px;">
+            <button onclick="approveAccessRequest(${req.id})" style="background: #10b981; color: white; border: none; padding: 2px 6px; border-radius: 3px; font-size: 0.6rem; cursor: pointer; font-weight: bold;">Approve</button>
+            <button onclick="rejectAccessRequest(${req.id})" style="background: #ef4444; color: white; border: none; padding: 2px 6px; border-radius: 3px; font-size: 0.6rem; cursor: pointer; font-weight: bold;">Reject</button>
+          </div>
+        </div>
+      `).join('');
+    } catch (e) {
+      console.warn("Could not load access requests", e);
+    }
+  }
+
+  async function approveAccessRequest(id) {
+    try {
+      const token = getAuthToken();
+      const res = await fetch('/api/auth/access-requests/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ request_id: id })
+      });
+      if (res.ok) {
+        showToast('Access request approved!');
+        loadPendingAccessRequests();
+        loadConfigFromServer();
+      }
+    } catch (e) {
+      showToast('Failed to approve request');
+    }
+  }
+
+  async function rejectAccessRequest(id) {
+    try {
+      const token = getAuthToken();
+      const res = await fetch('/api/auth/access-requests/reject', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ request_id: id })
+      });
+      if (res.ok) {
+        showToast('Request rejected');
+        loadPendingAccessRequests();
+      }
+    } catch (e) {
+      showToast('Failed to reject request');
     }
   }
 
@@ -1953,18 +2135,7 @@
     }
   }
 
-  function bypassGoogleAuth() {
-    const mockUser = {
-      email: "singhalrajeev89@gmail.com",
-      name: "Test Coach",
-      given_name: "Coach",
-      picture: "public/favicon.svg"
-    };
-    localStorage.setItem('hv_myra_user', JSON.stringify(mockUser));
-    localStorage.setItem('hv_myra_user_token', 'dummy-token-bypass');
-    showUserLoggedIn(mockUser);
-    showToast("Logged in as Coach (Local Bypass)");
-  }
+
 
   let authOverlayMode = 'signin';
   let selectedSignUpRole = 'coach';
@@ -1991,8 +2162,8 @@
     const desc = document.getElementById('signUpRoleDesc');
     if (desc) {
       desc.innerHTML = role === 'coach'
-        ? '🏃 <strong>Coach:</strong> Registers your Google Account for full line-up editing & tactic saving.'
-        : '👪 <strong>Parent:</strong> Grants view-only access to live pitch tactics and rotation matrix.';
+        ? '🏃 <strong>Coach:</strong> An approval request will be emailed to admin (singhalrajeev89@gmail.com). You receive instant Parent / Player view access until approved.'
+        : '👪 <strong>Parent / Player:</strong> Grants instant view-only access to live pitch tactics and rotation matrix (no approval required).';
     }
   }
 
@@ -2015,20 +2186,38 @@
     }
   }
 
+  async function requestAccessOnServer(email, name, role) {
+    try {
+      const res = await fetch(`/api/auth/request-access`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ team_id: currentTeam, requested_role: role, user_email: email, user_name: name })
+      });
+      if (res.ok) {
+        showToast(`🔔 Access request notification sent to admin (singhalrajeev89@gmail.com)!`);
+      }
+    } catch (e) {
+      console.warn("Failed to send access request to server:", e);
+    }
+  }
+
   async function handleCredentialResponse(response) {
     const payload = decodeJwtResponse(response.credential);
     localStorage.setItem('hv_myra_user', JSON.stringify(payload));
     localStorage.setItem('hv_myra_user_token', response.credential);
 
-    if (authOverlayMode === 'signup' && selectedSignUpRole === 'coach') {
-      await registerCoachOnServer(payload.email);
-      currentUserRole = 'coach';
-      showUserLoggedIn(payload);
-      showToast(`🎉 Signed up as Coach for ${currentTeam}!`);
-    } else if (authOverlayMode === 'signup' && selectedSignUpRole === 'parent') {
-      currentUserRole = 'parent';
-      showUserLoggedIn(payload);
-      showToast(`Welcome, ${payload.name}! Signed up as Parent.`);
+    if (authOverlayMode === 'signup') {
+      await requestAccessOnServer(payload.email, payload.name, selectedSignUpRole);
+      if (selectedSignUpRole === 'coach') {
+        // Pending coach approval: assign view-only role until admin approves
+        currentUserRole = 'parent';
+        showUserLoggedIn(payload);
+        showToast(`📩 Coach access request sent to admin (singhalrajeev89@gmail.com)! You have Parent / Player view-only access until approved.`);
+      } else {
+        currentUserRole = 'parent';
+        showUserLoggedIn(payload);
+        showToast(`Welcome, ${payload.name}! Signed up as Parent / Player.`);
+      }
     } else {
       showUserLoggedIn(payload);
       showToast(`Welcome, ${payload.name}!`);
@@ -2216,30 +2405,56 @@
         const qKey = getQuarterForInterval(interval);
         const currentRef = (currentTeam === 'Trimmers' && qKey) ? quarterReferees[qKey] : null;
 
-        // Calculate cumulative play count for a player up to previous interval
-        const getPlayCount = (name) => {
-          let cnt = 0;
+        // Calculate total playing blocks assigned up to this point
+        const getPlayCountSoFar = (name) => {
+          let plays = 0;
           for (let k = 0; k < interval; k++) {
-            if (subMatrixState[name] && subMatrixState[name][k]) cnt++;
+            if (subMatrixState[name] && subMatrixState[name][k]) plays++;
           }
-          return cnt;
+          return plays;
         };
 
-        // Determine current rests (e.g. referee)
-        let currentRests = fieldAvailableNames.filter(n => currentRef === n || subMatrixState[n][interval] === false);
+        // Total rests taken so far (including referee rests!)
+        const getRestCountSoFar = (name) => {
+          let rests = 0;
+          for (let k = 0; k < interval; k++) {
+            if (subMatrixState[name] && subMatrixState[name][k] === false) rests++;
+          }
+          return rests;
+        };
+
+        // Determine current rests (e.g. referee is ALREADY substituted/resting)
+        let currentRests = fieldAvailableNames.filter(n => n === currentRef || subMatrixState[n][interval] === false);
         currentRests.forEach(n => subMatrixState[n][interval] = false);
 
+        // Since the referee is ALREADY substituted/resting, subtract 1 from additional rests needed!
         let restsNeeded = Math.max(0, numRestsPerInterval - currentRests.length);
 
         // Candidates who can rest (not referee, currently active)
         let candidates = fieldAvailableNames.filter(n => n !== currentRef && subMatrixState[n][interval] !== false);
 
-        // Sort candidates by play count DESCENDING so players who played most blocks rest first
-        candidates.sort((a, b) => getPlayCount(b) - getPlayCount(a));
-
         for (let r = 0; r < restsNeeded; r++) {
-          let chosenRestPlayer = null;
+          if (candidates.length === 0) break;
 
+          // Multi-constraint scoring algorithm:
+          // 1. Strict penalty against consecutive rests (resting in interval - 1)
+          // 2. Strict preference for players with FEWEST total rests taken so far
+          // 3. Preference for players with HIGHEST total play count so far
+          candidates.sort((a, b) => {
+            const aRestedPrev = (subMatrixState[a] && subMatrixState[a][interval - 1] === false) ? 1 : 0;
+            const bRestedPrev = (subMatrixState[b] && subMatrixState[b][interval - 1] === false) ? 1 : 0;
+            
+            if (aRestedPrev !== bRestedPrev) {
+              return aRestedPrev - bRestedPrev; // 0 (played prev) comes before 1 (rested prev)
+            }
+
+            const restDiff = getRestCountSoFar(a) - getRestCountSoFar(b);
+            if (restDiff !== 0) return restDiff; // Favor player who has rested LEAST so far
+
+            return getPlayCountSoFar(b) - getPlayCountSoFar(a); // Favor player with highest play count
+          });
+
+          let chosenRestPlayer = null;
           for (let cIdx = 0; cIdx < candidates.length; cIdx++) {
             const cand = candidates[cIdx];
             if (subMatrixState[cand][interval] !== false) {
@@ -2248,7 +2463,6 @@
                 const gender = pObj ? (typeof pObj === 'string' ? getInitialGender(pObj) : (pObj.gender || 'M')) : getInitialGender(cand);
 
                 if (gender === 'F') {
-                  // Count active women if candidate rests
                   let activeWomenIfRest = 0;
                   fieldAvailableNames.forEach(fn => {
                     if (fn !== cand && fn !== currentRef && subMatrixState[fn][interval] !== false) {
@@ -2282,7 +2496,6 @@
             }
           }
 
-          // Fallback if women quota constraint skipped candidates
           if (!chosenRestPlayer) {
             chosenRestPlayer = candidates.find(n => subMatrixState[n][interval] !== false);
           }
@@ -2296,15 +2509,27 @@
     }
 
     renderSubstitutionMatrix();
+    if (currentUserRole === 'coach') {
+      saveTacticsLocalData(document.getElementById('matchFileName')?.value || 'Custom Setup', true);
+    }
     if (!silent) {
       const msg = `${currentTeam} rotation auto-balanced for ${availNames.length} available players (${targetPitchCount} on pitch)!`;
       showToast(msg);
     }
   }
 
+  function saveSubstitutionPlannerExplicit() {
+    if (currentUserRole !== 'coach') {
+      showToast('⚠️ View-only access: Log in as Coach to save substitution plans.');
+      return;
+    }
+    const matchName = document.getElementById('matchFileName')?.value || 'Match Setup';
+    saveTacticsLocalData(matchName, false);
+    showToast('💾 Substitution Plan saved and synced to cloud!');
+  }
+
   function saveSquadLocal() {
     localStorage.setItem(`hv_myra_squad_${currentTeam}`, JSON.stringify(squadPlayers));
-    localStorage.setItem('hv_myra_squad', JSON.stringify(squadPlayers));
     saveConfigToServer();
   }
 
@@ -2631,13 +2856,13 @@
         { id: 'gk', default: 'Liz', label: 'GK', x: '6%', y: '50%' },
         { id: 'lb', default: 'Liv', label: 'LB', x: '23%', y: '32%' },
         { id: 'rb', default: 'Defne', label: 'RB', x: '23%', y: '68%' },
-        { id: 'cb', default: 'Hannah', label: 'CB', x: '25%', y: '93%', isSubDef: (getSubRole('cb')==='DEF'), isSubMid: (getSubRole('cb')==='MID'), isSubFwd: (getSubRole('cb')==='FWD') },
         { id: 'lm', default: 'Kyra', label: 'LM', x: '47%', y: '26%' },
         { id: 'cm', default: 'Mira', label: 'CM', x: '45%', y: '50%' },
         { id: 'rm', default: 'Alina', label: 'RM', x: '47%', y: '74%' },
         { id: 'lf', default: 'Kate', label: 'LF', x: '70%', y: '35%' },
         { id: 'rf', default: 'Sai Jiya', label: 'RF', x: '70%', y: '65%' },
-        { id: 'sub_mid', default: 'Shanaya', label: 'SUB-MID', x: '55%', y: '93%', isSubDef: (getSubRole('sub_mid')==='DEF'), isSubMid: (getSubRole('sub_mid')==='MID'), isSubFwd: (getSubRole('sub_mid')==='FWD') }
+        { id: 'sub_def', default: 'Hannah', label: 'SUB-DEF', x: '25%', y: '93%', isSubDef: (getSubRole('sub_def')==='DEF'), isSubMid: (getSubRole('sub_def')==='MID'), isSubFwd: (getSubRole('sub_def')==='FWD'), isSub: true },
+        { id: 'sub_mid', default: 'Shanaya', label: 'SUB-MID', x: '55%', y: '93%', isSubDef: (getSubRole('sub_mid')==='DEF'), isSubMid: (getSubRole('sub_mid')==='MID'), isSubFwd: (getSubRole('sub_mid')==='FWD'), isSub: true }
       ];
     } else {
       return [
@@ -2838,16 +3063,51 @@
         <text x="550" y="575" fill="#38bdf8" font-size="11" font-weight="bold" text-anchor="middle">Attacking Direction ➔</text>
       `;
     } else {
+      // Balanced Goal posts: 55px height (~5m visual scale) for perfect visual proportion
+      // Left Goal Box
       html += `
-        <rect x="0" y="225" width="22" height="160" fill="rgba(255,255,255,0.25)" stroke="#ffffff" stroke-width="3" />
-        <rect x="1078" y="225" width="22" height="160" fill="rgba(255,255,255,0.25)" stroke="#ffffff" stroke-width="3" />
+        <!-- Left Goal Box -->
+        <rect x="0" y="277.5" width="25" height="55" fill="rgba(255,255,255,0.22)" stroke="#ffffff" stroke-width="3" rx="2" />
+        <path d="M 0 277.5 L 25 277.5 L 25 332.5 L 0 332.5" fill="none" stroke="#ffffff" stroke-width="3" />
+        <text x="3" y="308.5" fill="#ffffff" font-size="8" font-weight="800" opacity="0.7">GOAL</text>
+        
+        <!-- Right Goal Box -->
+        <rect x="1075" y="277.5" width="25" height="55" fill="rgba(255,255,255,0.22)" stroke="#ffffff" stroke-width="3" rx="2" />
+        <path d="M 1100 277.5 L 1075 277.5 L 1075 332.5 L 1100 332.5" fill="none" stroke="#ffffff" stroke-width="3" />
+        <text x="1077" y="308.5" fill="#ffffff" font-size="8" font-weight="800" opacity="0.7">GOAL</text>
+        
+        <!-- Center Line -->
         <line x1="550" y1="0" x2="550" y2="610" stroke="#ffffff" stroke-width="3" />
-        <circle cx="550" cy="305" r="60" fill="none" stroke="#ffffff" stroke-width="2.5" />
+        <!-- Center Spot -->
         <circle cx="550" cy="305" r="5" fill="#ffffff" />
-        <line x1="275" y1="0" x2="275" y2="610" stroke="#ffffff" stroke-width="2" stroke-dasharray="8,6" />
-        <line x1="825" y1="0" x2="825" y2="610" stroke="#ffffff" stroke-width="2" stroke-dasharray="8,6" />
-        <path d="M 0 125 A 180 180 0 0 1 180 305 A 180 180 0 0 1 0 485" fill="none" stroke="#ffffff" stroke-width="2.5" />
-        <path d="M 1100 125 A 180 180 0 0 0 920 305 A 180 180 0 0 0 1100 485" fill="none" stroke="#ffffff" stroke-width="2.5" />
+        
+        <!-- 23m Lines (22.9m out of 91.4m = 25.05% of 1100 = ~275.6px) -->
+        <line x1="275.6" y1="0" x2="275.6" y2="610" stroke="#ffffff" stroke-width="3" />
+        <line x1="824.4" y1="0" x2="824.4" y2="610" stroke="#ffffff" stroke-width="3" />
+        
+        <!-- Left Shooting Circle (14.63m radius = ~162.7px, flat front 3.66m = 40.6px) -->
+        <path d="M 0 124.4 A 162.7 162.7 0 0 1 162.7 284.7 L 162.7 325.3 A 162.7 162.7 0 0 1 0 485.6" fill="none" stroke="#ffffff" stroke-width="3" />
+        <!-- Left 5m Broken Line (19.63m radius = 218.3px) -->
+        <path d="M 0 68.9 A 218.3 218.3 0 0 1 218.3 284.7 L 218.3 325.3 A 218.3 218.3 0 0 1 0 541.1" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-dasharray="10,8" />
+        <!-- Left Penalty Spot (6.40m = ~77px from goal line, center y=305) -->
+        <circle cx="77" cy="305" r="4.5" fill="#ffffff" />
+        <!-- Left Penalty Corner Marks on Backline (4.55m = 50.5px, 9.10m = 101px from goal posts) -->
+        <line x1="0" y1="234.2" x2="12" y2="234.2" stroke="#ffffff" stroke-width="2.5" />
+        <line x1="0" y1="183.7" x2="12" y2="183.7" stroke="#ffffff" stroke-width="2.5" />
+        <line x1="0" y1="375.8" x2="12" y2="375.8" stroke="#ffffff" stroke-width="2.5" />
+        <line x1="0" y1="426.3" x2="12" y2="426.3" stroke="#ffffff" stroke-width="2.5" />
+
+        <!-- Right Shooting Circle -->
+        <path d="M 1100 124.4 A 162.7 162.7 0 0 0 937.3 284.7 L 937.3 325.3 A 162.7 162.7 0 0 0 1100 485.6" fill="none" stroke="#ffffff" stroke-width="3" />
+        <!-- Right 5m Broken Line (19.63m radius = 218.3px) -->
+        <path d="M 1100 68.9 A 218.3 218.3 0 0 0 881.7 284.7 L 881.7 325.3 A 218.3 218.3 0 0 0 1100 541.1" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-dasharray="10,8" />
+        <!-- Right Penalty Spot -->
+        <circle cx="1023" cy="305" r="4.5" fill="#ffffff" />
+        <!-- Right Penalty Corner Marks on Backline -->
+        <line x1="1100" y1="234.2" x2="1088" y2="234.2" stroke="#ffffff" stroke-width="2.5" />
+        <line x1="1100" y1="183.7" x2="1088" y2="183.7" stroke="#ffffff" stroke-width="2.5" />
+        <line x1="1100" y1="375.8" x2="1088" y2="375.8" stroke="#ffffff" stroke-width="2.5" />
+        <line x1="1100" y1="426.3" x2="1088" y2="426.3" stroke="#ffffff" stroke-width="2.5" />
       `;
     }
     svg.innerHTML = html;
@@ -2896,6 +3156,37 @@
     showToast(showOpponents ? 'Opponents Visible' : 'Opponents Hidden');
   }
 
+  let showPlayerNames = localStorage.getItem('hv_myra_show_player_names') !== 'false';
+
+
+  function updatePlayerNamesVisibility() {
+    const pills = document.querySelectorAll('.static-pill, .player-select-pill');
+    pills.forEach(pill => {
+      if (pill.parentElement && pill.parentElement.classList.contains('ball')) return;
+      pill.style.display = showPlayerNames ? '' : 'none';
+    });
+    const btns = [document.getElementById('btnTogglePlayerNames'), document.getElementById('btnToggleSitPlayerNames')].filter(Boolean);
+    btns.forEach(btn => {
+      btn.innerHTML = showPlayerNames ? '🏷️ Names: On' : '🏷️ Names: Off';
+      btn.classList.toggle('active', showPlayerNames);
+      if (!showPlayerNames) {
+        btn.style.borderColor = '#f59e0b';
+        btn.style.color = '#fcd34d';
+      } else {
+        btn.style.borderColor = '';
+        btn.style.color = '';
+      }
+    });
+  }
+
+  function togglePlayerNamesVisibility() {
+    showPlayerNames = !showPlayerNames;
+    localStorage.setItem('hv_myra_show_player_names', showPlayerNames);
+    updatePlayerNamesVisibility();
+    showToast(showPlayerNames ? 'Player Names Visible' : 'Player Names Hidden');
+  }
+
+
   function renderTokens() {
     const board = document.getElementById('board');
     if (!board) return;
@@ -2912,9 +3203,17 @@
       const dict = getPositionDict(pos.id);
       
       token.innerHTML = `
-        <div class="token-circle" id="circle_${pos.id}" style="cursor: pointer;" title="Double-click to rename" ondblclick="renamePosition('${pos.id}')">${dict.circle}</div>
+        <div class="token-circle" id="circle_${pos.id}" style="cursor: pointer;" title="Click or double-click to rename position">${dict.circle}</div>
         <select class="player-select-pill" id="select_board_${pos.id}" onchange="onPositionChanged('${pos.id}', this.value)"></select>
       `;
+      const circleEl = token.querySelector('.token-circle');
+      if (circleEl) {
+        circleEl.addEventListener('dblclick', (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          renamePosition(pos.id);
+        });
+      }
       board.appendChild(token);
     });
 
@@ -3070,33 +3369,98 @@
   window.addEventListener('resize', resizeCanvas);
   setTimeout(resizeCanvas, 100);
 
+  function getBoardNodes(isSituation = false) {
+    const containerId = isSituation ? 'sitBoardContainer' : 'board';
+    const container = document.getElementById(containerId);
+    if (!container) return [];
+
+    const nodes = [];
+    container.querySelectorAll('.token').forEach(tok => {
+      let nodeId = tok.id;
+      if (isSituation) {
+        nodeId = tok.id ? tok.id.replace('sit_', '') : (tok.classList.contains('ball') ? 'ball' : null);
+      } else {
+        nodeId = tok.id ? tok.id.replace('pos_', '') : (tok.classList.contains('ball') ? 'ball' : null);
+      }
+      if (!nodeId) return;
+
+      const leftPct = parseFloat(tok.style.left) / 100;
+      const topPct = parseFloat(tok.style.top) / 100;
+      if (!isNaN(leftPct) && !isNaN(topPct)) {
+        nodes.push({ id: nodeId, x: leftPct, y: topPct, element: tok });
+      }
+    });
+
+    // Add Goal Post targets
+    nodes.push({ id: 'goal_left', x: 0.02, y: 0.50 });
+    nodes.push({ id: 'goal_right', x: 0.98, y: 0.50 });
+    return nodes;
+  }
+
+  function findNearestBoardNode(normX, normY, isSituation = false, maxDist = 0.08) {
+    const nodes = getBoardNodes(isSituation);
+    let best = null;
+    let minD = maxDist;
+    nodes.forEach(n => {
+      const d = Math.hypot(n.x - normX, n.y - normY);
+      if (d < minD) {
+        minD = d;
+        best = n;
+      }
+    });
+    return best;
+  }
+
   function redrawCanvas() {
     if (!canvasEl) canvasEl = document.getElementById('drawCanvas');
     if (canvasEl && !ctx) ctx = canvasEl.getContext('2d');
     if (!canvasEl || !ctx) return;
 
     ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+    const nodes = getBoardNodes(false);
+    const nodeMap = new Map(nodes.map(n => [n.id, n]));
+
     drawnObjects.forEach(item => {
       ctx.save();
-      if (item.type === 'line') {
-        ctx.strokeStyle = item.color;
-        ctx.lineWidth = item.width;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.beginPath();
-        item.points.forEach((pt, idx) => {
-          const x = pt.x * canvasEl.width;
-          const y = pt.y * canvasEl.height;
-          if (idx === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        });
-        ctx.stroke();
-      } else if (item.type === 'arrow') {
-        const x1 = item.from.x * canvasEl.width;
-        const y1 = item.from.y * canvasEl.height;
-        const x2 = item.to.x * canvasEl.width;
-        const y2 = item.to.y * canvasEl.height;
-        drawArrowDirect(x1, y1, x2, y2, item.color, item.width);
+      if (item.type === 'line' || item.type === 'edge_line') {
+        let pts = item.points;
+        if (item.fromNode && item.toNode) {
+          const n1 = nodeMap.get(item.fromNode);
+          const n2 = nodeMap.get(item.toNode);
+          if (n1 && n2) pts = [{ x: n1.x, y: n1.y }, { x: n2.x, y: n2.y }];
+        }
+        if (pts && pts.length > 1) {
+          ctx.strokeStyle = item.color || '#facc15';
+          ctx.lineWidth = item.width || 3.5;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          ctx.beginPath();
+          pts.forEach((pt, idx) => {
+            const x = pt.x * canvasEl.width;
+            const y = pt.y * canvasEl.height;
+            if (idx === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          });
+          ctx.stroke();
+        }
+      } else if (item.type === 'arrow' || item.type === 'edge_arrow') {
+        let x1 = item.from ? item.from.x * canvasEl.width : 0;
+        let y1 = item.from ? item.from.y * canvasEl.height : 0;
+        let x2 = item.to ? item.to.x * canvasEl.width : 0;
+        let y2 = item.to ? item.to.y * canvasEl.height : 0;
+
+        if (item.fromNode && nodeMap.has(item.fromNode)) {
+          const n1 = nodeMap.get(item.fromNode);
+          x1 = n1.x * canvasEl.width;
+          y1 = n1.y * canvasEl.height;
+        }
+        if (item.toNode && nodeMap.has(item.toNode)) {
+          const n2 = nodeMap.get(item.toNode);
+          x2 = n2.x * canvasEl.width;
+          y2 = n2.y * canvasEl.height;
+        }
+
+        drawArrowDirect(x1, y1, x2, y2, item.color || '#38bdf8', item.width || 3.5);
       }
       ctx.restore();
     });
@@ -3163,14 +3527,40 @@
 
   function renamePosition(posId) {
     const currentDict = getPositionDict(posId);
-    const newName = prompt(
-      currentLang === 'en' 
-        ? `Enter new label for ${currentDict.label || posId} (max 4 characters):` 
-        : `Voer nieuwe afkorting in voor ${currentDict.label || posId} (max 4 tekens):`, 
-      currentDict.code
-    );
+    const modal = document.getElementById('renamePosModal');
+    const input = document.getElementById('renamePosInput');
+    const title = document.getElementById('renamePosTitle');
+    
+    if (modal && input) {
+      window.targetRenamePosId = posId;
+      if (title) title.innerText = `Rename Position: ${currentDict.label || posId.toUpperCase()}`;
+      input.value = currentDict.code;
+      modal.style.display = 'flex';
+      setTimeout(() => { input.focus(); input.select(); }, 100);
+      return;
+    }
+
+    const newName = prompt(`Enter new abbreviation for ${currentDict.label || posId}:`, currentDict.code);
     if (newName === null) return;
-    const cleanName = newName.trim().substring(0, 4);
+    confirmRenamePosition(posId, newName);
+  }
+
+  function closeRenamePosModal() {
+    const modal = document.getElementById('renamePosModal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  function confirmRenamePosModal() {
+    const input = document.getElementById('renamePosInput');
+    const newName = input ? input.value : '';
+    const posId = window.targetRenamePosId;
+    closeRenamePosModal();
+    if (posId) confirmRenamePosition(posId, newName);
+  }
+
+  function confirmRenamePosition(posId, newName) {
+    if (!newName) return;
+    const cleanName = newName.trim().substring(0, 5);
     if (!cleanName) return;
 
     if (!customPositionNames[posId]) {
@@ -3185,10 +3575,15 @@
 
     localStorage.setItem('hv_myra_custom_positions', JSON.stringify(customPositionNames));
     renderPositionLabels();
+    renderTokens();
+    if (document.getElementById('view-situations')?.style.display === 'block') {
+      renderSituationsBoard();
+    }
     initDropdowns();
     showToast(`Position renamed to ${cleanName}`);
     saveConfigToServer();
   }
+
 
   function renderPositionLabels() {
     positionsConfig.forEach(pos => {
@@ -3196,7 +3591,9 @@
       if (!circleEl) return;
       
       let label = '';
-      if (currentTeam === 'MO10') {
+      if (customPositionNames[pos.id] && customPositionNames[pos.id][currentLang]?.circle) {
+        label = customPositionNames[pos.id][currentLang].circle;
+      } else if (currentTeam === 'MO10') {
         if (activeFormation === '1-3-3-1') {
           if (pos.id === 'gk') label = currentLang === 'en' ? 'GK' : 'K';
           else if (pos.id === 'lb') label = currentLang === 'en' ? 'LB' : 'LA';
@@ -3245,7 +3642,10 @@
       positionsConfig.forEach(pos => {
         let code = '';
         let isSub = false;
-        if (currentTeam === 'MO10') {
+        if (customPositionNames[pos.id] && customPositionNames[pos.id][currentLang]?.code) {
+          code = customPositionNames[pos.id][currentLang].code;
+          isSub = pos.isSub || pos.id.includes('sub');
+        } else if (currentTeam === 'MO10') {
           if (activeFormation === '1-3-3-1') {
             if (pos.id === 'gk') code = currentLang === 'en' ? 'GK' : 'K';
             else if (pos.id === 'lb') code = currentLang === 'en' ? 'LB' : 'LA';
@@ -3296,7 +3696,10 @@
           else tagClass = 'pos-tag tag-sub-def';
         }
         row.innerHTML = `
-          <span class="${tagClass}" style="cursor: pointer;" title="Double-click to rename" ondblclick="renamePosition('${pos.id}')">${code}</span>
+          <span class="${tagClass}" style="cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" title="Click ✏️ or double-click to rename" onclick="if(event.target.classList.contains('rename-btn')) renamePosition('${pos.id}')" ondblclick="renamePosition('${pos.id}')">
+            ${code}
+            <span class="rename-btn" title="Rename position" style="font-size: 0.65rem; opacity: 0.75; cursor: pointer; padding: 0 2px;">✏️</span>
+          </span>
           <select class="sidebar-select" id="select_side_${pos.id}" onchange="onPositionChanged('${pos.id}', this.value)"></select>
         `;
         sidebarContainer.appendChild(row);
@@ -3529,7 +3932,9 @@
     
     renderPositionLabels();
     renderSquadManager();
-    saveTacticsLocal();
+    if (currentUserRole === 'coach') {
+      saveTacticsLocalData(document.getElementById('matchFileName')?.value || '', true);
+    }
     validateWomenQuota();
     if (typeof syncMatrixFromTactics === 'function') syncMatrixFromTactics();
   }
@@ -3572,15 +3977,21 @@
       y = Math.max(15, Math.min(boardRect.height - 15, y));
       activeElement.style.left = `${(x / boardRect.width) * 100}%`;
       activeElement.style.top = `${(y / boardRect.height) * 100}%`;
+      redrawCanvas();
     });
 
     board.addEventListener('pointerup', (e) => {
       if (activeElement) {
         activeElement.releasePointerCapture(e.pointerId);
         activeElement = null;
+        switchToCustomFormation();
+        if (currentUserRole === 'coach') {
+          saveTacticsLocalData(document.getElementById('matchFileName')?.value || 'Custom Setup', true);
+        }
       }
     });
   }
+
 
   /* -------------------------------------------------------------
      FIXED DRAWING & ERASER LOGIC (Robust, Point-to-Path, Erasable)
@@ -3674,7 +4085,20 @@
       const coords = getCanvasCoords(e);
 
       if (currentMode === 'draw') {
-        if (currentStroke.length > 1) {
+        const startNorm = currentStroke[0];
+        const endNorm = coords;
+        const startNode = startNorm ? findNearestBoardNode(startNorm.x, startNorm.y, false) : null;
+        const endNode = findNearestBoardNode(endNorm.normX, endNorm.normY, false);
+
+        if (startNode && endNode && startNode.id !== endNode.id) {
+          drawnObjects.push({
+            type: 'edge_line',
+            fromNode: startNode.id,
+            toNode: endNode.id,
+            color: '#facc15',
+            width: 3.5
+          });
+        } else if (currentStroke.length > 1) {
           drawnObjects.push({
             type: 'line',
             color: '#facc15',
@@ -3683,13 +4107,36 @@
           });
         }
       } else if (currentMode === 'arrow') {
-        drawnObjects.push({
-          type: 'arrow',
-          color: '#38bdf8',
-          width: 3.5,
-          from: { x: startX / (canvasEl.width || 1), y: startY / (canvasEl.height || 1) },
-          to: { x: coords.normX, y: coords.normY }
-        });
+        const startNormX = startX / (canvasEl.width || 1);
+        const startNormY = startY / (canvasEl.height || 1);
+        const startNode = findNearestBoardNode(startNormX, startNormY, false);
+        const endNode = findNearestBoardNode(coords.normX, coords.normY, false);
+
+        if (startNode && endNode && startNode.id !== endNode.id) {
+          drawnObjects.push({
+            type: 'edge_arrow',
+            fromNode: startNode.id,
+            toNode: endNode.id,
+            color: '#38bdf8',
+            width: 3.5
+          });
+        } else if (startNode && !endNode) {
+          drawnObjects.push({
+            type: 'edge_arrow',
+            fromNode: startNode.id,
+            to: { x: coords.normX, y: coords.normY },
+            color: '#38bdf8',
+            width: 3.5
+          });
+        } else {
+          drawnObjects.push({
+            type: 'arrow',
+            color: '#38bdf8',
+            width: 3.5,
+            from: { x: startNormX, y: startNormY },
+            to: { x: coords.normX, y: coords.normY }
+          });
+        }
         redrawCanvas();
       }
       saveCurrentSituation();
@@ -3810,11 +4257,39 @@
     }
   };
 
+  let customPlayerCoords = {};
+
+  function captureBoardTokenPositions() {
+    const board = document.getElementById('board');
+    if (!board) return;
+    const tokens = board.querySelectorAll('.token');
+    tokens.forEach(tok => {
+      if (!tok.id) return;
+      const styleLeft = parseFloat(tok.style.left);
+      const styleTop = parseFloat(tok.style.top);
+      if (!isNaN(styleLeft) && !isNaN(styleTop)) {
+        customPlayerCoords[tok.id] = [Math.round(styleLeft * 10) / 10, Math.round(styleTop * 10) / 10];
+      }
+    });
+    formations['custom'] = customPlayerCoords;
+  }
+
+  function switchToCustomFormation() {
+    captureBoardTokenPositions();
+    activeFormation = 'custom';
+    ['btnForm1', 'btnForm2', 'btnFormCustomMO10', 'btnFormTrimmers433', 'btnFormTrimmers442', 'btnFormTrimmers3133', 'btnFormCustomTrimmers'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) btn.classList.remove('active');
+    });
+    document.getElementById('btnFormCustomMO10')?.classList.add('active');
+    document.getElementById('btnFormCustomTrimmers')?.classList.add('active');
+  }
+
   function applyFormation(name) {
     activeFormation = name;
     
     // Update toolbar active states
-    ['btnForm1', 'btnForm2', 'btnFormTrimmers433', 'btnFormTrimmers442', 'btnFormTrimmers3133'].forEach(id => {
+    ['btnForm1', 'btnForm2', 'btnFormCustomMO10', 'btnFormTrimmers433', 'btnFormTrimmers442', 'btnFormTrimmers3133', 'btnFormCustomTrimmers'].forEach(id => {
       const btn = document.getElementById(id);
       if (btn) btn.classList.remove('active');
     });
@@ -3823,8 +4298,12 @@
     if (name === '4-3-3') document.getElementById('btnFormTrimmers433')?.classList.add('active');
     if (name === '4-4-2') document.getElementById('btnFormTrimmers442')?.classList.add('active');
     if (name === '3-1-3-3') document.getElementById('btnFormTrimmers3133')?.classList.add('active');
+    if (name === 'custom') {
+      document.getElementById('btnFormCustomMO10')?.classList.add('active');
+      document.getElementById('btnFormCustomTrimmers')?.classList.add('active');
+    }
 
-    const setup = formations[name];
+    const setup = (name === 'custom') ? customPlayerCoords : formations[name];
     if (!setup) return;
     for (const [id, [left, top]] of Object.entries(setup)) {
       let el = document.getElementById(id);
@@ -3837,8 +4316,13 @@
       if (el) { el.style.left = `${left}%`; el.style.top = `${top}%`; }
     }
     renderPositionLabels();
-    showToast(`Applied ${name} Formation`);
+    if (name === 'custom') {
+      showToast('Applied Custom Formation');
+    } else {
+      showToast(`Applied ${name} Formation`);
+    }
   }
+
 
   const situationTips = {
     'standard': '💡 <strong>Base Formation:</strong> Neutral balanced positioning for build-up and kickoff.',
@@ -4082,11 +4566,6 @@
   }
 
   function saveCurrentSituation(silent = false) {
-    if (activeSituation === 'standard') {
-      if (!silent) showToast('Standard formation is updated on Tactics Board');
-      return;
-    }
-
     const container = document.getElementById('sitBoardTokens');
     if (!container) return;
 
@@ -4107,11 +4586,13 @@
     
     customSituations[currentTeam][activeSituation].coords = coords;
     customSituations[currentTeam][activeSituation].notes = notesText;
+    customSituations[currentTeam][activeSituation].drawings = sitDrawnObjects;
 
     localStorage.setItem('hv_myra_custom_situations', JSON.stringify(customSituations));
     saveConfigToServer();
     if (!silent) showToast(`💾 Situation Saved!`);
   }
+
 
   function saveSituationNotes() {
     saveCurrentSituation(true);
@@ -4149,6 +4630,25 @@
     showToast('🔄 Situation Reset to Default');
   }
 
+  function deleteCustomSituation(sitKey, event) {
+    if (event) event.stopPropagation();
+    const sitTitle = customSituations[currentTeam]?.[sitKey]?.title || sitKey;
+    if (!confirm(`Are you sure you want to delete custom situation "${sitTitle}" for team ${currentTeam}?`)) return;
+
+    if (customSituations[currentTeam] && customSituations[currentTeam][sitKey]) {
+      delete customSituations[currentTeam][sitKey];
+      localStorage.setItem('hv_myra_custom_situations', JSON.stringify(customSituations));
+      saveConfigToServer();
+    }
+
+    if (activeSituation === sitKey) {
+      activeSituation = 'standard';
+    }
+    renderSituationButtons();
+    applySituation(activeSituation);
+    showToast(`🗑️ Deleted Play: ${sitTitle}`);
+  }
+
   function renderSituationButtons() {
     const group = document.getElementById('sitButtonsGroup');
     if (!group) return;
@@ -4178,12 +4678,16 @@
         const item = teamCustom[key];
         const title = item.title || key;
         const activeClass = activeSituation === key ? 'class="active"' : '';
-        html += `<button onclick="applySituation('${key}')" id="btnSit_${key}" ${activeClass}>📋 ${title}</button>`;
+        html += `<span style="display:inline-flex; align-items:center; position:relative;">
+          <button onclick="applySituation('${key}')" id="btnSit_${key}" ${activeClass} style="padding-right: 26px;">📋 ${title}</button>
+          <span onclick="deleteCustomSituation('${key}', event)" title="Delete play" style="position:absolute; right:6px; cursor:pointer; color:#f87171; font-size:0.75rem; font-weight:bold; padding:2px 4px; border-radius:3px; background:rgba(15, 23, 42, 0.6);">✕</span>
+        </span>`;
       }
     });
 
     group.innerHTML = html;
   }
+
 
   function renderSituationsBoard() {
     updatePositionsConfig();
@@ -4225,10 +4729,21 @@
       const playerName = currentAssignments[pos.id] || '';
       const displayName = getDisplayName(playerName);
 
+      const circleEl = document.getElementById(`circle_${pos.id}`);
+      const sitLabel = circleEl && circleEl.innerHTML ? circleEl.innerHTML : dict.circle;
+
       token.innerHTML = `
-        <div class="token-circle">${dict.circle}</div>
+        <div class="token-circle" id="sit_circle_${pos.id}" style="cursor: pointer;" title="Double-click to rename position">${sitLabel}</div>
         <div class="static-pill">${displayName}</div>
       `;
+      const sitCircle = token.querySelector('.token-circle');
+      if (sitCircle) {
+        sitCircle.addEventListener('dblclick', (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          renamePosition(pos.id);
+        });
+      }
       container.appendChild(token);
     });
 
@@ -4246,9 +4761,10 @@
       <div class="token-circle" style="width:24px; height:24px; background:#ffffff; border:3px solid #0f172a; border-radius:50%; box-shadow: 0 0 10px rgba(255,255,255,0.9); display:flex; align-items:center; justify-content:center;">
         <div style="width:6px; height:6px; background:#0f172a; border-radius:50%;"></div>
       </div>
-      <div class="static-pill" style="background:#ffffff; color:#0f172a; border-color:#0f172a; font-weight:900;">⚽ BALL</div>
     `;
     container.appendChild(ballToken);
+
+
 
     // Render Opponents if showOpponents is true
     if (showOpponents) {
@@ -4286,10 +4802,7 @@
         token.style.cursor = 'grab';
 
         const roleLabel = oppRoles[i] || 'OPP';
-        token.innerHTML = `
-          <div class="token-circle" style="background:#ef4444; border-color:#991b1b; color:#fff;">🔴</div>
-          <div class="static-pill" style="background:#450a0a; color:#fca5a5; border-color:#991b1b;">${roleLabel}</div>
-        `;
+        token.innerHTML = `<div class="token-circle">${roleLabel}</div>`;
         container.appendChild(token);
       }
     }
@@ -4300,21 +4813,298 @@
       notesEl.value = (customSituations[currentTeam] && customSituations[currentTeam][activeSituation] && customSituations[currentTeam][activeSituation].notes) || '';
     }
 
-    drawSituationCanvasArrows();
+    if (customSituations[currentTeam] && customSituations[currentTeam][activeSituation] && customSituations[currentTeam][activeSituation].drawings !== undefined) {
+      sitDrawnObjects = customSituations[currentTeam][activeSituation].drawings;
+    }
+    resizeSitCanvas();
+    updatePlayerNamesVisibility();
   }
 
-  function drawSituationCanvasArrows() {
-    const canvas = document.getElementById('sitCanvas');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const container = document.getElementById('sitBoardContainer');
-    if (container) {
-      canvas.width = container.clientWidth;
-      canvas.height = container.clientHeight;
+
+  let sitCurrentMode = 'select';
+  let sitDrawnObjects = [];
+  let sitIsDrawing = false;
+  let sitStartX = 0, sitStartY = 0;
+  let sitSnapshot = null;
+  let sitCurrentStroke = [];
+  let sitCanvasEl = null;
+  let sitCtx = null;
+
+  function setSitMode(mode) {
+    sitCurrentMode = mode;
+    resizeSitCanvas();
+    ['sitModeSelect', 'sitModeDraw', 'sitModeArrow', 'sitModeEraser'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) btn.classList.remove('active');
+    });
+    if (mode === 'select') document.getElementById('sitModeSelect')?.classList.add('active');
+    if (mode === 'draw') document.getElementById('sitModeDraw')?.classList.add('active');
+    if (mode === 'arrow') document.getElementById('sitModeArrow')?.classList.add('active');
+    if (mode === 'eraser') document.getElementById('sitModeEraser')?.classList.add('active');
+
+    if (!sitCanvasEl) sitCanvasEl = document.getElementById('sitCanvas');
+    if (sitCanvasEl) {
+      sitCanvasEl.style.pointerEvents = (mode === 'select') ? 'none' : 'all';
+      sitCanvasEl.style.zIndex = (mode === 'select') ? '1' : '25';
     }
-    // Clean pitch without arrows as requested by coach
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
   }
+
+
+  function resizeSitCanvas() {
+    if (!sitCanvasEl) sitCanvasEl = document.getElementById('sitCanvas');
+    const container = document.getElementById('sitBoardContainer');
+    if (!sitCanvasEl || !container) return;
+    const rect = container.getBoundingClientRect();
+    if (rect.width && rect.height) {
+      sitCanvasEl.width = rect.width;
+      sitCanvasEl.height = rect.height;
+      redrawSitCanvas();
+    }
+  }
+
+  function getSitCanvasCoords(e) {
+    if (!sitCanvasEl) sitCanvasEl = document.getElementById('sitCanvas');
+    const rect = sitCanvasEl.getBoundingClientRect();
+    return {
+      x: (e.clientX - rect.left),
+      y: (e.clientY - rect.top),
+      normX: (e.clientX - rect.left) / (sitCanvasEl.width || 1),
+      normY: (e.clientY - rect.top) / (sitCanvasEl.height || 1)
+    };
+  }
+
+  function drawSitArrowDirect(x1, y1, x2, y2, color, width) {
+    if (!sitCanvasEl) sitCanvasEl = document.getElementById('sitCanvas');
+    if (!sitCanvasEl) return;
+    if (!sitCtx) sitCtx = sitCanvasEl.getContext('2d');
+    const headlen = 14;
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+    sitCtx.save();
+    sitCtx.strokeStyle = color;
+    sitCtx.fillStyle = color;
+    sitCtx.lineWidth = width;
+    sitCtx.beginPath();
+    sitCtx.moveTo(x1, y1);
+    sitCtx.lineTo(x2, y2);
+    sitCtx.stroke();
+
+    sitCtx.beginPath();
+    sitCtx.moveTo(x2, y2);
+    sitCtx.lineTo(x2 - headlen * Math.cos(angle - Math.PI / 6), y2 - headlen * Math.sin(angle - Math.PI / 6));
+    sitCtx.lineTo(x2 - headlen * Math.cos(angle + Math.PI / 6), y2 - headlen * Math.sin(angle + Math.PI / 6));
+    sitCtx.closePath();
+    sitCtx.fill();
+    sitCtx.restore();
+  }
+
+  function redrawSitCanvas() {
+    if (!sitCanvasEl) sitCanvasEl = document.getElementById('sitCanvas');
+    if (!sitCanvasEl) return;
+    sitCtx = sitCanvasEl.getContext('2d');
+    const w = sitCanvasEl.width || 1;
+    const h = sitCanvasEl.height || 1;
+    sitCtx.clearRect(0, 0, w, h);
+
+    const nodes = getBoardNodes(true);
+    const nodeMap = new Map(nodes.map(n => [n.id, n]));
+
+    sitDrawnObjects.forEach(obj => {
+      if (obj.type === 'line' || obj.type === 'edge_line') {
+        let pts = obj.points;
+        if (obj.fromNode && obj.toNode) {
+          const n1 = nodeMap.get(obj.fromNode);
+          const n2 = nodeMap.get(obj.toNode);
+          if (n1 && n2) pts = [{ x: n1.x, y: n1.y }, { x: n2.x, y: n2.y }];
+        }
+        if (pts && pts.length > 1) {
+          sitCtx.strokeStyle = obj.color || '#facc15';
+          sitCtx.lineWidth = obj.width || 3.5;
+          sitCtx.lineCap = 'round';
+          sitCtx.lineJoin = 'round';
+          sitCtx.beginPath();
+          sitCtx.moveTo(pts[0].x * w, pts[0].y * h);
+          for (let i = 1; i < pts.length; i++) {
+            sitCtx.lineTo(pts[i].x * w, pts[i].y * h);
+          }
+          sitCtx.stroke();
+        }
+      } else if (obj.type === 'arrow' || obj.type === 'edge_arrow') {
+        let x1 = obj.from ? obj.from.x * w : 0;
+        let y1 = obj.from ? obj.from.y * h : 0;
+        let x2 = obj.to ? obj.to.x * w : 0;
+        let y2 = obj.to ? obj.to.y * h : 0;
+
+        if (obj.fromNode && nodeMap.has(obj.fromNode)) {
+          const n1 = nodeMap.get(obj.fromNode);
+          x1 = n1.x * w;
+          y1 = n1.y * h;
+        }
+        if (obj.toNode && nodeMap.has(obj.toNode)) {
+          const n2 = nodeMap.get(obj.toNode);
+          x2 = n2.x * w;
+          y2 = n2.y * h;
+        }
+
+        drawSitArrowDirect(x1, y1, x2, y2, obj.color || '#38bdf8', obj.width || 3.5);
+      }
+    });
+  }
+
+  function eraseSitAtPoint(normX, normY) {
+    const threshold = 0.035;
+    let changed = false;
+
+    sitDrawnObjects = sitDrawnObjects.filter(obj => {
+      if (obj.type === 'line') {
+        const nearPoint = obj.points.some(pt => {
+          return Math.hypot(pt.x - normX, pt.y - normY) < threshold;
+        });
+        if (nearPoint) { changed = true; return false; }
+      } else if (obj.type === 'arrow') {
+        const distFrom = Math.hypot(obj.from.x - normX, obj.from.y - normY);
+        const distTo = Math.hypot(obj.to.x - normX, obj.to.y - normY);
+        if (distFrom < threshold || distTo < threshold) { changed = true; return false; }
+      }
+      return true;
+    });
+
+    if (changed) {
+      redrawSitCanvas();
+      saveCurrentSituation(true);
+    }
+  }
+
+  function clearSitDrawings() {
+    sitDrawnObjects = [];
+    redrawSitCanvas();
+    saveCurrentSituation(true);
+    showToast('Situation Lines Cleared');
+  }
+
+  function initSitDrawingEvents() {
+    if (!sitCanvasEl) sitCanvasEl = document.getElementById('sitCanvas');
+    if (!sitCanvasEl) return;
+
+    sitCanvasEl.addEventListener('pointerdown', (e) => {
+      if (sitCurrentMode === 'select') return;
+      if (currentUserRole !== 'coach') return;
+      if (!sitCtx) sitCtx = sitCanvasEl.getContext('2d');
+      sitIsDrawing = true;
+      try { sitCanvasEl.setPointerCapture(e.pointerId); } catch(ex){}
+      const coords = getSitCanvasCoords(e);
+      sitStartX = coords.x;
+      sitStartY = coords.y;
+
+      if (sitCurrentMode === 'draw') {
+        sitCurrentStroke = [{ x: coords.normX, y: coords.normY }];
+        sitCtx.strokeStyle = '#facc15';
+        sitCtx.lineWidth = 3.5;
+        sitCtx.lineCap = 'round';
+        sitCtx.lineJoin = 'round';
+        sitCtx.beginPath();
+        sitCtx.moveTo(sitStartX, sitStartY);
+      } else if (sitCurrentMode === 'arrow') {
+        if (!sitCanvasEl.width || sitCanvasEl.width === 0 || !sitCanvasEl.height || sitCanvasEl.height === 0) {
+          resizeSitCanvas();
+        }
+        const w = sitCanvasEl.width || 1;
+        const h = sitCanvasEl.height || 1;
+        if (w > 0 && h > 0) {
+          sitSnapshot = sitCtx.getImageData(0, 0, w, h);
+        }
+      } else if (sitCurrentMode === 'eraser') {
+        eraseSitAtPoint(coords.normX, coords.normY);
+      }
+    });
+
+    sitCanvasEl.addEventListener('pointermove', (e) => {
+      if (!sitIsDrawing) return;
+      if (!sitCtx) sitCtx = sitCanvasEl.getContext('2d');
+      const coords = getSitCanvasCoords(e);
+
+      if (sitCurrentMode === 'draw') {
+        sitCurrentStroke.push({ x: coords.normX, y: coords.normY });
+        sitCtx.lineTo(coords.x, coords.y);
+        sitCtx.stroke();
+      } else if (sitCurrentMode === 'arrow') {
+        if (sitSnapshot) sitCtx.putImageData(sitSnapshot, 0, 0);
+        drawSitArrowDirect(sitStartX, sitStartY, coords.x, coords.y, '#38bdf8', 3.5);
+      } else if (sitCurrentMode === 'eraser') {
+        eraseSitAtPoint(coords.normX, coords.normY);
+      }
+    });
+
+    sitCanvasEl.addEventListener('pointerup', (e) => {
+      if (!sitIsDrawing) return;
+      sitIsDrawing = false;
+      try { sitCanvasEl.releasePointerCapture(e.pointerId); } catch(ex){}
+      const coords = getSitCanvasCoords(e);
+
+      if (sitCurrentMode === 'draw') {
+        const startNorm = sitCurrentStroke[0];
+        const endNorm = coords;
+        const startNode = startNorm ? findNearestBoardNode(startNorm.x, startNorm.y, true) : null;
+        const endNode = findNearestBoardNode(endNorm.normX, endNorm.normY, true);
+
+        if (startNode && endNode && startNode.id !== endNode.id) {
+          sitDrawnObjects.push({
+            type: 'edge_line',
+            fromNode: startNode.id,
+            toNode: endNode.id,
+            color: '#facc15',
+            width: 3.5
+          });
+        } else if (sitCurrentStroke.length > 1) {
+          sitDrawnObjects.push({
+            type: 'line',
+            color: '#facc15',
+            width: 3.5,
+            points: sitCurrentStroke
+          });
+        }
+      } else if (sitCurrentMode === 'arrow') {
+        const startNormX = sitStartX / (sitCanvasEl.width || 1);
+        const startNormY = sitStartY / (sitCanvasEl.height || 1);
+        const startNode = findNearestBoardNode(startNormX, startNormY, true);
+        const endNode = findNearestBoardNode(coords.normX, coords.normY, true);
+
+        if (startNode && endNode && startNode.id !== endNode.id) {
+          sitDrawnObjects.push({
+            type: 'edge_arrow',
+            fromNode: startNode.id,
+            toNode: endNode.id,
+            color: '#38bdf8',
+            width: 3.5
+          });
+        } else if (startNode && !endNode) {
+          sitDrawnObjects.push({
+            type: 'edge_arrow',
+            fromNode: startNode.id,
+            to: { x: coords.normX, y: coords.normY },
+            color: '#38bdf8',
+            width: 3.5
+          });
+        } else {
+          sitDrawnObjects.push({
+            type: 'arrow',
+            color: '#38bdf8',
+            width: 3.5,
+            from: { x: startNormX, y: startNormY },
+            to: { x: coords.normX, y: coords.normY }
+          });
+        }
+        redrawSitCanvas();
+      }
+      saveCurrentSituation(true);
+      sitCurrentStroke = [];
+    });
+  }
+
+
+  function drawSituationCanvasArrows() {
+    redrawSitCanvas();
+  }
+
 
   function drawArrowDirectCanvas(ctx, x1, y1, x2, y2, color, width) {
     const headlen = 12;
@@ -4405,7 +5195,8 @@
     saveTacticsLocalData(titleVal);
   }
 
-  function saveTacticsLocalData(titleVal) {
+  function saveTacticsLocalData(titleVal, silent = false) {
+    captureBoardTokenPositions();
     const data = {
       assignments: currentAssignments,
       matchDate: document.getElementById('matchDatePicker').value,
@@ -4415,13 +5206,14 @@
       notes: document.getElementById('coachNotes').value,
       drawings: drawnObjects,
       activeFormation: activeFormation,
+      customPlayerCoords: customPlayerCoords,
       activeSituation: activeSituation,
       subMatrixState: subMatrixState,
       quarterReferees: quarterReferees,
       squadPlayers: squadPlayers
     };
-    localStorage.setItem('hv_myra_clean_pdf_board', JSON.stringify(data));
-    showToast('Setup Saved Locally!');
+    localStorage.setItem(`hv_myra_clean_pdf_board_${currentTeam}`, JSON.stringify(data));
+    if (!silent) showToast('Setup Saved & Synced!');
     saveTacticsToServer(data);
   }
 
@@ -4430,13 +5222,13 @@
   }
 
   function loadTacticsLocal(showAlert = false) {
-    const raw = localStorage.getItem('hv_myra_clean_pdf_board');
-    if (!raw) {
+    const rawTeam = localStorage.getItem(`hv_myra_clean_pdf_board_${currentTeam}`);
+    if (!rawTeam) {
       if (showAlert) alert('No saved setup found.');
       return;
     }
     try {
-      const data = JSON.parse(raw);
+      const data = JSON.parse(rawTeam);
       applyTacticsData(data);
       if (showAlert) showToast('Setup Loaded!');
     } catch (e) {
@@ -4445,23 +5237,68 @@
   }
 
   function applyTacticsData(data) {
+    if (!data) return;
+
+    // Check if tactic payload is from a mismatched team
+    const opp = (data.matchOpponent || '').toLowerCase();
+    const title = (data.matchFileName || data.title || '').toLowerCase();
+    if (currentTeam === 'Trimmers' && (opp.includes('mo10') || title.includes('mo10'))) {
+      console.warn("Ignoring MO10 tactic payload for Trimmers team");
+      initDefaultAssignments(true);
+      return;
+    }
+    if (currentTeam === 'MO10' && (opp.includes('trimmers') || title.includes('trimmers'))) {
+      console.warn("Ignoring Trimmers tactic payload for MO10 team");
+      initDefaultAssignments(true);
+      return;
+    }
+
     // 1. Restore Squad Attendance / Available Player List if present in setup file
     if (data.squadPlayers && Array.isArray(data.squadPlayers) && data.squadPlayers.length > 0) {
-      squadPlayers = data.squadPlayers;
+      squadPlayers = validateAndSanitizeSquad(currentTeam, data.squadPlayers);
       localStorage.setItem(`hv_myra_squad_${currentTeam}`, JSON.stringify(squadPlayers));
-      localStorage.setItem('hv_myra_squad', JSON.stringify(squadPlayers));
       if (typeof renderRosterUI === 'function') renderRosterUI();
     }
 
-    // 2. Restore Tactics Board Assignments & Lineups
+    // 2. Validate formation compatibility with currentTeam
+    if (data.activeFormation) {
+      if (currentTeam === 'Trimmers' && (data.activeFormation === '1-2-3-2' || data.activeFormation === '1-3-3-1')) {
+        activeFormation = '4-3-3';
+      } else if (currentTeam === 'MO10' && (data.activeFormation === '4-3-3' || data.activeFormation === '4-4-2' || data.activeFormation === '3-1-3-3')) {
+        activeFormation = '1-2-3-2';
+      } else {
+        activeFormation = data.activeFormation;
+      }
+    } else {
+      activeFormation = (currentTeam === 'MO10') ? '1-2-3-2' : '4-3-3';
+    }
+
+    updatePositionsConfig();
+
+    // 3. Restore Tactics Board Assignments & Lineups
     if (data.assignments) {
-      let a = data.assignments;
+      let a = Object.assign({}, data.assignments);
       if (a.ld && !a.lb) a.lb = a.ld;
       if (a.rd && !a.rb) a.rb = a.rd;
       if (a.sub_def_att && !a.cb) a.cb = a.sub_def_att;
       if (a.sub_field_3 && !a.sub_def) a.sub_def = a.sub_field_3;
       if (a.sub_field_2 && !a.sub_mid) a.sub_mid = a.sub_field_2;
       if (a.sub_field_1 && !a.sub_fwd) a.sub_fwd = a.sub_field_1;
+
+      // Filter out any assigned player that does NOT exist in squadPlayers for currentTeam
+      const validSquadNames = [];
+      squadPlayers.forEach(sp => {
+        const full = (typeof sp === 'string' ? sp : sp.name).trim();
+        const first = full.split(' ')[0];
+        validSquadNames.push(full.toLowerCase());
+        validSquadNames.push(first.toLowerCase());
+      });
+
+      Object.keys(a).forEach(posId => {
+        if (a[posId] && !validSquadNames.includes(a[posId].trim().toLowerCase())) {
+          a[posId] = '';
+        }
+      });
       currentAssignments = a;
     }
     if (data.matchDate) document.getElementById('matchDatePicker').value = data.matchDate;
@@ -4471,10 +5308,9 @@
     if (data.matchQuarter) document.getElementById('matchQuarter').value = data.matchQuarter;
     if (data.notes) document.getElementById('coachNotes').value = data.notes;
 
-    if (data.activeFormation) {
-      activeFormation = data.activeFormation;
-    } else {
-      activeFormation = (currentTeam === 'MO10') ? '1-2-3-2' : '4-3-3';
+    if (data.customPlayerCoords) {
+      customPlayerCoords = data.customPlayerCoords;
+      formations['custom'] = customPlayerCoords;
     }
 
     if (data.activeSituation && data.activeSituation !== 'standard') {
@@ -4487,9 +5323,13 @@
     applyFormation(activeFormation);
     renderSituationsBoard();
 
-    if (data.drawings) {
+
+    if (data.drawings && Array.isArray(data.drawings)) {
       drawnObjects = data.drawings;
       redrawCanvas();
+    } else {
+      drawnObjects = [];
+      if (typeof clearCanvas === 'function') clearCanvas();
     }
 
     // 3. Restore Substitution Matrix Planner State
@@ -4755,6 +5595,37 @@
       }
     }
 
+    async function populateTeamsDropdown() {
+      try {
+        const res = await fetch('/api/teams');
+        if (res.ok) {
+          const teamsList = await res.json();
+          if (Array.isArray(teamsList) && teamsList.length > 0) {
+            const selector = document.getElementById('teamSelector');
+            if (selector) {
+              const selectedVal = currentTeam;
+              selector.innerHTML = '';
+              teamsList.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.team_id;
+                opt.textContent = `HV Myra ${t.team_id}`;
+                selector.appendChild(opt);
+              });
+              if (teamsList.some(t => t.team_id === selectedVal)) {
+                selector.value = selectedVal;
+              } else {
+                selector.value = teamsList[0].team_id;
+                currentTeam = teamsList[0].team_id;
+              }
+            }
+          }
+        }
+      } catch(e) {
+        console.warn("Could not load teams from server, using default options", e);
+      }
+    }
+    populateTeamsDropdown();
+
     const selector = document.getElementById('teamSelector');
     if (selector) selector.value = currentTeam;
 
@@ -4788,8 +5659,11 @@
       initDragDelegation();
       initDrawingEvents();
       initSituationDragDelegation();
+      initSitDrawingEvents();
       
       resizeCanvas();
+      resizeSitCanvas();
+
       initDropdowns();
       renderStrategyTips();
       renderSquadManager();
@@ -4807,6 +5681,12 @@
       }
       initGoogleAuth();
       syncBanner();
+
+      loadActiveTacticsFromServer().then(loaded => {
+        if (!loaded && currentUserRole === 'coach') {
+          loadTacticsLocal();
+        }
+      });
     });
   };
 </script>
