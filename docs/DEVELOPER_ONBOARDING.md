@@ -23,13 +23,28 @@ python3 -m venv .venv
 source .venv/bin/activate
 
 # 3. Install backend dependencies
-pip install -r backend/requirements.txt
+pip install -r backend/requirements-dev.txt
 
 # 4. Start Uvicorn development server
 uvicorn backend.app.main:app --host 127.0.0.1 --port 8085 --reload
 ```
 
 Open your browser at `http://127.0.0.1:8085` to interact with the application.
+
+### 1.3 Managing Dependencies (`requirements.in` + `uv`)
+
+We use `requirements.in` to declare top-level direct dependencies and `uv pip compile` to generate deterministic, hermetic `requirements.txt` files:
+
+1. **Add/modify dependencies**: Edit `backend/requirements.in` (for production) or `backend/requirements-dev.in` (for dev/test tooling).
+2. **Compile locked requirements**:
+   ```bash
+   uv pip compile backend/requirements.in --python-version 3.11 -o backend/requirements.txt
+   uv pip compile backend/requirements-dev.in --python-version 3.11 -o backend/requirements-dev.txt
+   ```
+3. **Verify security**:
+   ```bash
+   pip-audit -r backend/requirements.txt --strict
+   ```
 
 ---
 

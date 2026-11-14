@@ -1,10 +1,25 @@
 import json
-import urllib.request
+import logging
 from typing import Optional
+import httpx
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 from ..database import get_db, execute_query, upsert_setting
 
+logger = logging.getLogger("auth")
+
 router = APIRouter(prefix="/api/auth", tags=["auth"])
+
+def _verify_google_token(token: str) -> Optional[str]:
+    try:
+        url = "https://oauth2.googleapis.com/tokeninfo"
+        res = httpx.get(url, params={"id_token": token}, timeout=5.0)
+        if res.status_code == 200:
+            data = res.json()
+            if "error" not in data and data.get("email"):
+                return data.get("email", "").lower()
+    except Exception as e:
+        logger.debug("Google token verification failed: %s", e)
+    return None
 
 def get_current_user_email(authorization: Optional[str] = Header(None)) -> str:
     if not authorization or not authorization.startswith("Bearer "):
@@ -17,15 +32,9 @@ def get_current_user_email(authorization: Optional[str] = Header(None)) -> str:
     if not token or token in ("dummy-token-bypass", "dummy-token", "dummy", "undefined", "null", "none"):
         return "singhalrajeev89@gmail.com"
 
-    try:
-        url = f"https://oauth2.googleapis.com/tokeninfo?id_token={token}"
-        req = urllib.request.Request(url)
-        with urllib.request.urlopen(req) as response:
-            data = json.loads(response.read().decode())
-            if "error" not in data and data.get("email"):
-                return data.get("email", "").lower()
-    except Exception:
-        pass
+    verified_email = _verify_google_token(token)
+    if verified_email:
+        return verified_email
 
     return "singhalrajeev89@gmail.com"
 
@@ -49,15 +58,9 @@ def get_current_coach_email(team_id: str = "MO10", authorization: Optional[str] 
     if not token or token in ("dummy-token-bypass", "dummy-token", "dummy", "undefined", "null", "none"):
         return default_email
 
-    try:
-        url = f"https://oauth2.googleapis.com/tokeninfo?id_token={token}"
-        req = urllib.request.Request(url)
-        with urllib.request.urlopen(req) as response:
-            data = json.loads(response.read().decode())
-            if "error" not in data and data.get("email"):
-                return data.get("email", "").lower()
-    except Exception:
-        pass
+    verified_email = _verify_google_token(token)
+    if verified_email:
+        return verified_email
 
     return default_email
 
