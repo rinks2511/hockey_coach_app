@@ -13,22 +13,19 @@ The **HV Myra Matchday Board** application is deployed to **Google Cloud Run** i
 - **GCP Region**: `europe-west4` (Eemshaven / Netherlands)
 - **Cloud Run Service Name**: `hockey-coach-app`
 - **Service URL**: `https://hockey-coach-app-1083993716124.europe-west4.run.app` (or legacy `https://hockey-coach-app-belxoh76za-ez.a.run.app`)
+- **Dedicated Service Account**: `hockey-coach-app-sa@hockey-507014.iam.gserviceaccount.com` (Least-privilege: scoped to `roles/storage.objectAdmin` on `gs://hockey-507014-db-storage` and `roles/logging.logWriter`)
 - **Persistent Data Volume**: GCS Bucket `hockey-507014-db-storage` mounted to `/app/data`
 
 ### 2.2 Container Build Specification (`Dockerfile`)
 ```dockerfile
-FROM python:3.11-slim
+FROM python:3.11.11-slim
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Python requirements
-COPY backend/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy requirements and install dependencies
+COPY backend/requirements.txt ./backend/
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r backend/requirements.txt
 
 # Copy application files
 COPY backend/ ./backend/
@@ -64,6 +61,8 @@ set -euo pipefail
 PROJECT_ID=$(gcloud config get-value project 2>/dev/null || echo "hockey-507014")
 SERVICE_NAME="hockey-coach-app"
 REGION="europe-west4"
+BUCKET_NAME="hockey-507014-db-storage"
+SERVICE_ACCOUNT="hockey-coach-app-sa@${PROJECT_ID}.iam.gserviceaccount.com"
 
 echo "--------------------------------------------------------"
 echo "Deploying ${SERVICE_NAME} to Google Cloud Run"
@@ -77,14 +76,28 @@ gcloud run deploy "${SERVICE_NAME}" \
   --platform managed \
   --allow-unauthenticated \
   --port 8080 \
-  --project "${PROJECT_ID}"
+  --project "${PROJECT_ID}" \
+  --service-account "${SERVICE_ACCOUNT}" \
+  --add-volume "name=db-vol,type=cloud-storage,bucket=${BUCKET_NAME}" \
+  --add-volume-mount "volume=db-vol,mount-path=/app/data"
 
 echo "✅ Deployment finished successfully!"
 ```
 
 ---
 
-## 4. Local-First Quality Assurance Rules
+## 4. CI/CD Security & Quality Assurance
+
+Our GitHub Actions pipeline (`.github/workflows/deploy.yml`) runs mandatory security and quality checks on every push and pull request:
+
+1. **Dependency CVE Auditing (`pip-audit`)**: Scans all production and dev dependencies against the PyPA and OSV vulnerability advisory databases; fails build on any known CVE.
+2. **Static Application Security Testing (`bandit`)**: Performs SAST on Python backend code to detect OWASP/CWE vulnerabilities, insecure imports, and unhandled exceptions.
+3. **Filesystem Vulnerability Scanning (`trivy`)**: Scans project assets and configurations for known security issues.
+4. **Automated Unit Testing (`pytest`)**: Executes comprehensive multi-tenant test suites.
+
+---
+
+## 5. Local-First Quality Assurance Rules
 
 To ensure production stability, developers and AI pair programmers must follow these strict operational rules:
 

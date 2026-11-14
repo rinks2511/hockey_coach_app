@@ -1,4 +1,4 @@
-name: Python Backend CI
+name: Python Backend CI & Security
 
 on:
   push:
@@ -7,23 +7,50 @@ on:
     branches: [ main ]
 
 jobs:
-  build-and-test:
+  security-and-test:
+    name: Security Audits & Unit Tests
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Check out repository
+      uses: actions/checkout@v4
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
+        python-version-file: '.python-version'
         cache: 'pip'
+        cache-dependency-path: |
+          backend/requirements.txt
+          backend/requirements-dev.txt
 
-    - name: Install dependencies
+    - name: Upgrade pip and install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r backend/requirements.txt
+        pip install -r backend/requirements-dev.txt
 
-    - name: Run pytest test suite
+    - name: CVE Vulnerability Audit (pip-audit)
       run: |
+        echo "🔍 Scanning production dependencies for known CVEs..."
+        pip-audit -r backend/requirements.txt --strict
+        echo "🔍 Scanning dev/test dependencies for known CVEs..."
+        pip-audit -r backend/requirements-dev.txt --strict
+
+    - name: Static Security Analysis (Bandit SAST)
+      run: |
+        echo "🛡️ Running Bandit static security analysis..."
+        bandit -r backend/app/ -ll
+
+    - name: Run Pytest Test Suite
+      run: |
+        echo "🧪 Executing unit test suite..."
         PYTHONPATH=. pytest backend/tests/
+
+    - name: Repository CVE & Vulnerability Scan (Trivy)
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'table'
+        exit-code: '0'
+        severity: 'CRITICAL,HIGH'

@@ -18,6 +18,7 @@ echo "--------------------------------------------------------"
 # 1. Build and Deploy container to Cloud Run
 echo "🚀 Building and deploying directly to Cloud Run with persistent storage..."
 BUCKET_NAME="hockey-507014-db-storage"
+SERVICE_ACCOUNT="hockey-coach-app-sa@${PROJECT_ID}.iam.gserviceaccount.com"
 ENV_VARS_FLAG="--set-env-vars DATABASE_FILE=/app/data/hockey_coach.db"
 
 if [ -n "${DATABASE_URL:-}" ]; then
@@ -31,6 +32,7 @@ gcloud run deploy "${SERVICE_NAME}" \
   --allow-unauthenticated \
   --port 8080 \
   --project "${PROJECT_ID}" \
+  --service-account "${SERVICE_ACCOUNT}" \
   --add-volume "name=db-vol,type=cloud-storage,bucket=${BUCKET_NAME}" \
   --add-volume-mount "volume=db-vol,mount-path=/app/data" \
   ${ENV_VARS_FLAG}

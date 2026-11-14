@@ -1,8 +1,11 @@
 import sqlite3
 import json
 import os
+import logging
 from typing import List, Dict, Any, Optional
 from .config import settings
+
+logger = logging.getLogger("database")
 
 def get_db():
     database_url = settings.DATABASE_URL
@@ -12,16 +15,16 @@ def get_db():
             import psycopg2.extras
             conn = psycopg2.connect(database_url, cursor_factory=psycopg2.extras.DictCursor)
             return conn
-        except ImportError:
-            pass
+        except ImportError as e:
+            logger.debug("psycopg2 not available: %s", e)
 
     conn = sqlite3.connect(settings.DATABASE_FILE, timeout=30.0)
     conn.row_factory = sqlite3.Row
     try:
         conn.execute("PRAGMA busy_timeout = 30000")
         conn.execute("PRAGMA journal_mode = WAL")
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("WAL mode could not be set: %s", e)
     return conn
 
 def execute_query(conn, sql: str, params: tuple = ()):
@@ -117,8 +120,8 @@ def init_db():
                         if "drawings" in d and len(d["drawings"]) > 0:
                             d["drawings"] = []
                             conn.execute("UPDATE tactics SET data = ? WHERE id = ?", (json.dumps(d), r["id"]))
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logger.debug("Tactic drawing data migration skipped for id %s: %s", r["id"], e)
         else:
             # PostgreSQL table initialization
             cur = conn.cursor()

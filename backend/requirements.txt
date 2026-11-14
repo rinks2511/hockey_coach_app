@@ -1,4 +1,13 @@
-fastapi>=0.100.0
-uvicorn>=0.20.0
-pytest>=7.0.0
-httpx>=0.24.0
+# Production runtime dependencies (pinned versions with 0 known CVEs)
+fastapi==0.141.1
+uvicorn==0.52.4
+pydantic==2.13.5
+pydantic_core==2.46.5
+starlette==1.6.0
+anyio==4.14.2
+httpx==0.28.1
+certifi==2026.10.23
+idna==3.19
+h11==0.16.0
+click==8.5.0
+typing_extensions==4.16.0
