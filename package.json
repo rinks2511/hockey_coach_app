@@ -1,0 +1,12 @@
+{
+  "name": "hockey_coach_app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "HV Myra Matchday Hockey Tactics Board Application",
+  "scripts": {
+    "audit": "npm audit"
+  },
+  "devDependencies": {
+    "puppeteer": "^25.17.0"
+  }
+}

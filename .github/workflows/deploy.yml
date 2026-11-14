@@ -14,6 +14,13 @@ jobs:
     steps:
     - name: Check out repository
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Secret Leak Prevention Scan (TruffleHog)
+      uses: trufflesecurity/trufflehog@main
+      with:
+        extra_args: --only-verified
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -35,6 +42,17 @@ jobs:
         pip-audit -r backend/requirements.txt --strict
         echo "🔍 Scanning dev/test dependencies for known CVEs..."
         pip-audit -r backend/requirements-dev.txt --strict
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Audit npm dependencies
+      run: |
+        echo "🔍 Auditing npm package dependencies for known vulnerabilities..."
+        npm audit --audit-level=high
 
     - name: Static Security Analysis (Bandit SAST)
       run: |

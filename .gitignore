@@ -36,4 +36,24 @@ ENV/
 scratch/
 *scratch*
 
+# Secrets, Keys & Sensitive Credentials
+.env
+.env.*
+*.env
+!*.env.example
+*.pem
+*.key
+*.crt
+*.cert
+*.pfx
+*.p12
+*.keystore
+*credentials*.json
+*service-account*.json
+client_secret*.json
+gcp-key*.json
+*.sqlite
+*.sqlite3
+
+
 
