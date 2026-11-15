@@ -957,9 +957,21 @@
     console.error("Error parsing squad", e);
   }
   let squadPlayers = validateAndSanitizeSquad(currentTeam, squadLocal);
-  if (currentTeam === 'MO10' && !squadPlayers.some(p => (typeof p === 'string' ? p : p.name).toLowerCase().includes('ayana'))) {
-    squadPlayers.push({ name: 'Ayana', gender: 'F', isAvailable: true });
-    try { localStorage.setItem('hv_myra_squad_MO10', JSON.stringify(squadPlayers)); } catch(e) {}
+  if (currentTeam === 'MO10') {
+    let changed = false;
+    squadPlayers.forEach(p => {
+      if (typeof p === 'object' && p.name && p.name.toLowerCase() === 'ayana' && p.gender !== 'F') {
+        p.gender = 'F';
+        changed = true;
+      }
+    });
+    if (!squadPlayers.some(p => (typeof p === 'string' ? p : p.name).toLowerCase().includes('ayana'))) {
+      squadPlayers.push({ name: 'Ayana', gender: 'F', isAvailable: true });
+      changed = true;
+    }
+    if (changed) {
+      try { localStorage.setItem('hv_myra_squad_MO10', JSON.stringify(squadPlayers)); } catch(e) {}
+    }
   }
 
 
