@@ -368,6 +368,178 @@
     .panel-title { flex-direction: column; align-items: flex-start !important; gap: 8px; }
     #quarterRefereesGrid { grid-template-columns: repeat(2, 1fr) !important; }
   }
+
+  /* Centered Digital Substitution Timer Card */
+  .sub-timer-card {
+    max-width: 360px;
+    margin: 0 auto 16px auto;
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 14px;
+    padding: 14px 18px 16px 18px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    box-sizing: border-box;
+  }
+  .sub-timer-digits {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 3.4rem;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1;
+    letter-spacing: 1px;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+    margin: 4px 0 6px 0;
+    transition: color 0.3s ease, text-shadow 0.3s ease;
+  }
+  .sub-timer-digits.warning {
+    color: #f59e0b;
+    text-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+  }
+  .sub-timer-digits.critical {
+    color: #ef4444;
+    text-shadow: 0 0 25px rgba(239, 68, 68, 0.6);
+    animation: timerFlash 1s infinite alternate;
+  }
+  @keyframes timerFlash {
+    from { opacity: 1; }
+    to { opacity: 0.35; }
+  }
+  .sub-timer-progress-track {
+    width: 200px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .sub-timer-progress-fill {
+    height: 100%;
+    width: 100%;
+    background: #38bdf8;
+    transition: width 0.3s linear, background-color 0.3s ease;
+  }
+  .sub-timer-progress-fill.warning {
+    background: #f59e0b;
+  }
+  .sub-timer-progress-fill.critical {
+    background: #ef4444;
+  }
+  .sub-timer-controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+  }
+  .sub-timer-icon-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #cbd5e1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+  }
+  .sub-timer-icon-btn:hover {
+    background: #334155;
+    color: #ffffff;
+    transform: scale(1.06);
+  }
+  .sub-timer-stepper {
+    display: inline-flex;
+    align-items: center;
+    background: #020617;
+    border: 1px solid #1e293b;
+    border-radius: 20px;
+    padding: 2px 6px;
+    gap: 2px;
+  }
+  .stepper-arrow {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 2px 6px;
+    line-height: 1;
+    transition: color 0.15s;
+  }
+  .stepper-arrow:hover {
+    color: #38bdf8;
+  }
+  .stepper-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    padding: 0 4px;
+    cursor: pointer;
+    min-width: 44px;
+    text-align: center;
+    user-select: none;
+  }
+  .sub-timer-btn-primary {
+    height: 36px;
+    padding: 0 16px;
+    border-radius: 20px;
+    background: #2563eb;
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+    transition: all 0.15s ease;
+  }
+  .sub-timer-btn-primary:hover {
+    background: #1d4ed8;
+    transform: scale(1.04);
+  }
+  .sub-timer-btn-primary:active {
+    transform: scale(0.96);
+  }
+  .sub-timer-compact-alert {
+    max-width: 360px;
+    margin: 0 auto 12px auto;
+    background: rgba(225, 29, 72, 0.2);
+    border: 1px solid #e11d48;
+    border-radius: 10px;
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.82rem;
+    color: #fecdd3;
+    animation: alertPulse 1.2s infinite ease-in-out;
+  }
+  .sub-timer-alert-btn {
+    background: #e11d48;
+    border: none;
+    color: white;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  @keyframes alertPulse {
+    0%, 100% { box-shadow: 0 0 8px rgba(225, 29, 72, 0.4); }
+    50% { box-shadow: 0 0 20px rgba(225, 29, 72, 0.8); }
+  }
 </style>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
@@ -698,6 +870,47 @@
   </div> <!-- end view-tactics -->
 
   <div id="view-subs" style="display: none; max-width: 1200px; margin: 0 auto; padding: 10px;">
+    <!-- Centered Digital Substitution Timer Card -->
+    <div id="subTimerCard" class="sub-timer-card">
+      <!-- Centered Digital Clock -->
+      <div id="subTimerDigits" class="sub-timer-digits">05:00</div>
+      
+      <!-- Progress Bar Track -->
+      <div class="sub-timer-progress-track">
+        <div id="subTimerMiniBar" class="sub-timer-progress-fill"></div>
+      </div>
+
+      <!-- Centered Controls Row: Reset, Stepper, Play/Pause, Sound -->
+      <div class="sub-timer-controls-row">
+        <button id="btnSubTimerReset" onclick="resetSubTimer()" class="sub-timer-icon-btn" title="Reset timer">
+          🔄
+        </button>
+
+        <div class="sub-timer-stepper">
+          <button onclick="stepSubTimerMinutes(-1)" class="stepper-arrow" title="Decrease duration">－</button>
+          <span id="subTimerMinutesLabel" class="stepper-label" onclick="cycleSubTimerMinutes()" title="Click to cycle duration">5 min</span>
+          <button onclick="stepSubTimerMinutes(1)" class="stepper-arrow" title="Increase duration">＋</button>
+        </div>
+
+        <button id="btnSubTimerPlay" onclick="startOrPauseSubTimer()" class="sub-timer-btn-primary" title="Start / Pause">
+          <svg id="svgPlayPauseIcon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="7 4 19 12 7 20 7 4"></polygon>
+          </svg>
+          <span id="subTimerPlayText">Start</span>
+        </button>
+
+        <button id="btnSubTimerSound" onclick="toggleSubTimerSound()" class="sub-timer-icon-btn" title="Toggle Sound">
+          <span id="subTimerSoundIcon">🔊</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Alert banner when time expires -->
+    <div id="subTimerAlertBanner" class="sub-timer-compact-alert" style="display: none;">
+      <span>⏰ <strong>Time's up!</strong> Rotate bench players.</span>
+      <button onclick="resetSubTimer()" class="sub-timer-alert-btn">Reset 🔄</button>
+    </div>
+
     <div class="subs-grid-container" style="display: grid; grid-template-columns: 1fr 340px; gap: 15px; align-items: start;">
       
       <!-- Left Column: Substitution Matrix -->
@@ -1537,6 +1750,10 @@
       setTimeout(() => {
         resizeSitCanvas();
       }, 50);
+    }
+
+    if (tab === 'subs') {
+      if (typeof updateSubTimerDisplay === 'function') updateSubTimerDisplay();
     }
   }
 
@@ -3525,6 +3742,11 @@
     if (txtNotesTitle) txtNotesTitle.innerText = "✏️ Coach Notes";
     const txtRulesHeader = document.getElementById('txtRulesHeader');
     if (txtRulesHeader) txtRulesHeader.innerText = "📖 KNHB Match Rules & Guidelines";
+
+    const txtSubTimerHeading = document.getElementById('txtSubTimerHeading');
+    if (txtSubTimerHeading) {
+      txtSubTimerHeading.innerText = currentLang === 'nl' ? "Wissel- & Wedstrijdtimer" : "Substitution & Match Rotation Timer";
+    }
 
     renderPositionLabels();
     renderRules();
@@ -5612,6 +5834,269 @@
     });
   }
 
+  // ============================================================
+  // Minimalist Circular Substitution Match & Rotation Timer Logic
+  // ============================================================
+  let subTimerTotalSeconds = 300; // default 5 minutes
+  let subTimerRemainingSeconds = 300;
+  let subTimerInterval = null;
+  let subTimerIsRunning = false;
+  let subTimerRotationNumber = 1;
+  let subTimerSoundEnabled = true;
+  let subTimerWakeLockSentinel = null;
+
+  function initSubTimer() {
+    try {
+      const saved = localStorage.getItem('hv_sub_timer_minutes');
+      if (saved) {
+        const parsed = parseFloat(saved);
+        if (!isNaN(parsed) && parsed > 0) {
+          subTimerTotalSeconds = Math.round(parsed * 60);
+          subTimerRemainingSeconds = subTimerTotalSeconds;
+        }
+      }
+    } catch(e) {}
+    updateSubTimerDisplay();
+  }
+
+  function setSubTimerMinutes(minutes) {
+    const val = parseFloat(minutes);
+    if (isNaN(val) || val <= 0) return;
+    subTimerTotalSeconds = Math.round(val * 60);
+    try {
+      localStorage.setItem('hv_sub_timer_minutes', val);
+    } catch(e) {}
+
+    // If timer is not running, reset remaining to match new total
+    if (!subTimerIsRunning) {
+      subTimerRemainingSeconds = subTimerTotalSeconds;
+    }
+    updateSubTimerDisplay();
+  }
+
+  function stepSubTimerMinutes(delta) {
+    let currentMins = subTimerTotalSeconds / 60;
+    let newMins = Math.max(1, Math.min(60, currentMins + delta));
+    setSubTimerMinutes(newMins);
+    if (typeof showToast === 'function') {
+      showToast(`⏱️ Duration: ${newMins} min`);
+    }
+  }
+
+  function cycleSubTimerMinutes() {
+    const common = [2, 3, 4, 5, 6, 7.5, 10, 15];
+    let currentMins = subTimerTotalSeconds / 60;
+    let idx = common.indexOf(currentMins);
+    let nextMins = (idx >= 0 && idx < common.length - 1) ? common[idx + 1] : common[0];
+    setSubTimerMinutes(nextMins);
+    if (typeof showToast === 'function') {
+      showToast(`⏱️ Duration: ${nextMins} min`);
+    }
+  }
+
+  function updateSubTimerDisplay() {
+    const digitsEl = document.getElementById('subTimerDigits');
+    const miniBarEl = document.getElementById('subTimerMiniBar');
+    const minLabelEl = document.getElementById('subTimerMinutesLabel');
+    const iconEl = document.getElementById('svgPlayPauseIcon');
+    const playBtn = document.getElementById('btnSubTimerPlay');
+    const playText = document.getElementById('subTimerPlayText');
+
+    // 1. Digital MM:SS
+    const mins = Math.floor(Math.max(0, subTimerRemainingSeconds) / 60);
+    const secs = Math.max(0, subTimerRemainingSeconds) % 60;
+    const formatted = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    if (digitsEl) {
+      digitsEl.textContent = formatted;
+      digitsEl.classList.remove('warning', 'critical');
+      if (subTimerRemainingSeconds <= 30) {
+        digitsEl.classList.add('critical');
+      } else if (subTimerRemainingSeconds <= 60) {
+        digitsEl.classList.add('warning');
+      }
+    }
+
+    // 2. Slim progress bar fill
+    if (miniBarEl) {
+      const pct = subTimerTotalSeconds > 0
+        ? Math.max(0, Math.min(100, (subTimerRemainingSeconds / subTimerTotalSeconds) * 100))
+        : 0;
+      miniBarEl.style.width = `${pct}%`;
+      miniBarEl.classList.remove('warning', 'critical');
+      if (subTimerRemainingSeconds <= 30) {
+        miniBarEl.classList.add('critical');
+      } else if (subTimerRemainingSeconds <= 60) {
+        miniBarEl.classList.add('warning');
+      }
+    }
+
+    // 3. Stepper value (e.g. "5 min" or "10 min")
+    if (minLabelEl) {
+      const displayMin = (subTimerTotalSeconds / 60);
+      minLabelEl.textContent = `${displayMin} min`;
+    }
+
+    // 4. Play / Pause Button SVG, Text & dynamic styling
+    if (iconEl) {
+      if (subTimerIsRunning) {
+        iconEl.innerHTML = '<rect x="6" y="4" width="4" height="16" rx="1"></rect><rect x="14" y="4" width="4" height="16" rx="1"></rect>';
+      } else {
+        iconEl.innerHTML = '<polygon points="7 4 19 12 7 20 7 4"></polygon>';
+      }
+    }
+    if (playText) {
+      playText.textContent = subTimerIsRunning ? 'Pause' : 'Start';
+    }
+    if (playBtn) {
+      playBtn.title = subTimerIsRunning ? 'Pause' : 'Start';
+      playBtn.style.background = subTimerIsRunning ? '#e11d48' : '#2563eb';
+    }
+
+    // 5. Sound icon state
+    const soundIcon = document.getElementById('subTimerSoundIcon');
+    if (soundIcon) {
+      soundIcon.textContent = subTimerSoundEnabled ? '🔊' : '🔇';
+    }
+  }
+
+  function startOrPauseSubTimer() {
+    if (subTimerIsRunning) {
+      // Pause
+      clearInterval(subTimerInterval);
+      subTimerInterval = null;
+      subTimerIsRunning = false;
+      releaseSubTimerWakeLock();
+    } else {
+      // Start or Resume
+      if (subTimerRemainingSeconds <= 0) {
+        subTimerRemainingSeconds = subTimerTotalSeconds;
+      }
+      dismissSubTimerAlert();
+      subTimerIsRunning = true;
+      requestSubTimerWakeLock();
+      subTimerInterval = setInterval(tickSubTimer, 1000);
+    }
+    updateSubTimerDisplay();
+  }
+
+  function tickSubTimer() {
+    if (subTimerRemainingSeconds > 0) {
+      subTimerRemainingSeconds--;
+      updateSubTimerDisplay();
+    }
+    if (subTimerRemainingSeconds <= 0) {
+      clearInterval(subTimerInterval);
+      subTimerInterval = null;
+      subTimerIsRunning = false;
+      updateSubTimerDisplay();
+      triggerSubTimerAlert();
+    }
+  }
+
+  function resetSubTimer() {
+    if (subTimerInterval) {
+      clearInterval(subTimerInterval);
+      subTimerInterval = null;
+    }
+    subTimerIsRunning = false;
+    subTimerRemainingSeconds = subTimerTotalSeconds;
+    dismissSubTimerAlert();
+    releaseSubTimerWakeLock();
+    updateSubTimerDisplay();
+  }
+
+  function advanceSubRotation() {
+    subTimerRotationNumber++;
+    subTimerRemainingSeconds = subTimerTotalSeconds;
+    dismissSubTimerAlert();
+    if (typeof showToast === 'function') {
+      showToast(`🔄 Advanced to Rotation #${subTimerRotationNumber}`);
+    }
+    if (!subTimerIsRunning) {
+      startOrPauseSubTimer();
+    } else {
+      updateSubTimerDisplay();
+    }
+  }
+
+  function triggerSubTimerAlert() {
+    const alertEl = document.getElementById('subTimerAlertBanner');
+    if (alertEl) alertEl.style.display = 'flex';
+
+    if (subTimerSoundEnabled) {
+      playRefereeWhistleChime();
+    }
+
+    try {
+      if ('vibrate' in navigator) {
+        navigator.vibrate([300, 150, 300, 150, 600]);
+      }
+    } catch(e) {}
+  }
+
+  function dismissSubTimerAlert() {
+    const alertEl = document.getElementById('subTimerAlertBanner');
+    if (alertEl) alertEl.style.display = 'none';
+  }
+
+  function toggleSubTimerSound() {
+    subTimerSoundEnabled = !subTimerSoundEnabled;
+    const soundIcon = document.getElementById('subTimerSoundIcon');
+    if (soundIcon) {
+      soundIcon.textContent = subTimerSoundEnabled ? '🔊' : '🔇';
+    }
+    if (typeof showToast === 'function') {
+      showToast(subTimerSoundEnabled ? '🔊 Sound: ON' : '🔇 Sound: OFF');
+    }
+    if (subTimerSoundEnabled) {
+      playRefereeWhistleChime();
+    }
+  }
+
+  function playRefereeWhistleChime() {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      
+      function playTone(freq, start, dur) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
+        gain.gain.setValueAtTime(0.22, ctx.currentTime + start);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime + start);
+        osc.stop(ctx.currentTime + start + dur);
+      }
+
+      playTone(2200, 0, 0.16);
+      playTone(2600, 0.18, 0.16);
+      playTone(2400, 0.36, 0.32);
+    } catch(e) {
+      console.warn('Audio whistle unavailable', e);
+    }
+  }
+
+  async function requestSubTimerWakeLock() {
+    try {
+      if ('wakeLock' in navigator) {
+        subTimerWakeLockSentinel = await navigator.wakeLock.request('screen');
+      }
+    } catch(e) {}
+  }
+
+  function releaseSubTimerWakeLock() {
+    try {
+      if (subTimerWakeLockSentinel) {
+        subTimerWakeLockSentinel.release();
+        subTimerWakeLockSentinel = null;
+      }
+    } catch(e) {}
+  }
+
   window.onload = () => {
     function showToast(message) {
       const toast = document.getElementById('toast');
@@ -5714,6 +6199,7 @@
           loadTacticsLocal();
         }
       });
+      initSubTimer();
     });
   };
 </script>
