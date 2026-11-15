@@ -367,338 +367,227 @@
     .side-panel { width: 100% !important; max-width: 100vw !important; box-sizing: border-box; }
     .panel-title { flex-direction: column; align-items: flex-start !important; gap: 8px; }
     #quarterRefereesGrid { grid-template-columns: repeat(2, 1fr) !important; }
-  /* Substitution Match & Rotation Timer Styles */
+  /* Minimalist Circular Substitution Timer (Clean & Focused) */
   .sub-timer-card {
-    background: linear-gradient(135deg, #0b111e 0%, #162032 100%);
-    border: 1px solid #23354e;
-    border-radius: 12px;
-    padding: 14px 18px;
+    background: #141824;
+    border: 1px solid #232c3d;
+    border-radius: 16px;
+    padding: 16px 20px;
     margin-bottom: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     position: relative;
+    max-width: 440px;
+    margin-left: auto;
+    margin-right: auto;
   }
-  .sub-timer-header {
+  .sub-timer-topbar {
+    width: 100%;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-    padding-bottom: 10px;
+    margin-bottom: 6px;
   }
-  .sub-timer-title-wrap {
+  .timer-icon-only-btn {
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid #334155;
+    color: #cbd5e1;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
+    justify-content: center;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
   }
-  .sub-timer-title {
-    font-size: 1.02rem;
+  .timer-icon-only-btn:hover {
+    background: #334155;
+    color: #ffffff;
+    transform: scale(1.05);
+  }
+  .sub-timer-stepper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #0b0f19;
+    border: 1px solid #283548;
+    border-radius: 20px;
+    padding: 2px 12px;
+  }
+  .stepper-btn {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 1.15rem;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 2px 6px;
+    line-height: 1;
+    transition: color 0.15s;
+  }
+  .stepper-btn:hover {
+    color: #38bdf8;
+  }
+  .stepper-value {
+    font-size: 0.85rem;
     font-weight: 700;
     color: #f1f5f9;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .sub-timer-badge {
-    background: #0369a1;
-    color: #e0f2fe;
-    font-size: 0.72rem;
-    font-weight: 700;
-    padding: 3px 9px;
-    border-radius: 12px;
-    border: 1px solid #38bdf8;
-    letter-spacing: 0.3px;
-  }
-  .sub-timer-quick-actions {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .timer-pill-btn {
-    background: #0e1726;
-    border: 1px solid #334155;
-    color: #94a3b8;
-    padding: 5px 11px;
-    border-radius: 6px;
-    font-size: 0.73rem;
-    font-weight: 600;
+    min-width: 52px;
+    text-align: center;
     cursor: pointer;
-    transition: all 0.15s;
+  }
+  .sub-timer-circle-wrap {
+    position: relative;
+    width: 250px;
+    height: 250px;
+    margin: 8px 0;
     display: flex;
     align-items: center;
-    gap: 4px;
+    justify-content: center;
   }
-  .timer-pill-btn:hover {
-    background: #1e293b;
-    color: #f8fafc;
-    border-color: #475569;
+  .sub-timer-svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
   }
-  .timer-pill-btn.active {
-    background: #0284c7;
-    border-color: #38bdf8;
-    color: #ffffff;
-    box-shadow: 0 0 8px rgba(56, 189, 248, 0.35);
+  .sub-timer-track {
+    fill: none;
+    stroke: rgba(165, 180, 252, 0.35); /* soft purple-gray track like user screenshot */
+    stroke-width: 4px;
   }
-  .sub-timer-main-grid {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 18px;
-    align-items: center;
+  .sub-timer-arc {
+    fill: none;
+    stroke: #e11d48; /* bold coral-red arc like user screenshot */
+    stroke-width: 11px;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.3s linear, stroke 0.3s ease;
   }
-  @media (max-width: 820px) {
-    .sub-timer-main-grid {
-      grid-template-columns: 1fr;
-      gap: 14px;
-    }
-  }
-  .sub-timer-clock-box {
-    background: #070b12;
-    border: 1px solid #1e293b;
-    border-radius: 10px;
-    padding: 10px 18px;
+  .sub-timer-center-content {
+    position: absolute;
+    inset: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-width: 170px;
-    box-shadow: inset 0 2px 6px rgba(0,0,0,0.6);
+    pointer-events: none;
   }
-  .sub-timer-time-display {
-    font-family: 'SF Mono', Consolas, Monaco, 'Courier New', monospace;
-    font-size: 2.6rem;
+  .sub-timer-big-digits {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 3.4rem;
     font-weight: 800;
-    color: #38bdf8;
-    line-height: 1.05;
-    letter-spacing: 1.5px;
+    color: #ffffff;
+    line-height: 1;
+    letter-spacing: -1px;
     font-variant-numeric: tabular-nums;
-    text-shadow: 0 0 14px rgba(56, 189, 248, 0.4);
-    transition: color 0.3s ease, text-shadow 0.3s ease;
   }
-  .sub-timer-time-display.warning {
-    color: #f59e0b;
-    text-shadow: 0 0 16px rgba(245, 158, 11, 0.5);
-  }
-  .sub-timer-time-display.critical {
-    color: #ef4444;
-    text-shadow: 0 0 18px rgba(239, 68, 68, 0.7);
-    animation: pulseClock 1s infinite alternate;
-  }
-  @keyframes pulseClock {
-    0% { transform: scale(1); }
-    100% { transform: scale(1.03); }
-  }
-  .sub-timer-bar-wrap {
-    width: 100%;
-    height: 7px;
-    background: #141e2e;
-    border-radius: 4px;
-    overflow: hidden;
-    margin-top: 8px;
-    border: 1px solid #1f2d42;
-  }
-  .sub-timer-bar {
-    height: 100%;
-    width: 100%;
-    background: linear-gradient(90deg, #10b981, #38bdf8);
-    transition: width 0.25s linear, background 0.3s ease;
-  }
-  .sub-timer-bar.warning {
-    background: linear-gradient(90deg, #f59e0b, #ea580c);
-  }
-  .sub-timer-bar.critical {
-    background: #ef4444;
-  }
-  .sub-timer-controls-col {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .sub-timer-buttons-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-  .btn-timer-play {
-    background: #10b981;
-    border: 1px solid #059669;
-    color: #ffffff;
-    font-size: 0.95rem;
-    font-weight: 700;
-    padding: 8px 18px;
-    border-radius: 7px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.15s ease;
-    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
-  }
-  .btn-timer-play:hover {
-    background: #059669;
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
-  }
-  .btn-timer-play.running {
-    background: #f59e0b;
-    border-color: #d97706;
-    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
-  }
-  .btn-timer-play.running:hover {
-    background: #d97706;
-  }
-  .btn-timer-sec {
-    background: #1e293b;
-    border: 1px solid #334155;
-    color: #cbd5e1;
-    font-size: 0.85rem;
-    font-weight: 600;
-    padding: 8px 14px;
-    border-radius: 7px;
-    cursor: pointer;
-    transition: all 0.15s;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-  .btn-timer-sec:hover {
-    background: #334155;
-    color: #ffffff;
-  }
-  .btn-timer-step {
-    background: #0f172a;
-    border: 1px solid #28374d;
-    color: #94a3b8;
-    font-size: 0.8rem;
-    font-weight: 700;
-    padding: 8px 11px;
-    border-radius: 7px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .btn-timer-step:hover {
-    background: #1e293b;
-    color: #38bdf8;
-    border-color: #38bdf8;
-  }
-  .btn-timer-next-rot {
-    background: linear-gradient(135deg, #6366f1, #4f46e5);
-    border: 1px solid #818cf8;
-    color: #ffffff;
-    font-size: 0.85rem;
-    font-weight: 700;
-    padding: 8px 14px;
-    border-radius: 7px;
-    cursor: pointer;
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    transition: all 0.15s;
-  }
-  .btn-timer-next-rot:hover {
-    background: linear-gradient(135deg, #4f46e5, #4338ca);
-  }
-  @media (max-width: 600px) {
-    .btn-timer-next-rot {
-      margin-left: 0;
-      width: 100%;
-      justify-content: center;
-    }
-  }
-  .sub-timer-minutes-selector {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-    background: #070b13;
-    padding: 7px 10px;
-    border-radius: 8px;
-    border: 1px solid #1a2638;
-  }
-  .sub-timer-label {
-    font-size: 0.72rem;
+  .sub-timer-sub-label {
+    font-size: 0.82rem;
     font-weight: 700;
     color: #94a3b8;
+    letter-spacing: 2.5px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-right: 4px;
+    margin-top: 6px;
+    margin-bottom: 8px;
   }
-  .preset-pills-list {
+  .sub-timer-round-btn {
+    pointer-events: auto;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 3.5px solid #e2e8f0; /* matching the user mockup outline */
+    background: transparent;
+    color: #ffffff;
     display: flex;
-    gap: 5px;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .sub-timer-round-btn:hover {
+    border-color: #ffffff;
+    background: rgba(255, 255, 255, 0.12);
+    transform: scale(1.05);
+  }
+  .sub-timer-round-btn:active {
+    transform: scale(0.95);
+  }
+  .sub-timer-quick-presets {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 4px;
+    width: 100%;
     flex-wrap: wrap;
   }
-  .btn-minute-preset {
-    background: #131d2e;
-    border: 1px solid #23344d;
+  .quick-preset-pill {
+    background: #0b0f19;
+    border: 1px solid #283548;
     color: #94a3b8;
-    padding: 4px 10px;
-    border-radius: 14px;
-    font-size: 0.73rem;
+    font-size: 0.75rem;
     font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 12px;
     cursor: pointer;
     transition: all 0.15s;
   }
-  .btn-minute-preset:hover {
-    background: #1e2b40;
-    color: #f1f5f9;
+  .quick-preset-pill:hover {
+    color: #fff;
+    border-color: #475569;
   }
-  .btn-minute-preset.active {
-    background: #0284c7;
-    border-color: #38bdf8;
+  .quick-preset-pill.active {
+    background: #e11d48;
+    border-color: #f43f5e;
     color: #ffffff;
     font-weight: 700;
-    box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
   }
-  .sub-timer-custom-box {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    margin-left: auto;
-  }
-  .input-custom-min {
-    width: 48px;
-    background: #0e1726;
-    border: 1px solid #334155;
-    color: #38bdf8;
-    font-weight: 700;
-    font-size: 0.8rem;
-    padding: 3px 5px;
-    border-radius: 5px;
-    text-align: center;
-  }
-  .btn-apply-custom {
-    background: #0f172a;
-    border: 1px solid #38bdf8;
-    color: #38bdf8;
-    font-size: 0.73rem;
-    font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 5px;
+  .quick-preset-next {
+    background: transparent;
+    border: 1px dashed #475569;
+    color: #cbd5e1;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 12px;
     cursor: pointer;
+    margin-left: 6px;
+    transition: all 0.15s;
   }
-  .btn-apply-custom:hover {
-    background: #38bdf8;
-    color: #0b111e;
+  .quick-preset-next:hover {
+    border-color: #38bdf8;
+    color: #38bdf8;
   }
-  .sub-timer-alert-card {
-    margin-top: 12px;
-    background: linear-gradient(135deg, rgba(220, 38, 38, 0.2), rgba(153, 27, 27, 0.35));
-    border: 2px solid #ef4444;
+  .sub-timer-simple-alert {
+    margin-top: 10px;
+    background: rgba(225, 29, 72, 0.2);
+    border: 1px solid #e11d48;
     border-radius: 8px;
-    padding: 10px 14px;
+    padding: 8px 12px;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
+    justify-content: space-between;
+    width: 100%;
+    font-size: 0.78rem;
+    color: #fecdd3;
     animation: alertPulse 1.2s infinite ease-in-out;
   }
+  .btn-alert-next {
+    background: #e11d48;
+    border: none;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
   @keyframes alertPulse {
-    0%, 100% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.4); }
-    50% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.8); }
+    0%, 100% { box-shadow: 0 0 8px rgba(225, 29, 72, 0.4); }
+    50% { box-shadow: 0 0 20px rgba(225, 29, 72, 0.8); }
   }
 </style>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -1030,73 +919,54 @@
   </div> <!-- end view-tactics -->
 
   <div id="view-subs" style="display: none; max-width: 1200px; margin: 0 auto; padding: 10px;">
-    <!-- Match & Substitution Rotation Timer -->
+    <!-- Minimalist Circular Substitution Rotation Timer -->
     <div id="subTimerCard" class="sub-timer-card">
-      <div class="sub-timer-header">
-        <div class="sub-timer-title-wrap">
-          <span class="sub-timer-title">⏱️ <span id="txtSubTimerHeading">Substitution & Match Rotation Timer</span></span>
-          <span id="subTimerBadge" class="sub-timer-badge">Rotation 1 • Q1</span>
+      <!-- Top bar with reset, stepper, and sound icon -->
+      <div class="sub-timer-topbar">
+        <button id="btnSubTimerReset" onclick="resetSubTimer()" class="timer-icon-only-btn" title="Reset timer">
+          🔄
+        </button>
+        <div class="sub-timer-stepper">
+          <button onclick="stepSubTimerMinutes(-1)" class="stepper-btn" title="Decrease duration">－</button>
+          <span id="subTimerMinutesLabel" class="stepper-value" onclick="cycleSubTimerMinutes()" title="Click to choose duration">5 min</span>
+          <button onclick="stepSubTimerMinutes(1)" class="stepper-btn" title="Increase duration">＋</button>
         </div>
-        <div class="sub-timer-quick-actions">
-          <button id="btnSubTimerSound" onclick="toggleSubTimerSound()" class="timer-pill-btn active" title="Toggle audio chime alert">🔔 Sound: ON</button>
-          <button id="btnSubTimerWake" onclick="toggleSubTimerWakeLock()" class="timer-pill-btn" title="Prevent phone screen from sleeping during matches">📱 Keep Awake</button>
+        <button id="btnSubTimerSound" onclick="toggleSubTimerSound()" class="timer-icon-only-btn" title="Toggle Sound">
+          <span id="subTimerSoundIcon">🔊</span>
+        </button>
+      </div>
+
+      <!-- Main Circle Timer (matching user mockup) -->
+      <div class="sub-timer-circle-wrap">
+        <svg class="sub-timer-svg" viewBox="0 0 260 260">
+          <circle cx="130" cy="130" r="112" class="sub-timer-track"></circle>
+          <circle id="subTimerCircleProgress" cx="130" cy="130" r="112" class="sub-timer-arc" stroke-dasharray="703.7" stroke-dashoffset="0"></circle>
+        </svg>
+        <div class="sub-timer-center-content">
+          <div id="subTimerDigits" class="sub-timer-big-digits">05:00</div>
+          <div id="subTimerSubLabel" class="sub-timer-sub-label">ROTATION 1</div>
+          <button id="btnSubTimerPlay" onclick="startOrPauseSubTimer()" class="sub-timer-round-btn" title="Start / Pause">
+            <svg id="svgPlayPauseIcon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="7 4 19 12 7 20 7 4"></polygon>
+            </svg>
+          </button>
         </div>
       </div>
 
-      <div class="sub-timer-main-grid">
-        <!-- Clock Display & Progress Bar -->
-        <div class="sub-timer-clock-box">
-          <div id="subTimerDigits" class="sub-timer-time-display">05:00</div>
-          <div class="sub-timer-bar-wrap">
-            <div id="subTimerBar" class="sub-timer-bar" style="width: 100%;"></div>
-          </div>
-        </div>
-
-        <!-- Controls & Minutes Selector -->
-        <div class="sub-timer-controls-col">
-          <div class="sub-timer-buttons-row">
-            <button id="btnSubTimerPlay" onclick="startOrPauseSubTimer()" class="btn-timer-play">▶️ Start</button>
-            <button id="btnSubTimerReset" onclick="resetSubTimer()" class="btn-timer-sec">🔄 Reset</button>
-            <button onclick="adjustSubTimerSeconds(-30)" class="btn-timer-step" title="Subtract 30 seconds">-30s</button>
-            <button onclick="adjustSubTimerSeconds(60)" class="btn-timer-step" title="Add 1 minute">+1m</button>
-            <button onclick="advanceSubRotation()" class="btn-timer-next-rot" title="Advance rotation count and restart interval">⏭️ Next Rotation</button>
-          </div>
-
-          <div class="sub-timer-minutes-selector">
-            <span class="sub-timer-label">Choose Minutes:</span>
-            <div class="preset-pills-list">
-              <button class="btn-minute-preset" onclick="setSubTimerMinutes(2)">2m</button>
-              <button class="btn-minute-preset" onclick="setSubTimerMinutes(3)">3m</button>
-              <button class="btn-minute-preset" onclick="setSubTimerMinutes(4)">4m</button>
-              <button class="btn-minute-preset active" id="btnPreset5" onclick="setSubTimerMinutes(5)">5m</button>
-              <button class="btn-minute-preset" onclick="setSubTimerMinutes(6)">6m</button>
-              <button class="btn-minute-preset" onclick="setSubTimerMinutes(7.5)">7.5m</button>
-              <button class="btn-minute-preset" onclick="setSubTimerMinutes(10)">10m</button>
-              <button class="btn-minute-preset" onclick="setSubTimerMinutes(12.5)">12.5m</button>
-              <button class="btn-minute-preset" onclick="setSubTimerMinutes(15)">15m</button>
-            </div>
-            <div class="sub-timer-custom-box">
-              <input type="number" id="subTimerCustomInput" class="input-custom-min" min="0.5" max="90" step="0.5" value="5" title="Custom minutes" onkeydown="if(event.key==='Enter')applyCustomSubTimerMinutes()">
-              <span style="font-size: 0.72rem; color: #94a3b8;">min</span>
-              <button onclick="applyCustomSubTimerMinutes()" class="btn-apply-custom">Set</button>
-            </div>
-          </div>
-        </div>
+      <!-- Clean quick presets row -->
+      <div class="sub-timer-quick-presets">
+        <button class="quick-preset-pill" onclick="setSubTimerMinutes(3)">3m</button>
+        <button class="quick-preset-pill" onclick="setSubTimerMinutes(4)">4m</button>
+        <button class="quick-preset-pill active" id="pillPreset5" onclick="setSubTimerMinutes(5)">5m</button>
+        <button class="quick-preset-pill" onclick="setSubTimerMinutes(7.5)">7.5m</button>
+        <button class="quick-preset-pill" onclick="setSubTimerMinutes(10)">10m</button>
+        <button class="quick-preset-next" onclick="advanceSubRotation()" title="Advance rotation">Next Rotation ➔</button>
       </div>
 
-      <!-- Time's up rotation alert banner -->
-      <div id="subTimerAlertBanner" class="sub-timer-alert-card" style="display: none;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 1.15rem;">🚨</span>
-          <div>
-            <strong style="color: #fecaca; font-size: 0.88rem;">TIME TO ROTATE PLAYERS!</strong>
-            <div id="subTimerAlertText" style="color: #fca5a5; font-size: 0.75rem;">Rotation interval has ended. Swap bench substitutes onto the pitch.</div>
-          </div>
-        </div>
-        <div style="display: flex; gap: 6px;">
-          <button onclick="dismissSubTimerAlert()" style="padding: 4px 10px; background: #374151; border: 1px solid #4b5563; color: white; border-radius: 4px; font-size: 0.75rem; cursor: pointer;">Dismiss</button>
-          <button onclick="advanceSubRotation()" style="padding: 4px 12px; background: #22c55e; border: 1px solid #16a34a; color: white; border-radius: 4px; font-size: 0.75rem; font-weight: bold; cursor: pointer;">⏭️ Next Rotation</button>
-        </div>
+      <!-- Alert Banner (shown when time expires) -->
+      <div id="subTimerAlertBanner" class="sub-timer-simple-alert" style="display: none;">
+        <span>🚨 <strong>Time to rotate!</strong> Swap bench players.</span>
+        <button onclick="advanceSubRotation()" class="btn-alert-next">Next ➔</button>
       </div>
     </div>
 
@@ -6024,14 +5894,13 @@
   }
 
   // ============================================================
-  // Substitution Match & Rotation Timer Logic
+  // Minimalist Circular Substitution Match & Rotation Timer Logic
   // ============================================================
-  let subTimerTotalSeconds = 300; // default 5 minutes (300 seconds)
+  let subTimerTotalSeconds = 300; // default 5 minutes
   let subTimerRemainingSeconds = 300;
   let subTimerInterval = null;
   let subTimerIsRunning = false;
   let subTimerRotationNumber = 1;
-  let subTimerCurrentQuarter = 1;
   let subTimerSoundEnabled = true;
   let subTimerWakeLockSentinel = null;
 
@@ -6043,25 +5912,10 @@
         if (!isNaN(parsed) && parsed > 0) {
           subTimerTotalSeconds = Math.round(parsed * 60);
           subTimerRemainingSeconds = subTimerTotalSeconds;
-          const input = document.getElementById('subTimerCustomInput');
-          if (input) input.value = parsed;
         }
       }
     } catch(e) {}
-    updateSubTimerPresetButtons(subTimerTotalSeconds / 60);
     updateSubTimerDisplay();
-  }
-
-  function updateSubTimerPresetButtons(minutes) {
-    const pills = document.querySelectorAll('.btn-minute-preset');
-    pills.forEach(pill => {
-      const text = pill.textContent.replace('m', '');
-      if (parseFloat(text) === minutes) {
-        pill.classList.add('active');
-      } else {
-        pill.classList.remove('active');
-      }
-    });
   }
 
   function setSubTimerMinutes(minutes) {
@@ -6071,88 +5925,116 @@
     try {
       localStorage.setItem('hv_sub_timer_minutes', val);
     } catch(e) {}
-    const input = document.getElementById('subTimerCustomInput');
-    if (input) input.value = val;
-    updateSubTimerPresetButtons(val);
 
-    // If timer is not running, reset remaining seconds to new total
+    // If timer is not running, reset remaining to match new total
     if (!subTimerIsRunning) {
       subTimerRemainingSeconds = subTimerTotalSeconds;
     }
     updateSubTimerDisplay();
   }
 
-  function applyCustomSubTimerMinutes() {
-    const input = document.getElementById('subTimerCustomInput');
-    if (!input) return;
-    const val = parseFloat(input.value);
-    if (!isNaN(val) && val >= 0.5 && val <= 90) {
-      setSubTimerMinutes(val);
-      if (typeof showToast === 'function') {
-        showToast(`⏱️ Timer set to ${val} minutes`);
-      }
-    } else {
-      if (typeof showToast === 'function') {
-        showToast('⚠️ Please enter between 0.5 and 90 minutes');
-      }
+  function stepSubTimerMinutes(delta) {
+    let currentMins = subTimerTotalSeconds / 60;
+    let newMins = Math.max(1, Math.min(60, currentMins + delta));
+    setSubTimerMinutes(newMins);
+    if (typeof showToast === 'function') {
+      showToast(`⏱️ Duration: ${newMins} min`);
+    }
+  }
+
+  function cycleSubTimerMinutes() {
+    const common = [2, 3, 4, 5, 6, 7.5, 10, 15];
+    let currentMins = subTimerTotalSeconds / 60;
+    let idx = common.indexOf(currentMins);
+    let nextMins = (idx >= 0 && idx < common.length - 1) ? common[idx + 1] : common[0];
+    setSubTimerMinutes(nextMins);
+    if (typeof showToast === 'function') {
+      showToast(`⏱️ Duration: ${nextMins} min`);
     }
   }
 
   function updateSubTimerDisplay() {
     const digitsEl = document.getElementById('subTimerDigits');
-    const barEl = document.getElementById('subTimerBar');
-    if (!digitsEl || !barEl) return;
+    const arcEl = document.getElementById('subTimerCircleProgress');
+    const subLabelEl = document.getElementById('subTimerSubLabel');
+    const minLabelEl = document.getElementById('subTimerMinutesLabel');
+    const iconEl = document.getElementById('svgPlayPauseIcon');
 
+    // 1. Digital MM:SS
     const mins = Math.floor(Math.max(0, subTimerRemainingSeconds) / 60);
     const secs = Math.max(0, subTimerRemainingSeconds) % 60;
     const formatted = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-    digitsEl.textContent = formatted;
+    if (digitsEl) digitsEl.textContent = formatted;
 
-    const pct = subTimerTotalSeconds > 0
-      ? Math.max(0, Math.min(100, (subTimerRemainingSeconds / subTimerTotalSeconds) * 100))
-      : 0;
-    barEl.style.width = `${pct}%`;
+    // 2. Circular Arc (Circumference of r=112 is 703.7)
+    if (arcEl) {
+      const circumference = 703.7;
+      const fraction = subTimerTotalSeconds > 0
+        ? Math.max(0, Math.min(1, subTimerRemainingSeconds / subTimerTotalSeconds))
+        : 0;
+      const offset = circumference * (1 - fraction);
+      arcEl.style.strokeDashoffset = offset;
 
-    digitsEl.classList.remove('warning', 'critical');
-    barEl.classList.remove('warning', 'critical');
-
-    if (subTimerRemainingSeconds <= 30) {
-      digitsEl.classList.add('critical');
-      barEl.classList.add('critical');
-    } else if (subTimerRemainingSeconds <= 60) {
-      digitsEl.classList.add('warning');
-      barEl.classList.add('warning');
+      if (subTimerRemainingSeconds <= 30) {
+        arcEl.style.stroke = '#ef4444'; // Red alert when < 30s
+      } else {
+        arcEl.style.stroke = '#e11d48'; // Bold coral red as in mockup
+      }
     }
 
-    const badgeEl = document.getElementById('subTimerBadge');
-    if (badgeEl) {
-      badgeEl.textContent = `Rotation ${subTimerRotationNumber} • Q${subTimerCurrentQuarter}`;
+    // 3. Sub-label
+    if (subLabelEl) {
+      subLabelEl.textContent = `ROTATION ${subTimerRotationNumber}`;
+    }
+
+    // 4. Stepper value
+    if (minLabelEl) {
+      const displayMin = (subTimerTotalSeconds / 60);
+      minLabelEl.textContent = `${displayMin} min`;
+    }
+
+    // 5. Play / Pause Button SVG
+    if (iconEl) {
+      if (subTimerIsRunning) {
+        iconEl.innerHTML = '<rect x="6" y="4" width="4" height="16" rx="1"></rect><rect x="14" y="4" width="4" height="16" rx="1"></rect>';
+      } else {
+        iconEl.innerHTML = '<polygon points="7 4 19 12 7 20 7 4"></polygon>';
+      }
+    }
+
+    // 6. Preset pills active state
+    const currentMins = subTimerTotalSeconds / 60;
+    const pills = document.querySelectorAll('.quick-preset-pill');
+    pills.forEach(pill => {
+      const val = parseFloat(pill.textContent.replace('m', ''));
+      if (val === currentMins) {
+        pill.classList.add('active');
+      } else {
+        pill.classList.remove('active');
+      }
+    });
+
+    // 7. Sound icon state
+    const soundIcon = document.getElementById('subTimerSoundIcon');
+    if (soundIcon) {
+      soundIcon.textContent = subTimerSoundEnabled ? '🔊' : '🔇';
     }
   }
 
   function startOrPauseSubTimer() {
-    const playBtn = document.getElementById('btnSubTimerPlay');
     if (subTimerIsRunning) {
       // Pause
       clearInterval(subTimerInterval);
       subTimerInterval = null;
       subTimerIsRunning = false;
-      if (playBtn) {
-        playBtn.textContent = '▶️ Resume';
-        playBtn.classList.remove('running');
-      }
       releaseSubTimerWakeLock();
     } else {
-      // Start or resume
+      // Start or Resume
       if (subTimerRemainingSeconds <= 0) {
         subTimerRemainingSeconds = subTimerTotalSeconds;
       }
       dismissSubTimerAlert();
       subTimerIsRunning = true;
-      if (playBtn) {
-        playBtn.textContent = '⏸️ Pause';
-        playBtn.classList.add('running');
-      }
       requestSubTimerWakeLock();
       subTimerInterval = setInterval(tickSubTimer, 1000);
     }
@@ -6168,11 +6050,7 @@
       clearInterval(subTimerInterval);
       subTimerInterval = null;
       subTimerIsRunning = false;
-      const playBtn = document.getElementById('btnSubTimerPlay');
-      if (playBtn) {
-        playBtn.textContent = '▶️ Start Next';
-        playBtn.classList.remove('running');
-      }
+      updateSubTimerDisplay();
       triggerSubTimerAlert();
     }
   }
@@ -6184,33 +6062,18 @@
     }
     subTimerIsRunning = false;
     subTimerRemainingSeconds = subTimerTotalSeconds;
-    const playBtn = document.getElementById('btnSubTimerPlay');
-    if (playBtn) {
-      playBtn.textContent = '▶️ Start';
-      playBtn.classList.remove('running');
-    }
     dismissSubTimerAlert();
     releaseSubTimerWakeLock();
     updateSubTimerDisplay();
   }
 
-  function adjustSubTimerSeconds(delta) {
-    subTimerRemainingSeconds = Math.max(0, subTimerRemainingSeconds + delta);
-    updateSubTimerDisplay();
-  }
-
   function advanceSubRotation() {
     subTimerRotationNumber++;
-    // Advance quarter suggestion every 4 rotations
-    if (subTimerRotationNumber > 1 && (subTimerRotationNumber - 1) % 4 === 0) {
-      subTimerCurrentQuarter = Math.min(4, subTimerCurrentQuarter + 1);
-    }
     subTimerRemainingSeconds = subTimerTotalSeconds;
     dismissSubTimerAlert();
     if (typeof showToast === 'function') {
       showToast(`🔄 Advanced to Rotation #${subTimerRotationNumber}`);
     }
-    
     if (!subTimerIsRunning) {
       startOrPauseSubTimer();
     } else {
@@ -6220,13 +6083,7 @@
 
   function triggerSubTimerAlert() {
     const alertEl = document.getElementById('subTimerAlertBanner');
-    const alertText = document.getElementById('subTimerAlertText');
-    if (alertEl) {
-      if (alertText) {
-        alertText.textContent = `Rotation #${subTimerRotationNumber} finished! Rotate bench players now.`;
-      }
-      alertEl.style.display = 'flex';
-    }
+    if (alertEl) alertEl.style.display = 'flex';
 
     if (subTimerSoundEnabled) {
       playRefereeWhistleChime();
@@ -6246,10 +6103,12 @@
 
   function toggleSubTimerSound() {
     subTimerSoundEnabled = !subTimerSoundEnabled;
-    const btn = document.getElementById('btnSubTimerSound');
-    if (btn) {
-      btn.textContent = subTimerSoundEnabled ? '🔔 Sound: ON' : '🔕 Sound: OFF';
-      btn.classList.toggle('active', subTimerSoundEnabled);
+    const soundIcon = document.getElementById('subTimerSoundIcon');
+    if (soundIcon) {
+      soundIcon.textContent = subTimerSoundEnabled ? '🔊' : '🔇';
+    }
+    if (typeof showToast === 'function') {
+      showToast(subTimerSoundEnabled ? '🔊 Sound: ON' : '🔇 Sound: OFF');
     }
     if (subTimerSoundEnabled) {
       playRefereeWhistleChime();
@@ -6287,8 +6146,6 @@
     try {
       if ('wakeLock' in navigator) {
         subTimerWakeLockSentinel = await navigator.wakeLock.request('screen');
-        const btn = document.getElementById('btnSubTimerWake');
-        if (btn) btn.classList.add('active');
       }
     } catch(e) {}
   }
@@ -6298,24 +6155,8 @@
       if (subTimerWakeLockSentinel) {
         subTimerWakeLockSentinel.release();
         subTimerWakeLockSentinel = null;
-        const btn = document.getElementById('btnSubTimerWake');
-        if (btn) btn.classList.remove('active');
       }
     } catch(e) {}
-  }
-
-  async function toggleSubTimerWakeLock() {
-    if (subTimerWakeLockSentinel) {
-      releaseSubTimerWakeLock();
-      if (typeof showToast === 'function') {
-        showToast('📱 Keep Awake disabled');
-      }
-    } else {
-      await requestSubTimerWakeLock();
-      if (typeof showToast === 'function') {
-        showToast('📱 Keep Awake enabled (screen will stay on)');
-      }
-    }
   }
 
   window.onload = () => {
