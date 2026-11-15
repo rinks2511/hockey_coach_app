@@ -736,7 +736,7 @@
           <textarea id="coachNotesSubs">Horizontal Pitch Strategy:
 - 15m Scoring Line: Goals only count when shot or touched inside the 15m line!
 - Build-up: Push wide via LB (Liv) and RB (Sai Jiya)
-- Sub Rotation: Sub-DEF (Hannah) rotates with Defense; Sub-MID (Shanaya) rotates with Midfield/Attack.</textarea>
+- Sub Rotation: Sub-DEF (Hannah), Sub-MID (Shanaya), Sub-FWD (Ayana) rotate with field lines.</textarea>
         </div>
       </div>
 
@@ -914,7 +914,7 @@
   function getDefaultSquadForTeam(teamId) {
     if (teamId === 'MO10') {
       return [
-        "Sai Jiya", "Defne", "Shanaya", "Alina", "Liv", "Mira", "Hannah", "Kyra", "Kate", "Liz"
+        "Sai Jiya", "Defne", "Shanaya", "Alina", "Liv", "Mira", "Hannah", "Kyra", "Kate", "Liz", "Ayana"
       ];
     } else {
       return [
@@ -937,7 +937,7 @@
           return false;
         }
       } else if (teamId === 'Trimmers') {
-        if (name.includes('sai jiya') || name.includes('defne') || name.includes('shanaya') || name.includes('alina') || name.includes('mira') || name.includes('kyra') || name.includes('kate') || name.includes('liz')) {
+        if (name.includes('sai jiya') || name.includes('defne') || name.includes('shanaya') || name.includes('alina') || name.includes('mira') || name.includes('kyra') || name.includes('kate') || name.includes('liz') || name.includes('ayana')) {
           return false;
         }
       }
@@ -957,6 +957,22 @@
     console.error("Error parsing squad", e);
   }
   let squadPlayers = validateAndSanitizeSquad(currentTeam, squadLocal);
+  if (currentTeam === 'MO10') {
+    let changed = false;
+    squadPlayers.forEach(p => {
+      if (typeof p === 'object' && p.name && p.name.toLowerCase() === 'ayana' && p.gender !== 'F') {
+        p.gender = 'F';
+        changed = true;
+      }
+    });
+    if (!squadPlayers.some(p => (typeof p === 'string' ? p : p.name).toLowerCase().includes('ayana'))) {
+      squadPlayers.push({ name: 'Ayana', gender: 'F', isAvailable: true });
+      changed = true;
+    }
+    if (changed) {
+      try { localStorage.setItem('hv_myra_squad_MO10', JSON.stringify(squadPlayers)); } catch(e) {}
+    }
+  }
 
 
   function getDisplayName(fullName) {
@@ -1060,7 +1076,7 @@
     const mo10GK = ['mira', 'liz'];
     const mo10DEF = ['alina', 'shanaya', 'hannah'];
     const mo10MID = ['defne', 'kate', 'sai', 'kyra'];
-    const mo10FWD = ['liv', 'kate'];
+    const mo10FWD = ['liv', 'kate', 'ayana'];
 
     if (mo10GK.some(n => nameLower.includes(n))) return 'GK';
     if (mo10DEF.some(n => nameLower.includes(n))) return 'DEF';
@@ -2861,8 +2877,9 @@
         { id: 'rm', default: 'Alina', label: 'RM', x: '47%', y: '74%' },
         { id: 'lf', default: 'Kate', label: 'LF', x: '70%', y: '35%' },
         { id: 'rf', default: 'Sai Jiya', label: 'RF', x: '70%', y: '65%' },
-        { id: 'sub_def', default: 'Hannah', label: 'SUB-DEF', x: '25%', y: '93%', isSubDef: (getSubRole('sub_def')==='DEF'), isSubMid: (getSubRole('sub_def')==='MID'), isSubFwd: (getSubRole('sub_def')==='FWD'), isSub: true },
-        { id: 'sub_mid', default: 'Shanaya', label: 'SUB-MID', x: '55%', y: '93%', isSubDef: (getSubRole('sub_mid')==='DEF'), isSubMid: (getSubRole('sub_mid')==='MID'), isSubFwd: (getSubRole('sub_mid')==='FWD'), isSub: true }
+        { id: 'sub_def', default: 'Hannah', label: 'SUB-DEF', x: '20%', y: '93%', isSubDef: (getSubRole('sub_def')==='DEF'), isSubMid: (getSubRole('sub_def')==='MID'), isSubFwd: (getSubRole('sub_def')==='FWD'), isSub: true },
+        { id: 'sub_mid', default: 'Shanaya', label: 'SUB-MID', x: '50%', y: '93%', isSubDef: (getSubRole('sub_mid')==='DEF'), isSubMid: (getSubRole('sub_mid')==='MID'), isSubFwd: (getSubRole('sub_mid')==='FWD'), isSub: true },
+        { id: 'sub_fwd', default: 'Ayana', label: 'SUB-FWD', x: '80%', y: '93%', isSubDef: (getSubRole('sub_fwd')==='DEF'), isSubMid: (getSubRole('sub_fwd')==='MID'), isSubFwd: (getSubRole('sub_fwd')==='FWD'), isSub: true }
       ];
     } else {
       return [
@@ -2897,7 +2914,7 @@
           { title: "🎯 15-Meter Flat Scoring Line", desc: "In 8v8 cross-pitch hockey, goals only count if the ball is hit or touched by an attacker <strong>past the straight 15-meter line</strong> into the goal." },
           { title: "🥅 Horizontal Cross-Pitch Format", desc: "Played across one half of a full hockey field (sideline to sideline). Teams play <strong>8 vs 8</strong> (1 Goalkeeper + 7 Outfield players)." },
           { title: "📏 5-Meter Distance Rule", desc: "Opponents must always keep at least <strong>5 meters distance</strong> on all free hits and side-ins. Self-passes are allowed immediately." },
-          { title: "⏱️ Match Duration & Quarters", desc: "Played as <strong>4 x 15 minutes</strong> with 2-minute quarter breaks and a 5-minute half-time. Great for rotating all 10 players evenly." },
+          { title: "⏱️ Match Duration & Quarters", desc: "Played as <strong>4 x 15 minutes</strong> with 2-minute quarter breaks and a 5-minute half-time. Great for rotating all 11 players evenly." },
           { title: "🚫 Feet & Back of Stick (Bolle Kant)", desc: "Players may only play the ball with the <strong>flat side of the stick</strong>. Kicking or intentionally stopping the ball with feet/body is a foul." },
           { title: "⚠️ Dangerous Play & Safety", desc: "Slap shots and pushes are encouraged. Hard lifted balls or raising the stick above shoulder height near other players is forbidden." }
         ],
@@ -2963,7 +2980,7 @@
 
   function getInitialGender(name) {
     const females = [
-      "shanaya", "kyra", "hannah", "liv", "kate", "alina", "mira", "defne",
+      "shanaya", "kyra", "hannah", "liv", "kate", "alina", "mira", "defne", "ayana",
       "anna", "erdmann",
       "frances", "handoko",
       "saskia", "klaverstijn",
@@ -3604,7 +3621,9 @@
           else if (pos.id === 'rm') label = 'RM';
           else if (pos.id === 'lf') label = currentLang === 'en' ? 'ST' : 'SP';
           else if (pos.id === 'rf') label = currentLang === 'en' ? 'SUB<span class="sub-tag">ATT</span>' : 'WIS<span class="sub-tag">AAN</span>';
+          else if (pos.id === 'sub_def') label = currentLang === 'en' ? 'SUB<span class="sub-tag">DEF</span>' : 'WIS<span class="sub-tag">VER</span>';
           else if (pos.id === 'sub_mid') label = currentLang === 'en' ? 'SUB<span class="sub-tag">MID</span>' : 'WIS<span class="sub-tag">MID</span>';
+          else if (pos.id === 'sub_fwd') label = currentLang === 'en' ? 'SUB<span class="sub-tag">FWD</span>' : 'WIS<span class="sub-tag">AAN</span>';
         } else {
           if (pos.id === 'gk') label = currentLang === 'en' ? 'GK' : 'K';
           else if (pos.id === 'lb') label = currentLang === 'en' ? 'LB' : 'LA';
@@ -3615,7 +3634,9 @@
           else if (pos.id === 'rm') label = 'RM';
           else if (pos.id === 'lf') label = currentLang === 'en' ? 'LF' : 'LA';
           else if (pos.id === 'rf') label = currentLang === 'en' ? 'RF' : 'RA';
+          else if (pos.id === 'sub_def') label = currentLang === 'en' ? 'SUB<span class="sub-tag">DEF</span>' : 'WIS<span class="sub-tag">VER</span>';
           else if (pos.id === 'sub_mid') label = currentLang === 'en' ? 'SUB<span class="sub-tag">MID</span>' : 'WIS<span class="sub-tag">MID</span>';
+          else if (pos.id === 'sub_fwd') label = currentLang === 'en' ? 'SUB<span class="sub-tag">FWD</span>' : 'WIS<span class="sub-tag">AAN</span>';
         }
       } else {
         // Trimmers
@@ -3656,7 +3677,9 @@
             else if (pos.id === 'rm') code = 'RM';
             else if (pos.id === 'lf') code = currentLang === 'en' ? 'ST' : 'SP';
             else if (pos.id === 'rf') { code = currentLang === 'en' ? 'SUB-ATT' : 'WIS-AAN'; isSub = true; }
+            else if (pos.id === 'sub_def') { code = currentLang === 'en' ? 'SUB-DEF' : 'WIS-VER'; isSub = true; }
             else if (pos.id === 'sub_mid') { code = currentLang === 'en' ? 'SUB-MID' : 'WIS-MID'; isSub = true; }
+            else if (pos.id === 'sub_fwd') { code = currentLang === 'en' ? 'SUB-FWD' : 'WIS-AAN'; isSub = true; }
           } else {
             if (pos.id === 'gk') code = currentLang === 'en' ? 'GK' : 'K';
             else if (pos.id === 'lb') code = currentLang === 'en' ? 'LB' : 'LA';
@@ -3667,7 +3690,9 @@
             else if (pos.id === 'rm') code = 'RM';
             else if (pos.id === 'lf') code = currentLang === 'en' ? 'LF' : 'LA';
             else if (pos.id === 'rf') code = currentLang === 'en' ? 'RF' : 'RA';
+            else if (pos.id === 'sub_def') { code = currentLang === 'en' ? 'SUB-DEF' : 'WIS-VER'; isSub = true; }
             else if (pos.id === 'sub_mid') { code = currentLang === 'en' ? 'SUB-MID' : 'WIS-MID'; isSub = true; }
+            else if (pos.id === 'sub_fwd') { code = currentLang === 'en' ? 'SUB-FWD' : 'WIS-AAN'; isSub = true; }
           }
         } else {
           // Trimmers
@@ -4200,9 +4225,10 @@
   const formations = {
     // MO10 Formations (8v8)
     '1-2-3-2': {
-      'pos_gk': [6, 50], 'pos_lb': [23, 34], 'pos_rb': [23, 66], 'pos_cb': [25, 93],
+      'pos_gk': [6, 50], 'pos_lb': [23, 34], 'pos_rb': [23, 66], 'pos_cb': [20, 93],
       'pos_lm': [47, 26], 'pos_cm': [45, 50], 'pos_rm': [47, 74],
-      'pos_lf': [70, 35], 'pos_rf': [70, 65], 'pos_sub_mid': [55, 93],
+      'pos_lf': [70, 35], 'pos_rf': [70, 65],
+      'pos_sub_def': [20, 93], 'pos_sub_mid': [50, 93], 'pos_sub_fwd': [80, 93],
       'ball': [50, 50],
       'opp_0': [95, 50], 'opp_1': [81, 34], 'opp_2': [81, 66],
       'opp_3': [56, 26], 'opp_4': [55, 50], 'opp_5': [56, 74],
@@ -4211,7 +4237,8 @@
     '1-3-3-1': {
       'pos_gk': [6, 50], 'pos_lb': [23, 28], 'pos_cb': [20, 50], 'pos_rb': [23, 72],
       'pos_lm': [47, 26], 'pos_cm': [45, 50], 'pos_rm': [47, 74],
-      'pos_lf': [70, 50], 'pos_rf': [55, 93], 'pos_sub_mid': [25, 93],
+      'pos_lf': [70, 50], 'pos_rf': [80, 93],
+      'pos_sub_def': [20, 93], 'pos_sub_mid': [50, 93], 'pos_sub_fwd': [80, 93],
       'ball': [50, 50],
       'opp_0': [95, 50], 'opp_1': [81, 28], 'opp_2': [84, 50], 'opp_3': [81, 72],
       'opp_4': [56, 26], 'opp_5': [55, 50], 'opp_6': [56, 74], 'opp_7': [32, 50]
