@@ -37,7 +37,7 @@ class Settings:
     def DEFAULT_SQUAD_PLAYERS(self) -> List[str]:
       squad_str = os.getenv(
           "DEFAULT_SQUAD_PLAYERS",
-          "Alina, Defne, Hannah, Kate, Kyra, Liz, Liv, Mira, Sai, Shanaya"
+          "Alina, Ayana, Defne, Hannah, Kate, Kyra, Liz, Liv, Mira, Sai Jiya, Shanaya"
       )
       return [player.strip() for player in squad_str.split(",") if player.strip()]
 

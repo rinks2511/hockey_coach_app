@@ -200,6 +200,14 @@ def init_db():
             val_mo10_str = cur_mo10["value"]
             if "Sander Duivesteijn" in val_mo10_str or "Rajeev Singhal" in val_mo10_str:
                 upsert_setting(conn, "MO10", "squad_players", json.dumps(settings.DEFAULT_SQUAD_PLAYERS))
+            elif "Ayana" not in val_mo10_str:
+                try:
+                    players = json.loads(val_mo10_str)
+                    if isinstance(players, list) and not any("ayana" in (p if isinstance(p, str) else p.get("name", "")).lower() for p in players):
+                        players.append("Ayana")
+                        upsert_setting(conn, "MO10", "squad_players", json.dumps(players))
+                except Exception as e:
+                    logger.debug(f"Failed to migrate squad players for Ayana: {e}")
 
         cur_trimmers = execute_query(conn, "SELECT value FROM settings WHERE team_id = 'Trimmers' AND key = 'squad_players'").fetchone()
         if not cur_trimmers:

@@ -38,11 +38,16 @@ def get_config(team_id: str):
             squad_players = settings.DEFAULT_TRIMMERS_SQUAD_PLAYERS
             upsert_setting(conn, team_id, 'squad_players', json.dumps(squad_players))
             conn.commit()
-        elif team_id == "MO10" and ("Sander Duivesteijn" in squad_str or "Rajeev Singhal" in squad_str):
-            from ..config import settings
-            squad_players = settings.DEFAULT_SQUAD_PLAYERS
-            upsert_setting(conn, team_id, 'squad_players', json.dumps(squad_players))
-            conn.commit()
+        elif team_id == "MO10":
+            if "Sander Duivesteijn" in squad_str or "Rajeev Singhal" in squad_str:
+                from ..config import settings
+                squad_players = settings.DEFAULT_SQUAD_PLAYERS
+                upsert_setting(conn, team_id, 'squad_players', json.dumps(squad_players))
+                conn.commit()
+            elif not any("ayana" in (p if isinstance(p, str) else p.get("name", "")).lower() for p in squad_players):
+                squad_players.append("Ayana")
+                upsert_setting(conn, team_id, 'squad_players', json.dumps(squad_players))
+                conn.commit()
         
         row_positions = execute_query(conn, "SELECT value FROM settings WHERE team_id = ? AND key = 'custom_positions'", (team_id,)).fetchone()
         custom_positions = json.loads(row_positions["value"]) if row_positions else {}
